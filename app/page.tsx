@@ -1,66 +1,59 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import type { Metadata } from 'next'
+import { Nav } from '@/components/layout/nav'
+import { Footer } from '@/components/layout/footer'
+import { HeroSection } from '@/components/sections/hero'
+import { TrustBar } from '@/components/sections/trust-bar'
+import { ServicesSection } from '@/components/sections/services'
+import { WhyUsSection } from '@/components/sections/why-us'
+import { WorkPreviewSection } from '@/components/sections/work-preview'
+import { TestimonialsSection } from '@/components/sections/testimonials'
+import { FoundersSection } from '@/components/sections/founders'
+import { ComparisonSection } from '@/components/sections/comparison'
+import { FaqSection } from '@/components/sections/faq'
+import { ContactCtaSection } from '@/components/sections/contact-cta'
+import { organizationSchema, websiteSchema } from '@/lib/schema'
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: 'Web3 & AI Development Studio | Metaborong',
+  description:
+    'Metaborong builds DeFi protocols, AI agent systems, and custom SaaS products for founders and crypto-native teams. Fast delivery, product-first thinking.',
+  alternates: { canonical: 'https://www.metaborong.com' },
+  openGraph: {
+    title: 'Web3 & AI Development Studio | Metaborong',
+    description:
+      'Metaborong builds DeFi protocols, AI agent systems, and custom SaaS products for founders and crypto-native teams.',
+    url: 'https://www.metaborong.com',
+  },
+}
+
+export default function HomePage() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+
+      <Nav />
+
+      <main>
+        <HeroSection />
+        <TrustBar />
+        <ServicesSection />
+        <WhyUsSection />
+        <WorkPreviewSection />
+        <TestimonialsSection />
+        <FoundersSection />
+        <ComparisonSection />
+        <FaqSection />
+        <ContactCtaSection />
       </main>
-    </div>
-  );
+
+      <Footer />
+    </>
+  )
 }
