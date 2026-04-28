@@ -1,5 +1,3 @@
-import { Linkedin } from 'lucide-react'
-
 const founders = [
   { name: 'Arnab Ray',    role: 'CEO & Co-Founder', bio: 'Leads strategy, client relationships, and business direction. Background in technology entrepreneurship and Web3 ecosystem development.',                linkedin: 'https://linkedin.com/in/arnab-ray' },
   { name: 'Anik Ghosh',   role: 'COO & Co-Founder', bio: 'Oversees operations, project delivery, and go-to-market execution. Ensures every project ships on time and to spec.',                                linkedin: 'https://linkedin.com/in/anik-ghosh' },
@@ -27,7 +25,8 @@ export function FoundersSection() {
               <p style={{ fontSize: 12, color: '#204AF8', fontWeight: 600, letterSpacing: '0.02em', marginBottom: 14 }}>{f.role}</p>
               <p style={{ fontSize: 13, color: '#676767', lineHeight: 1.7, letterSpacing: '-0.005em', marginBottom: 20 }}>{f.bio}</p>
               <a href={f.linkedin} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#204AF8', fontWeight: 500, textDecoration: 'none' }}>
-                <Linkedin size={14} /> LinkedIn
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#204AF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+                LinkedIn
               </a>
             </div>
           ))}
