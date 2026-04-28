@@ -1,0 +1,94 @@
+<h2>Site Architecture Approach</h2>
+<p class="subtitle">14 services across 3 pillars. How should they be structured for SEO + UX?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="flat" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:monospace;font-size:11px;color:#94a3b8;min-height:140px;">
+      <div style="color:#f87171;font-weight:bold;margin-bottom:8px;">/ Homepage</div>
+      <div style="color:#fbbf24;">/services <span style="color:#475569;">← one big page, all 14 services</span></div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ #defi-protocol</div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ #smart-contract-audit</div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ #ai-automation</div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ ... 11 more anchor sections</div>
+      <div style="color:#fbbf24;margin-top:8px;">/work</div>
+      <div style="color:#fbbf24;">/about</div>
+      <div style="color:#fbbf24;">/contact</div>
+    </div>
+    <div class="card-body">
+      <h3>A — Flat (Current approach)</h3>
+      <p>All services on one page with anchor links. What the site does today.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Fastest to build</li><li>Simple navigation</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>One URL can't rank for 14 different keywords</li><li>No page depth = no SEO value</li><li>Dead end for content strategy</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="category-hub" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:monospace;font-size:11px;color:#94a3b8;min-height:140px;">
+      <div style="color:#38bdf8;font-weight:bold;margin-bottom:6px;">/ Homepage</div>
+      <div style="color:#a78bfa;">/services/web3/ <span style="color:#475569;">← hub page</span></div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ /services/web3/defi-protocol/</div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ /services/web3/smart-contract-audit/</div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ /services/web3/nft-marketplace/  <span style="color:#374151;">+4 more</span></div>
+      <div style="color:#34d399;margin-top:4px;">/services/ai-agents/ <span style="color:#475569;">← hub page</span></div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ /services/ai-agents/agentic-ai/</div>
+      <div style="color:#94a3b8;padding-left:12px;">↳ /services/ai-agents/rag-development/ <span style="color:#374151;">+4 more</span></div>
+      <div style="color:#fbbf24;margin-top:4px;">/services/product-studio/saas-development/</div>
+      <div style="color:#94a3b8;margin-top:4px;">/blog/  /work/  /about/  /contact/</div>
+    </div>
+    <div class="card-body">
+      <h3>B — Category Hub + Individual Pages (Recommended)</h3>
+      <p>Three pillar hub pages (Web3, AI Agents, Product Studio) each containing individual service sub-pages. Matches the strategy doc's pillar/cluster model exactly.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Every service gets its own URL + keyword target</li>
+          <li>Hub pages rank for category terms ("web3 development company")</li>
+          <li>Internal linking flows naturally pillar → cluster → blog</li>
+          <li>Scalable — add services without restructuring</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>More pages to write (14 service pages + 3 hubs)</li>
+          <li>Needs a clear nav to not overwhelm visitors</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="full-flat" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:monospace;font-size:11px;color:#94a3b8;min-height:140px;">
+      <div style="color:#38bdf8;font-weight:bold;margin-bottom:6px;">/ Homepage</div>
+      <div style="color:#fb923c;">/defi-protocol-development/</div>
+      <div style="color:#fb923c;">/smart-contract-audit/</div>
+      <div style="color:#fb923c;">/nft-marketplace-development/</div>
+      <div style="color:#fb923c;">/ai-automation-services/</div>
+      <div style="color:#fb923c;">/agentic-ai-development/</div>
+      <div style="color:#fb923c;">... 9 more at root level</div>
+      <div style="color:#94a3b8;margin-top:6px;">/blog/  /work/  /about/  /contact/</div>
+    </div>
+    <div class="card-body">
+      <h3>C — All Individual Pages, Flat Root</h3>
+      <p>Every service gets its own top-level URL, no hub categories. Simpler URL structure, but loses the pillar authority that hub pages provide.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Short, clean URLs per service</li><li>Good for individual keyword targeting</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>No hub page to rank for category-level terms</li>
+          <li>Internal linking harder to organize</li>
+          <li>Navigation becomes cluttered with 14 top-level items</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:28px;padding:16px;background:#0f172a;border-radius:8px;border:1px solid #1e293b;">
+  <div style="color:#94a3b8;font-size:12px;font-family:monospace;">
+    <span style="color:#38bdf8;font-weight:bold;">Approach B gives us:</span>
+    &nbsp;&nbsp;3 hub pages + 14 service pages + homepage + about + work + blog + contact
+    &nbsp;=&nbsp;<span style="color:#34d399;font-weight:bold;">~20 core pages</span> + blog posts
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;text-align:center;">Click your preferred structure or reply in the terminal.</p>

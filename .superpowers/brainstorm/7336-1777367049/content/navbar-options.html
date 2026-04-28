@@ -1,0 +1,122 @@
+<h2>Navbar Structure Options</h2>
+<p class="subtitle">The URL architecture lives in the background. The navbar is what visitors see. Here are three ways to surface 3 pillars + 14 services cleanly.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="simple-dropdown" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:sans-serif;min-height:160px;">
+      <!-- Navbar mockup -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#111827;border-radius:6px;border:1px solid #1e293b;">
+        <span style="color:#38bdf8;font-weight:700;font-size:13px;">METABORONG</span>
+        <div style="display:flex;gap:20px;align-items:center;">
+          <span style="color:#38bdf8;font-size:11px;border-bottom:1px solid #38bdf8;padding-bottom:1px;">Services ▾</span>
+          <span style="color:#94a3b8;font-size:11px;">Work</span>
+          <span style="color:#94a3b8;font-size:11px;">About</span>
+          <span style="color:#94a3b8;font-size:11px;">Blog</span>
+          <span style="background:#38bdf8;color:#0f172a;font-size:10px;font-weight:700;padding:5px 10px;border-radius:4px;">Let's Talk</span>
+        </div>
+      </div>
+      <!-- Dropdown -->
+      <div style="margin-top:4px;margin-left:auto;width:220px;background:#1e293b;border-radius:6px;padding:12px;border:1px solid #334155;">
+        <div style="color:#a78bfa;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Web3 / Blockchain</div>
+        <div style="color:#94a3b8;font-size:10px;margin-bottom:8px;">DeFi, NFT, Wallets, DAO +4 more →</div>
+        <div style="color:#34d399;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">AI Agents</div>
+        <div style="color:#94a3b8;font-size:10px;margin-bottom:8px;">Agentic AI, RAG, Voice, Gen AI +2 more →</div>
+        <div style="color:#fbbf24;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Product Studio</div>
+        <div style="color:#94a3b8;font-size:10px;">Custom SaaS Platforms →</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Simple Dropdown (Recommended)</h3>
+      <p>Clean top-level nav: <strong>Services ▾ / Work / About / Blog / Let's Talk</strong>. Services opens a dropdown showing the 3 pillar categories, each linking to the hub page. Visitors who want specifics click into a category.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Clean, uncluttered bar — 5 items max</li>
+          <li>Categories are scannable in one glance</li>
+          <li>Standard pattern founders expect</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Individual services not visible without hover</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="mega-menu" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:sans-serif;min-height:160px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#111827;border-radius:6px;border:1px solid #1e293b;">
+        <span style="color:#38bdf8;font-weight:700;font-size:13px;">METABORONG</span>
+        <div style="display:flex;gap:20px;align-items:center;">
+          <span style="color:#38bdf8;font-size:11px;border-bottom:1px solid #38bdf8;padding-bottom:1px;">Services ▾</span>
+          <span style="color:#94a3b8;font-size:11px;">Work</span>
+          <span style="color:#94a3b8;font-size:11px;">About</span>
+          <span style="color:#94a3b8;font-size:11px;">Blog</span>
+          <span style="background:#38bdf8;color:#0f172a;font-size:10px;font-weight:700;padding:5px 10px;border-radius:4px;">Let's Talk</span>
+        </div>
+      </div>
+      <!-- Mega menu -->
+      <div style="margin-top:4px;background:#1e293b;border-radius:6px;padding:16px;border:1px solid #334155;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <div>
+          <div style="color:#a78bfa;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">⬡ Web3 / Blockchain</div>
+          <div style="color:#94a3b8;font-size:9.5px;line-height:1.8;">DeFi Protocol Dev<br>Smart Contract Audit<br>NFT Marketplace<br>Crypto Wallets<br>Token Launchpad<br>Liquid Staking Vaults<br>DAO Tooling</div>
+        </div>
+        <div>
+          <div style="color:#34d399;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">⬡ AI Agents</div>
+          <div style="color:#94a3b8;font-size:9.5px;line-height:1.8;">AI Automation<br>Generative AI Dev<br>AI Integration<br>Voice Agents<br>RAG Applications<br>Agentic AI Systems</div>
+        </div>
+        <div>
+          <div style="color:#fbbf24;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">⬡ Product Studio</div>
+          <div style="color:#94a3b8;font-size:9.5px;line-height:1.8;">Custom SaaS Platforms</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Mega Menu</h3>
+      <p>Services opens a full-width panel showing all 14 services across 3 columns. Every service is visible on hover — great for return visitors who know what they want.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Full service catalogue visible at a glance</li>
+          <li>No extra clicks to find a specific service</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Can feel overwhelming to cold visitors</li>
+          <li>More complex to build responsively on mobile</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="split-nav" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:sans-serif;min-height:160px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#111827;border-radius:6px;border:1px solid #1e293b;">
+        <span style="color:#38bdf8;font-weight:700;font-size:13px;">METABORONG</span>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <span style="color:#a78bfa;font-size:11px;">Web3 ▾</span>
+          <span style="color:#34d399;font-size:11px;">AI Agents ▾</span>
+          <span style="color:#fbbf24;font-size:11px;">Product Studio</span>
+          <span style="color:#94a3b8;font-size:11px;">Work</span>
+          <span style="color:#94a3b8;font-size:11px;">About</span>
+          <span style="background:#38bdf8;color:#0f172a;font-size:10px;font-weight:700;padding:5px 10px;border-radius:4px;">Let's Talk</span>
+        </div>
+      </div>
+      <div style="margin-top:8px;color:#94a3b8;font-size:10px;padding:8px;background:#1e293b;border-radius:4px;text-align:center;">
+        Each pillar is a top-level nav item with its own dropdown → individual services
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Split Pillar Nav</h3>
+      <p>Each pillar (Web3, AI Agents, Product Studio) is its own nav item, each with its own dropdown. No "Services" umbrella — the pillars are the navigation.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Pillars get equal visual weight</li>
+          <li>Signals 3 distinct offerings clearly</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>7+ nav items — too crowded on mobile</li>
+          <li>Buries Work, About, Blog</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px;text-align:center;">The navbar is what visitors see — URL structure stays invisible. Click your preference.</p>
