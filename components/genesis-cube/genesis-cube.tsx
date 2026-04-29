@@ -1,37 +1,35 @@
 'use client'
 
 import { useGenesisCube } from './use-genesis-cube'
-import { DEFAULT_CONFIG } from './renderer'
+import { CANVAS_W, CANVAS_H } from './renderer'
 
-interface GenesisCubeProps {
-  className?: string
-}
-
-export function GenesisCube({ className = '' }: GenesisCubeProps) {
-  const frame = useGenesisCube()
+export function GenesisCube({ className = '' }: { className?: string }) {
+  const canvasRef = useGenesisCube()
 
   return (
     <div
       className={className}
       aria-hidden="true"
-      style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', width: '100%', height: '100%' }}
+      style={{
+        display:         'flex',
+        alignItems:      'center',
+        justifyContent:  'center',
+        width:           '100%',
+        height:          '100%',
+        overflow:        'hidden',
+      }}
     >
-      <pre style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: 'clamp(7px, 1.1vw, 11px)',
-        lineHeight: 1.25,
-        letterSpacing: '0.05em',
-        color: '#204AF8',
-        userSelect: 'none',
-        whiteSpace: 'pre',
-        opacity: 0.85,
-      }}>
-        {frame || Array(DEFAULT_CONFIG.rows).fill(' '.repeat(DEFAULT_CONFIG.cols)).join('\n')}
-      </pre>
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse at center, transparent 40%, #f5f7ff 100%)',
-      }} />
+      <canvas
+        ref={canvasRef}
+        width={CANVAS_W}
+        height={CANVAS_H}
+        style={{
+          display:   'block',
+          width:     'auto',
+          height:    '80%',
+          maxWidth:  '90%',
+        }}
+      />
     </div>
   )
 }

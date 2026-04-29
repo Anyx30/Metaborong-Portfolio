@@ -1,9 +1,5 @@
-import { lazy, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
-
-const GenesisCube = lazy(() =>
-  import('@/components/genesis-cube/genesis-cube').then(m => ({ default: m.GenesisCube }))
-)
+import { IsometricLattice } from './isometric-lattice'
 
 export function HeroSection() {
   return (
@@ -62,13 +58,7 @@ export function HeroSection() {
         background: '#f5f7ff', borderLeft: '1px solid rgba(32,74,248,0.08)',
         position: 'relative', overflow: 'hidden', minHeight: '100vh',
       }}>
-        <Suspense fallback={
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'rgba(32,74,248,0.15)', lineHeight: 1.25, letterSpacing: '0.05em', whiteSpace: 'pre' }}>
-            {Array(40).fill('0'.repeat(80)).join('\n')}
-          </div>
-        }>
-          <GenesisCube />
-        </Suspense>
+        <IsometricLattice />
       </div>
     </section>
   )
