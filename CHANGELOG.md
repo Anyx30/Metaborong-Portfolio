@@ -8,7 +8,49 @@ All major decisions, milestones, and changes to this project.
 
 ### In progress
 - Content writing for service hub pages and 14 individual service pages
+- Visual polish pass on remaining homepage sections
 - Case studies (pending client-provided details for KGeN, Bionic, DATA3 AI, Defiverse, GET Smart, SEDAX, Bayan, Memestakes Vault)
+
+---
+
+## 2026-04-29 — Hero Visual: Three.js Orb (Phase complete)
+
+### Decision log
+- **ASCII Genesis Cube replaced** — original wireframe renderer was edge-only (no filled surfaces). Attempted canvas rewrite with donut.c-style lighting; visual still insufficient. Abandoned.
+- **Isometric SVG lattice attempted** — `components/sections/isometric-lattice.tsx` created as a hex-prism lattice in pure SVG. Rejected: not visually compelling enough for the hero.
+- **Three.js Hero Orb chosen** — reference: right panel of ausdata.ai. Node-graph sphere on light background with M-mark centered and interactive service labels. Approved after canvas 2D mockup shown.
+- **Light background kept** — hero right panel stays `#f5f7ff`, no dark panel. Nodes readable in blue/orange/green on light bg.
+
+### Added
+- **`components/hero-orb/hero-orb.tsx`** — Canvas wrapper, lazy-loaded via `next/dynamic` with `ssr: false`. Camera at `[0,0,5.5]`, fov 48, dpr `[1,2]`, transparent bg.
+- **`components/hero-orb/orb-scene.tsx`** — Full Three.js scene:
+  - 214 nodes distributed on a Fibonacci sphere (mathematically uniform, no polar clustering)
+  - 200 blue nodes (`#204AF8`) as InstancedMesh — 1 draw call
+  - 14 interactive service nodes color-coded by pillar: WEB3 = orange `#F6851B`, AI = green `#4dff9a`, PRODUCT = blue `#204AF8`
+  - ~530 edges (5-nearest neighbours per node) as LineSegments — 1 draw call, opacity 0.16
+  - Metaborong M-mark SVG centered via `@react-three/drei` `Html`
+  - **Custom orbit controller** replacing OrbitControls — proper click-vs-drag detection (>5px threshold). Drag overrides auto-rotate; releases damp back to auto-speed. Fixes OrbitControls interference with page interactions.
+  - Auto-rotation: `0.058 rad/s` (≈ OrbitControls speed 0.55) on Y axis
+  - **HUD floating label on hover** — `onPointerEnter` on service nodes (core + halo) triggers futuristic label:
+    - Dark glass background `rgba(2,6,26,0.94)` with colored glow border + box-shadow
+    - L-shaped corner brackets in category color
+    - Glowing dot indicator + service name in monospace uppercase + blinking `_` cursor
+    - Scan-line animation overlay
+    - CSS keyframes injected at runtime (avoids Tailwind purge in Three.js Html portals)
+    - **Hemisphere-aware anchoring**: right hemisphere (`worldX > 0`) → `translateX(-100%) translateY(-100%)`, bottom-right corner at node, label extends left. Left hemisphere → `translateX(0%) translateY(-100%)`, bottom-left corner at node, label extends right. No slide — label materialises at final position via scale+blur fade only.
+    - 3.6s auto-expire; label persists on pointer-leave so user can read as sphere rotates
+
+### Technical decisions
+- **Stack additions:** `three@0.184`, `@react-three/fiber@9.6`, `@react-three/drei@10.7`, `@types/three@0.184`
+- **`JetBrains Mono`** added to `globals.css` via Google Fonts — used in HUD label text
+- **`app/globals.css`** — HUD label CSS keyframes (`_orbIn`, `_orbCur`, `_orbScn`) added
+- **`hero.tsx`** marked `'use client'` — required for `next/dynamic` with `ssr: false`
+- **InstancedMesh + LineSegments** — entire orb is 2 WebGL draw calls regardless of node count; 60fps on any modern GPU
+- **Geometry built at module load time** — Fibonacci sphere, edge graph, and mesh objects computed once on first import; no per-render allocation
+
+### Superseded / dead code (kept, not deleted)
+- `components/genesis-cube/` — original ASCII canvas renderer, no longer used by any page
+- `components/sections/isometric-lattice.tsx` — SVG lattice attempt, no longer imported
 
 ---
 
@@ -91,18 +133,21 @@ All major decisions, milestones, and changes to this project.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Service hub pages (3) | Pending | Content in `docs/content/` |
+| Hero visual | ✅ Done | Three.js Fibonacci orb with HUD labels — see 2026-04-29 entry |
+| Homepage visual polish pass | Pending | Other sections reviewed but not all adjusted yet |
+| Service hub pages (3) | Pending | Content skeleton in `docs/content/`; no pages built yet |
 | Individual service pages (14) | Pending | Keyword targets in strategy doc |
 | About page | Pending | Founders + E-E-A-T |
 | Contact page | Pending | Form + email |
-| Case studies | Blocked | Awaiting client details from Anik |
+| Case studies | Blocked | Awaiting client details (KGeN, Bionic, DATA3 AI, Defiverse, GET Smart, SEDAX, Bayan, Memestakes Vault) |
 | Blog infrastructure | Phase 2 | 16 posts planned per strategy doc |
 | `llms.txt` | Pending | GEO compliance |
 | `robots.txt` + `sitemap.xml` | Pending | Technical SEO |
 | Google Search Console setup | Pending | Phase 1 quick win |
 | GA4 with conversion events | Pending | Phase 1 quick win |
 | LinkedIn provider pages audit | Pending | |
-| OG image (`/assets/og/og-home.webp`) | Pending | 1200×630 |
-| Mobile responsiveness pass | Pending | Breakpoints: 320/768/1024/1440 |
+| OG image (`/assets/og/og-home.webp`) | Pending | 1200×630; referenced in metadata but file missing |
+| Mobile responsiveness pass | Pending | Breakpoints: 320/768/1024/1440; hero built desktop-first |
 | Core Web Vitals audit | Pending | LCP < 2.5s, INP < 200ms, CLS < 0.1 |
-| Founders LinkedIn URLs | Pending | Confirm real URLs before deploy |
+| Founders LinkedIn URLs | Pending | Placeholders in `components/sections/founders.tsx` |
+| Clean up dead code | Pending | `components/genesis-cube/` and `isometric-lattice.tsx` unused |
