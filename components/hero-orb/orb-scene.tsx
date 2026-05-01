@@ -7,12 +7,15 @@ import * as THREE from 'three'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const N_TOTAL    = 214
+const N_TOTAL    = 294   // 280 filler glyphs + 14 service nodes
 const N_ORANGE   = 14
 const SPHERE_R   = 1.25
-const BLUE_R     = 0.019
 const NODE_R     = 0.030
 const AUTO_SPEED = 0.058  // rad/s ≈ OrbitControls 0.55
+
+// Glyph alphabet for filler nodes — weighted toward soft characters,
+// denser ones used as accents.
+const GLYPHS = ['·', '·', '·', '·', '+', '+', '*', '◦', '╳', '█'] as const
 
 const CAT_COLOR = {
   WEB3:    '#F6851B',
@@ -104,25 +107,64 @@ const _orangeIdxs   = [..._orangeIdxSet]
 const _worldPts     = _unitPts.map(p => p.clone().multiplyScalar(SPHERE_R))
 const _orangePts    = _orangeIdxs.map(i => _worldPts[i])
 
-// ── Blue nodes: InstancedMesh with deterministic size variation ────────────────
-// Skills ref (threejs-geometry): vary dummy.scale per instance before setMatrixAt.
+// ── Filler ASCII glyphs: per-node Sprite with cached canvas textures ──────────
+// Skills ref (threejs-geometry, threejs-fundamentals): Sprite always faces
+// camera; CanvasTexture lets us draw any glyph and reuse via a Map cache.
 
-function buildBlueMesh(): THREE.InstancedMesh {
-  const geo   = new THREE.SphereGeometry(BLUE_R, 9, 7)
-  const mat   = new THREE.MeshBasicMaterial({ color: '#204AF8' })
-  const count = N_TOTAL - N_ORANGE
-  const mesh  = new THREE.InstancedMesh(geo, mat, count)
-  const dummy = new THREE.Object3D()
-  let slot = 0
+const _glyphTextureCache = new Map<string, THREE.Texture>()
+
+function getGlyphTexture(glyph: string): THREE.Texture {
+  const cached = _glyphTextureCache.get(glyph)
+  if (cached) return cached
+
+  const size = 64
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, size, size)
+  // Spec calibrated #c8d8ff for a darker bg; on bg-bg-subtle #f5f7ff that's
+  // invisible. Use brand-blue tone to match the prior dot fill on this surface.
+  ctx.fillStyle = '#3b5dd9'
+  ctx.font = '700 44px "JetBrains Mono", monospace'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(glyph, size / 2, size / 2 + 2)
+
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.needsUpdate = true
+  _glyphTextureCache.set(glyph, tex)
+  return tex
+}
+
+function buildGlyphSprites(): THREE.Group {
+  const group = new THREE.Group()
+  const sizeFor = (g: string): number => {
+    if (g === '·') return 0.040
+    if (g === '+') return 0.052
+    if (g === '*') return 0.058
+    if (g === '◦') return 0.064
+    if (g === '╳') return 0.066
+    return 0.072 // █
+  }
+
   _unitPts.forEach((_, i) => {
     if (_orangeIdxSet.has(i)) return
-    dummy.position.copy(_worldPts[i])
-    dummy.scale.setScalar(0.65 + hashF(i) * 0.70)   // 0.65–1.35× size variation
-    dummy.updateMatrix()
-    mesh.setMatrixAt(slot++, dummy.matrix)
+    const glyph = GLYPHS[Math.floor(hashF(i) * GLYPHS.length)]
+    const mat = new THREE.SpriteMaterial({
+      map: getGlyphTexture(glyph),
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(_worldPts[i])
+    const s = sizeFor(glyph) * (0.85 + hashF(i + 1) * 0.30)
+    sprite.scale.set(s, s, s)
+    group.add(sprite)
   })
-  mesh.instanceMatrix.needsUpdate = true
-  return mesh
+  return group
 }
 
 // ── Edges: depth-based vertex colours for visual depth cue ───────────────────
@@ -410,18 +452,22 @@ export function OrbScene() {
 
   const groupRef = useRef<THREE.Group>(null)
 
-  const { blueMesh, edgeLines } = useMemo(() => ({
-    blueMesh:  buildBlueMesh(),
-    edgeLines: buildEdgeLines(),
+  const { glyphSprites, edgeLines } = useMemo(() => ({
+    glyphSprites: buildGlyphSprites(),
+    edgeLines:    buildEdgeLines(),
   }), [])
 
   useEffect(() => () => {
-    blueMesh.geometry.dispose()
-    ;(blueMesh.material as THREE.Material).dispose()
-    blueMesh.dispose()
+    glyphSprites.traverse(obj => {
+      if (obj instanceof THREE.Sprite) {
+        ;(obj.material as THREE.SpriteMaterial).dispose()
+      }
+    })
     edgeLines.geometry.dispose()
     ;(edgeLines.material as THREE.Material).dispose()
-  }, [blueMesh, edgeLines])
+    _glyphTextureCache.forEach(tex => tex.dispose())
+    _glyphTextureCache.clear()
+  }, [glyphSprites, edgeLines])
 
   const [label, setLabel] = useState<LabelState | null>(null)
 
@@ -448,7 +494,7 @@ export function OrbScene() {
 
       <group ref={groupRef}>
         <primitive object={edgeLines} />
-        <primitive object={blueMesh} />
+        <primitive object={glyphSprites} />
 
         {_orangeIdxs.map((_, si) => (
           <ServiceNode
