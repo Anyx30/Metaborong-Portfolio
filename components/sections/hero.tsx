@@ -22,10 +22,10 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section className="min-h-screen bg-bg-subtle">
+    <section className="relative min-h-screen bg-bg-subtle">
       <div className="max-w-[1600px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[60fr_40fr]">
         {/* Left: copy */}
-        <div className="relative flex flex-col justify-center py-[64px] lg:py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+        <div className="flex flex-col justify-center py-[64px] lg:py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
           {/* Eyebrow chip */}
           <div className="inline-flex items-center gap-2 mb-7 bg-bg border border-border rounded-sm px-3 py-[5px] w-fit">
             <span className="w-2 h-2 bg-brand rounded-sm shrink-0 inline-block" />
@@ -65,23 +65,23 @@ export function HeroSection() {
           <p className="text-xs text-gray-light tracking-[-0.01em]">
             No pitch decks. No retainers. Direct from founders.
           </p>
-
-          {/* Scroll-down affordance */}
-          <div
-            aria-hidden="true"
-            className={`absolute bottom-[40px] left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-gray-light transition-opacity duration-300 ${
-              scrolled ? 'opacity-0' : 'opacity-100'
-            } motion-safe:animate-[heroScrollBounce_1.6s_cubic-bezier(0.45,0,0.55,1)_infinite]`}
-          >
-            <ChevronDown size={16} strokeWidth={2} />
-            <span className="text-[10px] tracking-[0.15em] uppercase">Scroll</span>
-          </div>
         </div>
 
         {/* Right: Three.js orb */}
         <div className="relative overflow-hidden flex items-center justify-center h-[60vh] lg:h-auto lg:min-h-screen">
           <HeroOrb />
         </div>
+      </div>
+
+      {/* Scroll-down affordance — centered on full viewport, not the left column */}
+      <div
+        aria-hidden="true"
+        className={`absolute bottom-[40px] left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-gray-light transition-opacity duration-300 z-10 ${
+          scrolled ? 'opacity-0' : 'opacity-100'
+        } motion-safe:animate-[heroScrollBounce_1.6s_cubic-bezier(0.45,0,0.55,1)_infinite]`}
+      >
+        <ChevronDown size={16} strokeWidth={2} />
+        <span className="text-[10px] tracking-[0.15em] uppercase">Scroll</span>
       </div>
     </section>
   )
