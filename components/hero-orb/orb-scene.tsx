@@ -20,6 +20,20 @@ const CAT_COLOR = {
   PRODUCT: '#204AF8',
 } as const
 
+// ── Reduced motion detection ──────────────────────────────────────────────────
+
+function useReducedMotion(): boolean {
+  const [reduce, setReduce] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduce(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setReduce(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduce
+}
+
 // ── Services ──────────────────────────────────────────────────────────────────
 
 const SERVICES: { name: string; cat: keyof typeof CAT_COLOR }[] = [
@@ -171,7 +185,7 @@ function useKeyframes() {
 
 // ── Custom orbit controller ───────────────────────────────────────────────────
 
-function useOrbit(groupRef: React.RefObject<THREE.Group | null>) {
+function useOrbit(groupRef: React.RefObject<THREE.Group | null>, reducedMotion: boolean) {
   const { gl } = useThree()
   const velY   = useRef(0)
   const velX   = useRef(0)
@@ -207,7 +221,7 @@ function useOrbit(groupRef: React.RefObject<THREE.Group | null>) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
     if (!d.current.active) {
-      const target = AUTO_SPEED * delta
+      const target = reducedMotion ? 0 : AUTO_SPEED * delta
       velY.current  = velY.current * 0.90 + target * 0.10
       velX.current *= 0.90
     }
@@ -356,8 +370,14 @@ function ServiceNode({
 
 // ── Controller ────────────────────────────────────────────────────────────────
 
-function OrbController({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> }) {
-  useOrbit(groupRef)
+function OrbController({
+  groupRef,
+  reducedMotion,
+}: {
+  groupRef: React.RefObject<THREE.Group | null>
+  reducedMotion: boolean
+}) {
+  useOrbit(groupRef, reducedMotion)
   return null
 }
 
@@ -392,9 +412,11 @@ export function OrbScene() {
 
   const clearLabel = useCallback(() => setLabel(null), [])
 
+  const reducedMotion = useReducedMotion()
+
   return (
     <>
-      <OrbController groupRef={groupRef} />
+      <OrbController groupRef={groupRef} reducedMotion={reducedMotion} />
 
       {/* Lights live in world-space so they DON'T rotate with the group.
           This means service nodes get a shifting highlight as they rotate —
