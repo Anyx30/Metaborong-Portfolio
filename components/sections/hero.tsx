@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
+import { Eyebrow } from '@/components/ui/eyebrow'
 
 // Three.js: client-only, lazy-loaded after paint — no LCP impact
 const HeroOrb = dynamic(
@@ -11,62 +12,55 @@ const HeroOrb = dynamic(
 
 export function HeroSection() {
   return (
-    <section style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '55fr 45fr', background: '#f5f7ff' }}>
-      {/* Left: copy */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '96px 64px 96px 80px', maxWidth: 680 }}>
-        {/* Eyebrow */}
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 28,
-          background: '#fff', border: '1px solid #e5e7eb', borderRadius: 4,
-          padding: '5px 12px', fontSize: 12, color: '#676767', letterSpacing: '0.02em', width: 'fit-content',
-        }}>
-          <span style={{ width: 7, height: 7, background: '#204AF8', borderRadius: 2, flexShrink: 0, display: 'inline-block' }} />
-          Web3 Development · AI Agents · Product Studio
-        </div>
+    <section className="min-h-screen bg-bg-subtle">
+      <div className="max-w-[1600px] mx-auto min-h-screen grid grid-cols-[60fr_40fr]">
+        {/* Left: copy */}
+        <div className="flex flex-col justify-center py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+          {/* Eyebrow chip */}
+          <div className="inline-flex items-center gap-2 mb-7 bg-bg border border-border rounded-sm px-3 py-[5px] w-fit">
+            <span className="w-2 h-2 bg-brand rounded-sm shrink-0 inline-block" />
+            <Eyebrow>Web3 Development · AI Agents · Product Studio</Eyebrow>
+          </div>
 
-        {/* H1 */}
-        <h1 style={{
-          fontSize: 'clamp(36px, 4.5vw, 64px)', fontWeight: 700,
-          letterSpacing: '-0.04em', lineHeight: 1.02, color: '#303030', marginBottom: 20,
-        }}>
-          Full-Stack Web3 Development
-          <br />
-          <span style={{ color: '#204AF8' }}>&amp; AI Agent Studio</span>
-        </h1>
+          {/* H1 */}
+          <h1 className="text-[clamp(40px,5vw,72px)] font-bold tracking-[-0.04em] leading-[1.02] text-dark mb-6">
+            Web3 protocols.
+            <br />
+            AI agents.
+            <br />
+            <span className="text-brand">Shipped.</span>
+          </h1>
 
-        {/* AEO extraction blockquote */}
-        <blockquote style={{ borderLeft: '2px solid #204AF8', paddingLeft: 16, marginBottom: 24, fontStyle: 'normal' }}>
-          <p style={{ fontSize: 15, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 480 }}>
-            Metaborong is a Web3 development company and AI agent studio that builds DeFi protocols,
-            autonomous AI systems, and custom SaaS products for founders and crypto-native teams.
-            Based across the US and Europe, Metaborong delivers from spec to production — fast.
+          {/* AEO extraction blockquote — promoted */}
+          <blockquote cite="/about" className="border-l-[3px] border-brand pl-5 py-1 mb-6">
+            <p className="text-base font-medium text-dark leading-[1.6] tracking-[-0.015em] max-w-[560px]">
+              Metaborong is a Web3 and AI agent development studio that ships DeFi protocols,
+              autonomous AI systems, and custom SaaS products for founders and crypto-native teams
+              across the US and Europe.
+            </p>
+          </blockquote>
+
+          {/* Body lead — demoted */}
+          <p className="text-sm text-gray leading-[1.6] tracking-[-0.005em] max-w-[480px] mb-8">
+            For founders who need a technical partner that ships — not an agency that pitches.
           </p>
-        </blockquote>
 
-        {/* Sub */}
-        <p style={{ fontSize: 16, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 460, marginBottom: 32 }}>
-          We work with founders and crypto-native teams who need a technical partner that ships, not just consults. Built with product thinking, not just code.
-        </p>
+          {/* CTAs */}
+          <div className="flex items-center gap-3 mb-5">
+            <Button href="/contact/" size="lg">Start a Project &rarr;</Button>
+            <Button href="/work/" variant="ghost" size="lg">See Our Work</Button>
+          </div>
 
-        {/* CTAs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <Button href="/contact/" size="lg">Start a Project &rarr;</Button>
-          <Button href="/work/" variant="ghost" size="lg">See Our Work</Button>
+          {/* Micro-copy */}
+          <p className="text-xs text-gray-light tracking-[-0.01em]">
+            No pitch decks. No retainers. Direct from founders.
+          </p>
         </div>
 
-        {/* Micro-copy */}
-        <p style={{ fontSize: 12, color: '#999999', letterSpacing: '-0.01em' }}>
-          No pitch decks. No retainers. Direct from founders.
-        </p>
-      </div>
-
-      {/* Right: Three.js orb */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#f5f7ff', borderLeft: '1px solid rgba(32,74,248,0.08)',
-        position: 'relative', overflow: 'hidden', minHeight: '100vh',
-      }}>
-        <HeroOrb />
+        {/* Right: Three.js orb */}
+        <div className="relative overflow-hidden flex items-center justify-center min-h-screen">
+          <HeroOrb />
+        </div>
       </div>
     </section>
   )
