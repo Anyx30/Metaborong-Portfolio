@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useMemo, useEffect, useState, useCallback } from 'react'
+import { useRef, useMemo, useEffect, useState, useCallback, type KeyboardEvent } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
@@ -344,6 +344,15 @@ function ServiceNode({
     document.body.style.cursor = 'default'
   }, [])
 
+  const serviceName = SERVICES[serviceIdx].name
+
+  const onKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onHover(pos, serviceIdx)
+    }
+  }
+
   return (
     <group position={pos}>
       {/* Large halo — extends the hover hitbox and adds soft glow */}
@@ -364,6 +373,19 @@ function ServiceNode({
           emissiveIntensity={0.32}
         />
       </mesh>
+      {/* Keyboard accessibility — invisible button at the node's screen position.
+          Tab into focus, Enter/Space (or focus alone) opens the same HUD label
+          that pointer hover triggers. */}
+      <Html center zIndexRange={[20, 20]}>
+        <button
+          type="button"
+          aria-label={`View ${serviceName} service`}
+          onKeyDown={onKey}
+          onFocus={() => onHover(pos, serviceIdx)}
+          className="w-5 h-5 rounded-full bg-transparent border-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2"
+          style={{ outlineColor: color }}
+        />
+      </Html>
     </group>
   )
 }
