@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: {
-    default: 'Web3 & AI Development Studio | Metaborong',
+    default: 'AI and Blockchain Development Company | Web3 & GenAI | Metaborong',
     template: '%s | Metaborong',
   },
   description:

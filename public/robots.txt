@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Block internal / non-public routes
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+Disallow: /tmp/
+
+# Allow important assets
+Allow: /images/
+Allow: /assets/
+
+# Sitemap location
+Sitemap: https://www.metaborong.com/sitemap.xml

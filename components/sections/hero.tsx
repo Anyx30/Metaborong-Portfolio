@@ -29,23 +29,24 @@ export function HeroSection() {
           fontSize: 'clamp(36px, 4.5vw, 64px)', fontWeight: 700,
           letterSpacing: '-0.04em', lineHeight: 1.02, color: '#303030', marginBottom: 20,
         }}>
-          Full-Stack Web3 Development
+          AI and Blockchain Development Company
           <br />
-          <span style={{ color: '#204AF8' }}>&amp; AI Agent Studio</span>
+          <span style={{ color: '#204AF8' }}>for Systems That Hold Up in Production</span>
         </h1>
 
         {/* AEO extraction blockquote */}
         <blockquote style={{ borderLeft: '2px solid #204AF8', paddingLeft: 16, marginBottom: 24, fontStyle: 'normal' }}>
           <p style={{ fontSize: 15, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 480 }}>
-            Metaborong is a Web3 development company and AI agent studio that builds DeFi protocols,
-            autonomous AI systems, and custom SaaS products for founders and crypto-native teams.
-            Based across the US and Europe, Metaborong delivers from spec to production — fast.
+            Metaborong is an AI and Blockchain Development Company building production-grade AI systems, AI agents, and blockchain infrastructure for startups and crypto-native teams. We develop systems designed to operate under real constraints — traffic spikes, latency, cost, and failure conditions.
+          </p>
+          <p style={{ fontSize: 15, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 480, marginTop: 12 }}>
+            Most teams build demos. We build systems that continue working after launch.
           </p>
         </blockquote>
 
         {/* Sub */}
         <p style={{ fontSize: 16, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 460, marginBottom: 32 }}>
-          We work with founders and crypto-native teams who need a technical partner that ships, not just consults. Built with product thinking, not just code.
+          We work directly with founders and technical teams. No account managers, no layers. The same people designing your system are the ones building it.
         </p>
 
         {/* CTAs */}

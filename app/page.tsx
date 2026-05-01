@@ -7,8 +7,8 @@ import { ServicesSection } from '@/components/sections/services'
 import { WhyUsSection } from '@/components/sections/why-us'
 import { WorkPreviewSection } from '@/components/sections/work-preview'
 import { TestimonialsSection } from '@/components/sections/testimonials'
-import { FoundersSection } from '@/components/sections/founders'
-import { ComparisonSection } from '@/components/sections/comparison'
+import { HowWeWorkSection } from '@/components/sections/how-we-work'
+import { IndustriesSection } from '@/components/sections/industries'
 import { FaqSection } from '@/components/sections/faq'
 import { ContactCtaSection } from '@/components/sections/contact-cta'
 import { organizationSchema, websiteSchema } from '@/lib/schema'
@@ -46,9 +46,9 @@ export default function HomePage() {
         <ServicesSection />
         <WhyUsSection />
         <WorkPreviewSection />
+        <HowWeWorkSection />
+        <IndustriesSection />
         <TestimonialsSection />
-        <FoundersSection />
-        <ComparisonSection />
         <FaqSection />
         <ContactCtaSection />
       </main>
