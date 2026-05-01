@@ -23,9 +23,9 @@ export function HeroSection() {
 
   return (
     <section className="min-h-screen bg-bg-subtle">
-      <div className="max-w-[1600px] mx-auto min-h-screen grid grid-cols-[60fr_40fr]">
+      <div className="max-w-[1600px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[60fr_40fr]">
         {/* Left: copy */}
-        <div className="relative flex flex-col justify-center py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+        <div className="relative flex flex-col justify-center py-[64px] lg:py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
           {/* Eyebrow chip */}
           <div className="inline-flex items-center gap-2 mb-7 bg-bg border border-border rounded-sm px-3 py-[5px] w-fit">
             <span className="w-2 h-2 bg-brand rounded-sm shrink-0 inline-block" />
@@ -79,7 +79,7 @@ export function HeroSection() {
         </div>
 
         {/* Right: Three.js orb */}
-        <div className="relative overflow-hidden flex items-center justify-center min-h-screen">
+        <div className="relative overflow-hidden flex items-center justify-center h-[60vh] lg:h-auto lg:min-h-screen">
           <HeroOrb />
         </div>
       </div>
