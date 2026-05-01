@@ -22,7 +22,7 @@ The homepage renders all 12 sections (nav + 10 sections + footer) but visual qua
 | Stray emerald `#10b981` | nav, services, why-us, work-preview | Add `--color-ai: #10b981` token; replace literals with `text-ai`, `bg-ai`, etc. |
 | Two H2 scales | services/why-us vs others | One display H2: `clamp(32px, 4vw, 52px)`, weight 700, tracking `-0.035em` |
 | Card padding drift (`44/36`, `36/32`, `32/28`, `32`) | services, why-us, work, founders, testimonials | One `<Card>` primitive: `p-9` (36px) on default, `p-10` (40px) on featured |
-| Card radius drift (4/8/12/16/20) | hero eyebrow, work thumbs, cards, services wrapper | Two radii only: `rounded-md` (8px) for chips/thumbs, `rounded-xl` (12px) for cards |
+| Card radius drift (4/8/12/16/20) | hero eyebrow, work thumbs, cards, services wrapper | Two radii only: `rounded-md` (8px) for chips/thumbs, `rounded-lg` (12px) for cards |
 | Header→content margin drift (16/48/56) | every section | One value: 48px (`mb-12`) below `<SectionHeader>` |
 | Hero padding deviates (`96 64 96 80` vs `96 80`) | hero only | Hero conforms to `<Section>` defaults; left-column padding handled inside |
 | Eyebrow size drift (11 vs 12) | hero vs others | One eyebrow: 11px, 700 weight, `0.1em` tracking, uppercase, `text-gray-light` |
@@ -56,11 +56,14 @@ The existing tokens (`--color-brand`, `--color-accent`, `--color-dark`, `--color
 
 ### Spacing rhythm (locked)
 
-- Section vertical padding: 96px (`py-24`).
-- Section horizontal padding: 80px (`px-20`) desktop, 24px (`px-6`) mobile.
+The locked **values** (not class names) are authoritative. The project's `@theme` defines a custom `--spacing-N` scale (slot 9 = 96px, slot 7 = 48px, etc.) that does not align with Tailwind's default `p-N`/`py-N`/`mb-N` numeric mapping. To keep the rhythm unambiguous, primitives use **arbitrary value classes** (`py-[96px]`, `mb-[48px]`, `p-[36px]`) rather than scale-dependent shorthand. Section refactors should follow the same convention.
+
+- Section vertical padding: 96px → `py-[96px]`.
+- Horizontal padding scale (apply to **nav, sections, footer** uniformly): `px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]` — 24px mobile, 48px tablet (≥768), 96px desktop (≥1024), 128px large desktop (≥1280). Gives the premium breathing room on standard monitors and avoids the prior 80px-only step that felt tight at 1440px+.
 - Section content max-width: 1280px wide; 960px for narrative-heavy (comparison, problem, founders intro); 760px for FAQ.
-- `<SectionHeader>` → content: 48px (`mb-12`).
-- Card grid gap: 24px (`gap-6`).
+- Nav stays full-bleed (no `max-w`) — chrome layer hugs viewport edges. Sections cap content at the `max-width` above. The two intentionally don't align on wide monitors; this matches Linear/Vercel/Stripe convention.
+- `<SectionHeader>` → content: 48px → `mb-[48px]`.
+- Card grid gap: 24px → `gap-6` (this one is unambiguous since 24px is also default `gap-6`).
 - Card internal vertical rhythm: eyebrow 18px → title → 14px → body → 28px → CTA.
 
 ### Card system (one primitive, three variants)
@@ -68,10 +71,10 @@ The existing tokens (`--color-brand`, `--color-accent`, `--color-dark`, `--color
 ```
 <Card variant="default" | "featured" | "quote">
 ```
-- All variants: `bg-white` (or `bg-bg-subtle` on dark-section variant), `border border-border`, `rounded-xl`, hover lift `translate-y-[-2px]` + `border-brand/30` (200ms).
-- `default`: `p-9` (36px). Used by why-us, work-preview, founders.
-- `featured`: `p-10` (40px), thicker accent left-border in pillar color. Used by services pillars.
-- `quote`: `p-8` (32px), italic body. Used by testimonials.
+- All variants: `bg-white` (or `bg-bg-subtle` on dark-section variant), `border border-border`, `rounded-lg` (= 12px, existing `--radius-lg` token; the spec's earlier `rounded-xl` was a typo — `--radius-xl` is 20px), hover lift `-translate-y-0.5` + `border-brand/30` (200ms).
+- `default`: 36px padding → `p-[36px]`. Used by why-us, work-preview, founders.
+- `featured`: 40px padding → `p-[40px]`, 3px accent left-border in pillar color (passed via `accentColor` prop). Used by services pillars.
+- `quote`: 32px padding → `p-[32px]`, italic body. Used by testimonials.
 
 No "bordered grid" trick like the current services section — that's a 1px-gap hack and reads inconsistent. Replace with normal grid + uniform cards.
 
@@ -96,10 +99,10 @@ Existing `Button`, `Logo`, `Badge` stay.
 
 Each section's master responsibility, layout, and what it inherits. Per-session work writes a small section-level spec inheriting these.
 
-### 1. Nav (`components/layout/nav.tsx`)
-- Sticky frosted-glass, 56px tall, `max-w-[1280px]`.
-- Migrate all inline styles to Tailwind. Replace `#10b981` literal with `text-ai`/`bg-ai`. Dropdown card uses same border + radius as `<Card>`.
-- Mobile hamburger functional; currently has `display: none` on the trigger — fix.
+### 1. Nav (`components/layout/nav.tsx`) — done in Session 2
+- Sticky frosted-glass, 56px tall, **full-bleed** (no `max-w`). Padding follows the global horizontal scale.
+- All inline styles migrated to Tailwind; no hex literals; dropdown card mirrors `<Card>` border + radius.
+- Flair: nav-link underline indicator, dropdown enter animation + caret, magnetic CTA hover (scale + glow).
 
 ### 2. Hero (`components/sections/hero.tsx`)
 - 55/45 grid, light bg `bg-bg-subtle`, min-h-screen.
@@ -193,9 +196,17 @@ The user runs **one section per session.** Each session:
 
 **Subagents:** Not needed. Each section is small, isolated, and sequential. Subagent dispatch would only add coordination cost.
 
-**Session 1 (next):** Build the primitives (`<Section>`, `<SectionHeader>`, `<Card>`, `<Eyebrow>`) + add the `--color-ai` and `--color-border` tokens. No section refactor yet — just the foundation.
+**Session 1 (DONE — 2026-05-01):** Built the four primitives (`<Section>`, `<SectionHeader>`, `<Card>`, `<Eyebrow>`) at `components/ui/` and added `--color-ai`, `--color-border`, `--color-border-subtle` tokens to `app/globals.css`. Build passes; no visual change yet. Two clarifications were folded back into this spec: (a) cards use `rounded-lg` not `rounded-xl`, (b) primitives use arbitrary-value classes (`py-[96px]` etc.) instead of scale shorthand to bypass the `--spacing-N` ↔ default-Tailwind ambiguity.
 
-**Session 2 onward:** Nav → Hero → Trust bar → Problem (new) → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
+**Session 2 (DONE — 2026-05-02):** Refactored `components/layout/nav.tsx` — all inline styles migrated to Tailwind, `#10b981` literals replaced with `text-ai`/`bg-ai`, dropdown restyled to match `<Card>` border/radius, mobile hamburger fixed. Three flair additions per user request: (a) 2px brand-blue underline on nav links via `after:` pseudo-elements, also lit on Services trigger when dropdown is open, (b) dropdown enter animation (`navDropdownIn` keyframe in `globals.css`, 150ms fade+rise) plus an upward caret notch above the card aligned to the trigger, (c) magnetic CTA — wrapper around `<Button>` does `hover:scale-[1.02]` + brand-tinted `box-shadow` glow.
+
+Two structural deviations from the original plan, both driven by user feedback on a wide monitor:
+1. **Nav is full-bleed** (no `max-w`) instead of `max-w-[1280px]`. The 1280 cap pulled the CTA toward the middle of wide monitors. Spec section "Spacing rhythm" updated accordingly.
+2. **Horizontal padding scale widened** from `px-6 md:px-[80px]` to the 4-step `px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]`. Spec section "Spacing rhythm" updated accordingly. **Future section refactors must adopt this scale**, not the original 80px-only value.
+
+**Critical bug fix in `app/globals.css`:** The universal reset `*, *::before, *::after { margin: 0; padding: 0 }` was unlayered, which silently outranks every Tailwind v4 `@layer utilities` rule. Result: `p-*`, `m-*`, `gap-*` — including arbitrary-value forms like `p-[8px]` — were rendering as `0` everywhere. Wrapped the reset in `@layer base` to restore proper precedence. This affected Session 1's primitives too (they were importing fine but their `p-[36px]` etc. were no-ops). All future sessions can now rely on Tailwind utilities working as expected.
+
+**Session 3 onward:** Hero → Trust bar → Problem (new) → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
 
 ---
 
