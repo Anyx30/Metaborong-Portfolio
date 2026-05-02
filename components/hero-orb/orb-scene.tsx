@@ -277,8 +277,8 @@ function useEdgePulse(bundle: EdgeBundle, reducedMotion: boolean) {
 
     const now = clock.elapsedTime * 1000
 
-    // Fire a new pulse every 3-5s
-    if (now - lastFireRef.current > 3000 + Math.random() * 2000) {
+    // Fire a new pulse every 1-2s
+    if (now - lastFireRef.current > 1000 + Math.random() * 1000) {
       lastFireRef.current = now
       const chainLen = 3 + Math.floor(Math.random() * 3) // 3..5
       const chain    = walkChain(bundle.adjacency, bundle.pairs, chainLen)
@@ -321,9 +321,11 @@ function useEdgePulse(bundle: EdgeBundle, reducedMotion: boolean) {
 
 // ── Background drift particles: 120 dots living behind the orb ───────────────
 
-const DRIFT_COUNT = 120
+const DRIFT_COUNT = 180
 const DRIFT_SPEED = 0.02 // units / second
-const DRIFT_BOX   = { x: 2.4, y: 2.4, zMin: -1.0, zMax: 0.2 }
+// Symmetric box around the orb so particles fill the surrounding space evenly
+// from the camera's fixed viewing angle, not clustered behind.
+const DRIFT_BOX   = { x: 3.4, y: 3.4, zMin: -1.6, zMax: 1.0 }
 
 interface DriftBundle {
   points:     THREE.Points
@@ -341,7 +343,7 @@ function buildDrift(): DriftBundle {
 
     const vx = Math.random() - 0.5
     const vy = Math.random() - 0.5
-    const vz = (Math.random() - 0.5) * 0.3
+    const vz = Math.random() - 0.5  // full-range z velocity for true 3D drift
     const len = Math.hypot(vx, vy, vz) || 1
     velocities[i * 3]     = (vx / len) * DRIFT_SPEED
     velocities[i * 3 + 1] = (vy / len) * DRIFT_SPEED
