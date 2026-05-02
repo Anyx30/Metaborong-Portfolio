@@ -319,6 +319,76 @@ function useEdgePulse(bundle: EdgeBundle, reducedMotion: boolean) {
   })
 }
 
+// ── Background drift particles: 120 dots living behind the orb ───────────────
+
+const DRIFT_COUNT = 120
+const DRIFT_SPEED = 0.02 // units / second
+const DRIFT_BOX   = { x: 2.4, y: 2.4, zMin: -1.0, zMax: 0.2 }
+
+interface DriftBundle {
+  points:     THREE.Points
+  positions:  Float32Array
+  velocities: Float32Array
+}
+
+function buildDrift(): DriftBundle {
+  const positions  = new Float32Array(DRIFT_COUNT * 3)
+  const velocities = new Float32Array(DRIFT_COUNT * 3)
+  for (let i = 0; i < DRIFT_COUNT; i++) {
+    positions[i * 3]     = (Math.random() - 0.5) * DRIFT_BOX.x
+    positions[i * 3 + 1] = (Math.random() - 0.5) * DRIFT_BOX.y
+    positions[i * 3 + 2] = DRIFT_BOX.zMin + Math.random() * (DRIFT_BOX.zMax - DRIFT_BOX.zMin)
+
+    const vx = Math.random() - 0.5
+    const vy = Math.random() - 0.5
+    const vz = (Math.random() - 0.5) * 0.3
+    const len = Math.hypot(vx, vy, vz) || 1
+    velocities[i * 3]     = (vx / len) * DRIFT_SPEED
+    velocities[i * 3 + 1] = (vy / len) * DRIFT_SPEED
+    velocities[i * 3 + 2] = (vz / len) * DRIFT_SPEED
+  }
+
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  const mat = new THREE.PointsMaterial({
+    color:           '#3b5dd9',  // matches glyph fill so it reads as a single visual system
+    size:            0.018,
+    transparent:     true,
+    opacity:         0.42,
+    depthWrite:      false,
+    sizeAttenuation: true,
+  })
+  const points = new THREE.Points(geo, mat)
+  points.renderOrder = -1
+  return { points, positions, velocities }
+}
+
+function useDrift(bundle: DriftBundle, reducedMotion: boolean) {
+  useFrame((_, delta) => {
+    if (reducedMotion) return
+    const pos = bundle.positions
+    const vel = bundle.velocities
+    const halfX = DRIFT_BOX.x / 2
+    const halfY = DRIFT_BOX.y / 2
+
+    for (let i = 0; i < DRIFT_COUNT; i++) {
+      pos[i * 3]     += vel[i * 3]     * delta
+      pos[i * 3 + 1] += vel[i * 3 + 1] * delta
+      pos[i * 3 + 2] += vel[i * 3 + 2] * delta
+
+      if (pos[i * 3]     >  halfX) pos[i * 3]     = -halfX
+      if (pos[i * 3]     < -halfX) pos[i * 3]     =  halfX
+      if (pos[i * 3 + 1] >  halfY) pos[i * 3 + 1] = -halfY
+      if (pos[i * 3 + 1] < -halfY) pos[i * 3 + 1] =  halfY
+      if (pos[i * 3 + 2] > DRIFT_BOX.zMax) pos[i * 3 + 2] = DRIFT_BOX.zMin
+      if (pos[i * 3 + 2] < DRIFT_BOX.zMin) pos[i * 3 + 2] = DRIFT_BOX.zMax
+    }
+
+    const attr = bundle.points.geometry.getAttribute('position') as THREE.BufferAttribute
+    attr.needsUpdate = true
+  })
+}
+
 // ── CSS keyframes injected once ───────────────────────────────────────────────
 
 const KF = `
@@ -580,6 +650,17 @@ function EdgePulse({
   return null
 }
 
+function Drift({
+  bundle,
+  reducedMotion,
+}: {
+  bundle: DriftBundle
+  reducedMotion: boolean
+}) {
+  useDrift(bundle, reducedMotion)
+  return <primitive object={bundle.points} />
+}
+
 // ── Main scene ────────────────────────────────────────────────────────────────
 
 export function OrbScene() {
@@ -587,9 +668,10 @@ export function OrbScene() {
 
   const groupRef = useRef<THREE.Group>(null)
 
-  const { glyphSprites, edgeBundle } = useMemo(() => ({
+  const { glyphSprites, edgeBundle, drift } = useMemo(() => ({
     glyphSprites: buildGlyphSprites(),
     edgeBundle:   buildEdgeLines(),
+    drift:        buildDrift(),
   }), [])
 
   useEffect(() => () => {
@@ -600,9 +682,11 @@ export function OrbScene() {
     })
     edgeBundle.lines.geometry.dispose()
     ;(edgeBundle.lines.material as THREE.Material).dispose()
+    drift.points.geometry.dispose()
+    ;(drift.points.material as THREE.Material).dispose()
     _glyphTextureCache.forEach(tex => tex.dispose())
     _glyphTextureCache.clear()
-  }, [glyphSprites, edgeBundle])
+  }, [glyphSprites, edgeBundle, drift])
 
   const [label, setLabel] = useState<LabelState | null>(null)
   const lastUserInteractionRef = useRef(0)
@@ -653,6 +737,7 @@ export function OrbScene() {
     <>
       <OrbController groupRef={groupRef} reducedMotion={reducedMotion} />
       <EdgePulse bundle={edgeBundle} reducedMotion={reducedMotion} />
+      <Drift bundle={drift} reducedMotion={reducedMotion} />
 
       {/* Lights live in world-space so they DON'T rotate with the group.
           This means service nodes get a shifting highlight as they rotate —
