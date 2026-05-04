@@ -98,6 +98,36 @@ Existing `Button`, `Logo`, `Badge` stay.
 
 ---
 
+## Visual temperament (locked 2026-05-04, calibrated against shipped Problem signature)
+
+The master plan locks the **mechanics** (tokens, type scale, spacing rhythm, card system, section bg weave). It also locks a **temperament** for how the page should feel as a whole. The temperament was added 2026-05-04 after Section 4 (Problem) shipped its signature — Problem is the first calibration data point.
+
+**Chrome (top of page) — restraint.**
+Hero, Nav, Trust bar are locked at currently-shipped state. No numbered eyebrows, no terminal/IDE chrome retrofits, no D-trimmed engineering chassis (both directions explored and rejected during the 2026-05-04 brainstorming session — see `memory/visual-direction-and-workflow.md` for the rejection rationale and exploration artifacts). The Hero orb carries the maximalist character; everything in the chrome layer (Nav + Trust bar) defers to it.
+
+**Body sections (4–13) — signature personality + supporting motion, one per section.**
+Each body section earns one signature visual moment that is disciplined, ownable, and proprietary. The signature lives in a typographic, layout, or interaction state at rest; motion stages how that state arrives. Motion is *complementary*, not the headline.
+
+The shipped Problem signature is the calibration example:
+- **At rest:** the bridge phrase `treats the project like a ticket in a queue` carries a typographic stamp — 1px brand-blue hairline underline, baseline-flush, plus weight delta + color delta. A reader scanning the section instantly sees which line is load-bearing.
+- **In motion:** scroll triggers the section's existing global `<Reveal>` (whole-section fade+rise, 400ms). ~600ms later the stamp's weight, color, and underline animate in over 350ms / 350ms / 500ms (split timing — the underline lands last as punctuation). The motion is subtle, not the spectacle; the typographic state is the signature.
+- **Reduced motion:** the final state renders on mount. The signature is preserved without the staging.
+
+Other body sections will land different signatures (Services: pillar visualizer; Work: hover-reveal cards; Comparison: animated table reveal; FAQ: accordion motion; etc. — exact moves decided per-section). They share Problem's posture: at-rest typographic/visual state is the signature, motion supports it, motion respects `prefers-reduced-motion`.
+
+**What this rules out (do not re-propose):**
+- Page-wide motion grammar beyond the existing global `<Reveal>` plus per-section signature layers. No parallax. No big reveals. No "the whole page has rhythm X."
+- Internal stagger on rule/eyebrow/H2/body within a section (rejected during Problem brainstorming as A2). Sections enter as one block; signature animates on top.
+- Diagrammatic/schematic gestures inside a 720px prose column (Problem's lane B/C — explicitly rejected at signature scale below the 880/1120 cap).
+- Chrome retrofits to Hero, Nav, or Trust bar.
+
+**Multi-skill workflow drives implementation (locked).**
+Per `memory/visual-direction-and-workflow.md`: each section runs `superpowers:brainstorming` → `superpowers:writing-plans` → `/design-shotgun` → `/plan-design-review` → implementation (`/frontend-design` + `/frontend-patterns`; `/landing-page-generator` only for genuinely net-new copy + structure, which Problem qualified for and most subsequent sections will not). One section per session.
+
+**Note for `/design-shotgun`:** the AI image generator is the right tool for full-section composition exploration (Services, Work, Founders, Comparison) where layout and visual direction are the question. For sub-pixel typographic decisions (Problem-style finishes), prefer the visual-companion HTML/CSS path — AI raster generation can't reliably distinguish 1px line weights, baseline offsets, or font-weight deltas. Problem ran the visual-companion path and saved the V1 finish to `~/.gstack/projects/Anyx30-Metaborong-Portfolio/designs/section-problem-stamp-20260504/approved.json` with full taste-profile signal.
+
+---
+
 ## Section inventory
 
 Each section's master responsibility, layout, and what it inherits. Per-session work writes a small section-level spec inheriting these.
@@ -117,10 +147,10 @@ Each section's master responsibility, layout, and what it inherits. Per-session 
 - Thin full-bleed band between sections. Marquee logo wall — no text caption. Per-logo silhouette / grayscale / reveal treatment encoded in the client list (`keepSilhouette` / `softMute` flags) so each asset reads correctly on the white background and lights up its real brand color on hover/focus. Marquee animation continues.
 - Wrapped in `<Reveal>` (Session 5.5).
 
-### 4. Problem (`components/sections/problem.tsx`) — done in Session 5
+### 4. Problem (`components/sections/problem.tsx`) — done in Session 5; signature added Session 6 (2026-05-04)
 - Pulls from `docs/content/homepage.md:223-231`, **compressed 2026-05-04** to one pain paragraph (bridge + second pain paragraph dropped — see Session 5 spec for rationale).
 - Layout: prose column (`<Section maxWidth="prose">` = 720px, centered) with **left-aligned** editorial typography (eyebrow, H2, body). 40×2px brand-blue accent rule above the eyebrow.
-- Typographic emphasis on `treats the project like a ticket in a queue` via `<strong className="font-medium text-dark">` (semantic + visual).
+- **Signature moment (Session 6, 2026-05-04):** the bridge phrase `treats the project like a ticket in a queue` is wrapped in a small client component `PhraseStamp` (`components/sections/phrase-stamp.tsx`) that owns its own `IntersectionObserver`. ~600ms after the section enters viewport, the phrase animates: color shifts gray→dark (350ms), weight 400→500 (350ms), brand-blue 1px hairline underline draws L→R (500ms, lands last as typographic punctuation). `box-decoration-clone` ensures the underline survives multi-line wrap on mobile. Non-interactive (no hover, no focus). Respects `prefers-reduced-motion: reduce` (renders final state on mount). See spec `docs/superpowers/specs/2026-05-04-section-problem-signature.md` and plan `docs/superpowers/plans/2026-05-04-section-problem-signature.md`.
 - Section gets `id="problem"` for in-page anchoring + future schema work.
 - Background: `bg-bg` (white).
 - Bridge into Services dropped — Services Session 6 must rewrite its intro to absorb that role.
@@ -217,7 +247,9 @@ Two structural deviations from the original plan, both driven by user feedback o
 
 **Session 5.5 (NEW — added 2026-05-04 from /plan-design-review on Problem):** Build the global enter animation promised in the master plan motion grammar (`opacity 0→1, translateY 8px→0, 400ms cubic-bezier(0.16, 1, 0.3, 1)`, triggered on intersection 50px before viewport). The motion grammar has been spec'd since Session 1 but never implemented; three shipped sections (Hero, Trust bar, Problem) currently render static on scroll. Implementation: small client component `<Reveal>` using `IntersectionObserver` (one observer instance, unobserve on first intersection). Must respect `prefers-reduced-motion` (skip the transform + duration → 0). Apply to Hero copy column, Trust bar marquee container, Problem section content, and bake into `<Section>` primitive so all future sections inherit it for free. Verify in agent-browser at `prefers-reduced-motion: reduce`. Defer to Session 5.5 — do NOT bundle into a content session.
 
-**Session 3 onward:** Hero → Trust bar → Problem (new) → **Session 5.5 global motion** → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
+**Session 6 (DONE — 2026-05-04):** Problem section signature moment shipped. Net-new client component `components/sections/phrase-stamp.tsx` (~58 lines) wraps the bridge phrase. Owns its own `IntersectionObserver`, applies `box-decoration-clone` for multi-line wrap, ships split motion timing (350ms color/weight + 500ms underline draw) as default. Non-interactive. `prefers-reduced-motion` renders final state on mount. First section to land a body-section signature; calibrates the "Visual temperament" section above. Spec at `docs/superpowers/specs/2026-05-04-section-problem-signature.md`, plan at `docs/superpowers/plans/2026-05-04-section-problem-signature.md`. V1 finish (1px brand-blue baseline-flush hairline + weight 400→500 + color gray→dark) chosen from 6 candidates via visual-companion HTML/CSS rendering — AI image generation skipped because sub-pixel typography needs real-CSS fidelity.
+
+**Session 3 onward:** Hero → Trust bar → Problem (new) → **Session 5.5 global motion** → **Session 6 Problem signature** → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
 
 ---
 
