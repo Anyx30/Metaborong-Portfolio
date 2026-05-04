@@ -3,6 +3,7 @@ import { Nav } from '@/components/layout/nav'
 import { Footer } from '@/components/layout/footer'
 import { HeroSection } from '@/components/sections/hero'
 import { TrustBar } from '@/components/sections/trust-bar'
+import { ProblemSection } from '@/components/sections/problem'
 import { ServicesSection } from '@/components/sections/services'
 import { WhyUsSection } from '@/components/sections/why-us'
 import { WorkPreviewSection } from '@/components/sections/work-preview'
@@ -43,6 +44,7 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <TrustBar />
+        <ProblemSection />
         <ServicesSection />
         <WhyUsSection />
         <WorkPreviewSection />

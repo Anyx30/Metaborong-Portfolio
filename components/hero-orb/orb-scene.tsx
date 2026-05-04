@@ -1,24 +1,41 @@
 'use client'
 
-import { useRef, useMemo, useEffect, useState, useCallback } from 'react'
+import { useRef, useMemo, useEffect, useState, useCallback, type KeyboardEvent } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const N_TOTAL = 214
+const N_TOTAL = 394   // 380 filler glyphs + 14 service nodes
 const N_ORANGE = 14
 const SPHERE_R = 1.25
-const BLUE_R = 0.019
 const NODE_R = 0.030
 const AUTO_SPEED = 0.058  // rad/s ≈ OrbitControls 0.55
+
+// Glyph alphabet for filler nodes — weighted toward soft characters,
+// denser ones used as accents.
+const GLYPHS = ['·', '·', '·', '·', '+', '+', '*', '◦', '╳', '█'] as const
 
 const CAT_COLOR = {
   WEB3: '#F6851B',
   AI: '#4dff9a',
   PRODUCT: '#204AF8',
 } as const
+
+// ── Reduced motion detection ──────────────────────────────────────────────────
+
+function useReducedMotion(): boolean {
+  const [reduce, setReduce] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduce(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setReduce(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduce
+}
 
 // ── Services ──────────────────────────────────────────────────────────────────
 
@@ -74,6 +91,20 @@ function buildEdges(pts: THREE.Vector3[]): number[] {
   return pairs
 }
 
+// Adjacency: vertexIndex → list of edge indices (positions in the flat pairs array)
+function buildAdjacency(pairs: number[]): Map<number, number[]> {
+  const adj = new Map<number, number[]>()
+  for (let e = 0; e < pairs.length; e += 2) {
+    const a = pairs[e]
+    const b = pairs[e + 1]
+    if (!adj.has(a)) adj.set(a, [])
+    if (!adj.has(b)) adj.set(b, [])
+    adj.get(a)!.push(e / 2)
+    adj.get(b)!.push(e / 2)
+  }
+  return adj
+}
+
 // Cheap deterministic hash → 0..1 — gives consistent size variation
 // without re-randomising on every module load.
 function hashF(i: number): number {
@@ -90,25 +121,64 @@ const _orangeIdxs = [..._orangeIdxSet]
 const _worldPts = _unitPts.map(p => p.clone().multiplyScalar(SPHERE_R))
 const _orangePts = _orangeIdxs.map(i => _worldPts[i])
 
-// ── Blue nodes: InstancedMesh with deterministic size variation ────────────────
-// Skills ref (threejs-geometry): vary dummy.scale per instance before setMatrixAt.
+// ── Filler ASCII glyphs: per-node Sprite with cached canvas textures ──────────
+// Skills ref (threejs-geometry, threejs-fundamentals): Sprite always faces
+// camera; CanvasTexture lets us draw any glyph and reuse via a Map cache.
 
-function buildBlueMesh(): THREE.InstancedMesh {
-  const geo = new THREE.SphereGeometry(BLUE_R, 9, 7)
-  const mat = new THREE.MeshBasicMaterial({ color: '#204AF8' })
-  const count = N_TOTAL - N_ORANGE
-  const mesh = new THREE.InstancedMesh(geo, mat, count)
-  const dummy = new THREE.Object3D()
-  let slot = 0
+const _glyphTextureCache = new Map<string, THREE.Texture>()
+
+function getGlyphTexture(glyph: string): THREE.Texture {
+  const cached = _glyphTextureCache.get(glyph)
+  if (cached) return cached
+
+  const size = 64
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, size, size)
+  // Spec calibrated #c8d8ff for a darker bg; on bg-bg-subtle #f5f7ff that's
+  // invisible. Use brand-blue tone to match the prior dot fill on this surface.
+  ctx.fillStyle = '#3b5dd9'
+  ctx.font = '700 44px "JetBrains Mono", monospace'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(glyph, size / 2, size / 2 + 2)
+
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.needsUpdate = true
+  _glyphTextureCache.set(glyph, tex)
+  return tex
+}
+
+function buildGlyphSprites(): THREE.Group {
+  const group = new THREE.Group()
+  const sizeFor = (g: string): number => {
+    if (g === '·') return 0.040
+    if (g === '+') return 0.052
+    if (g === '*') return 0.058
+    if (g === '◦') return 0.064
+    if (g === '╳') return 0.066
+    return 0.072 // █
+  }
+
   _unitPts.forEach((_, i) => {
     if (_orangeIdxSet.has(i)) return
-    dummy.position.copy(_worldPts[i])
-    dummy.scale.setScalar(0.65 + hashF(i) * 0.70)   // 0.65–1.35× size variation
-    dummy.updateMatrix()
-    mesh.setMatrixAt(slot++, dummy.matrix)
+    const glyph = GLYPHS[Math.floor(hashF(i) * GLYPHS.length)]
+    const mat = new THREE.SpriteMaterial({
+      map: getGlyphTexture(glyph),
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    })
+    const sprite = new THREE.Sprite(mat)
+    sprite.position.copy(_worldPts[i])
+    const s = sizeFor(glyph) * (0.85 + hashF(i + 1) * 0.30)
+    sprite.scale.set(s, s, s)
+    group.add(sprite)
   })
-  mesh.instanceMatrix.needsUpdate = true
-  return mesh
+  return group
 }
 
 // ── Edges: depth-based vertex colours for visual depth cue ───────────────────
@@ -117,32 +187,252 @@ function buildBlueMesh(): THREE.InstancedMesh {
 // Since the group rotates we use the INITIAL z (precomputed once) as a proxy
 // for the average front/back depth — avoids per-frame colour buffer updates.
 
-function buildEdgeLines(): THREE.LineSegments {
+interface EdgeBundle {
+  lines: THREE.LineSegments  // baseline dim mesh — stays calm
+  pulseLines: THREE.LineSegments  // overlay mesh — only active pulses
+  pulsePositions: Float32Array        // shared buffer for pulse positions
+  pairs: number[]
+  adjacency: Map<number, number[]>
+}
+
+function buildEdgeLines(): EdgeBundle {
   const pairs = buildEdges(_unitPts)
   const n = pairs.length
   const pos = new Float32Array(n * 3)
-  const col = new Float32Array(n * 3)  // per-vertex RGB
+  const col = new Float32Array(n * 3)
 
   const blue = new THREE.Color('#204AF8')
-  const dim = new THREE.Color('#99aeff')  // muted periwinkle for back vertices
+  const dim = new THREE.Color('#99aeff')
 
   for (let i = 0; i < n; i++) {
     const wp = _worldPts[pairs[i]]
     wp.toArray(pos, i * 3)
 
-    // z in [-SPHERE_R, SPHERE_R] → 0..1
     const t = (wp.z + SPHERE_R) / (2 * SPHERE_R)
-    const c = blue.clone().lerp(dim, 1 - t)  // front = blue, back = dim
+    const c = blue.clone().lerp(dim, 1 - t)
     c.toArray(col, i * 3)
   }
 
+  // Baseline mesh — dim, the resting network
   const geo = new THREE.BufferGeometry()
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3))
-  return new THREE.LineSegments(
+  const lines = new THREE.LineSegments(
     geo,
-    new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.22 })
+    new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.32 })
   )
+
+  // Pulse overlay mesh — sized for up to 24 active edge segments at once.
+  // Per-vertex colors so concurrent pulses can render in different brand
+  // colors (alternates orange/green, matching Web3/AI pillar palette).
+  const PULSE_CAPACITY = 24
+  const pulsePositions = new Float32Array(PULSE_CAPACITY * 2 * 3) // 2 vertices per edge
+  const pulseColors = new Float32Array(PULSE_CAPACITY * 2 * 3)
+  const pulseGeo = new THREE.BufferGeometry()
+  pulseGeo.setAttribute('position', new THREE.BufferAttribute(pulsePositions, 3))
+  pulseGeo.setAttribute('color', new THREE.BufferAttribute(pulseColors, 3))
+  pulseGeo.setDrawRange(0, 0)
+  const pulseLines = new THREE.LineSegments(
+    pulseGeo,
+    new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 1.0,
+      depthWrite: false,
+    })
+  )
+
+  return {
+    lines,
+    pulseLines,
+    pulsePositions,
+    pairs,
+    adjacency: buildAdjacency(pairs),
+  }
+}
+
+// ── Edge pulse: walks adjacency graph, animates a chain over 800ms ───────────
+
+interface ActivePulse {
+  edgeIndices: number[]
+  startTime: number
+  color: [number, number, number]  // RGB 0..1, picked at fire time
+}
+
+// Pulse palette — alternates between Web3 orange and AI green for variety.
+// Brand-blue (Product) is omitted because it would blend into the dim
+// blue baseline mesh.
+const PULSE_COLORS: [number, number, number][] = [
+  [0xF6 / 255, 0x85 / 255, 0x1B / 255],  // orange — Web3
+  [0x4D / 255, 0xFF / 255, 0x9A / 255],  // green — AI
+]
+
+function walkChain(
+  adjacency: Map<number, number[]>,
+  pairs: number[],
+  length: number,
+): number[] {
+  const vertices = [...adjacency.keys()]
+  if (vertices.length === 0) return []
+  const startVertex = vertices[Math.floor(Math.random() * vertices.length)]
+  const visited = new Set<number>()
+  const chain: number[] = []
+  let current = startVertex
+  for (let step = 0; step < length; step++) {
+    const neighbors = (adjacency.get(current) || []).filter(e => !visited.has(e))
+    if (neighbors.length === 0) break
+    const edgeIdx = neighbors[Math.floor(Math.random() * neighbors.length)]
+    visited.add(edgeIdx)
+    chain.push(edgeIdx)
+    const a = pairs[edgeIdx * 2]
+    const b = pairs[edgeIdx * 2 + 1]
+    current = current === a ? b : a
+  }
+  return chain
+}
+
+function useEdgePulse(bundle: EdgeBundle, reducedMotion: boolean) {
+  const lastFireRef = useRef(0)
+  const colorIndexRef = useRef(0)  // alternates 0/1 for orange/green
+  const activeRef = useRef<ActivePulse[]>([])
+
+  useFrame(({ clock }) => {
+    const pulseGeo = bundle.pulseLines.geometry
+    const pulseMat = bundle.pulseLines.material as THREE.LineBasicMaterial
+    const posAttr = pulseGeo.getAttribute('position') as THREE.BufferAttribute
+    const colAttr = pulseGeo.getAttribute('color') as THREE.BufferAttribute
+    const posArr = posAttr.array as Float32Array
+    const colArr = colAttr.array as Float32Array
+
+    if (reducedMotion) {
+      if (activeRef.current.length > 0) {
+        pulseGeo.setDrawRange(0, 0)
+        activeRef.current = []
+      }
+      return
+    }
+
+    const now = clock.elapsedTime * 1000
+
+    // Fire a new pulse every 1-2s, alternating color
+    if (now - lastFireRef.current > 1000 + Math.random() * 1000) {
+      lastFireRef.current = now
+      const chainLen = 3 + Math.floor(Math.random() * 3) // 3..5
+      const chain = walkChain(bundle.adjacency, bundle.pairs, chainLen)
+      if (chain.length > 0) {
+        const color = PULSE_COLORS[colorIndexRef.current]
+        colorIndexRef.current = (colorIndexRef.current + 1) % PULSE_COLORS.length
+        activeRef.current.push({ edgeIndices: chain, startTime: now, color })
+      }
+    }
+
+    let writeIdx = 0
+    let peakAlpha = 0
+    const baselinePos = bundle.lines.geometry.getAttribute('position').array as Float32Array
+
+    activeRef.current = activeRef.current.filter(p => {
+      const elapsed = now - p.startTime
+      if (elapsed > 800) return false
+      const alpha = elapsed < 200
+        ? (elapsed / 200) * 1.0
+        : (1 - (elapsed - 200) / 600) * 1.0
+      if (alpha > peakAlpha) peakAlpha = alpha
+
+      for (const edgeIdx of p.edgeIndices) {
+        if (writeIdx >= 24) break // capacity guard
+        const srcOffset = edgeIdx * 6
+        const dstOffset = writeIdx * 6
+        for (let i = 0; i < 6; i++) {
+          posArr[dstOffset + i] = baselinePos[srcOffset + i]
+        }
+        // Write this pulse's color to both vertices of the segment
+        for (let v = 0; v < 2; v++) {
+          colArr[dstOffset + v * 3] = p.color[0]
+          colArr[dstOffset + v * 3 + 1] = p.color[1]
+          colArr[dstOffset + v * 3 + 2] = p.color[2]
+        }
+        writeIdx++
+      }
+      return true
+    })
+
+    pulseGeo.setDrawRange(0, writeIdx * 2)
+    posAttr.needsUpdate = true
+    colAttr.needsUpdate = true
+    pulseMat.opacity = peakAlpha
+  })
+}
+
+// ── Background drift particles: 120 dots living behind the orb ───────────────
+
+const DRIFT_COUNT = 180
+const DRIFT_SPEED = 0.02 // units / second
+// Symmetric box around the orb so particles fill the surrounding space evenly
+// from the camera's fixed viewing angle, not clustered behind.
+const DRIFT_BOX = { x: 3.4, y: 3.4, zMin: -1.6, zMax: 1.0 }
+
+interface DriftBundle {
+  points: THREE.Points
+  positions: Float32Array
+  velocities: Float32Array
+}
+
+function buildDrift(): DriftBundle {
+  const positions = new Float32Array(DRIFT_COUNT * 3)
+  const velocities = new Float32Array(DRIFT_COUNT * 3)
+  for (let i = 0; i < DRIFT_COUNT; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * DRIFT_BOX.x
+    positions[i * 3 + 1] = (Math.random() - 0.5) * DRIFT_BOX.y
+    positions[i * 3 + 2] = DRIFT_BOX.zMin + Math.random() * (DRIFT_BOX.zMax - DRIFT_BOX.zMin)
+
+    const vx = Math.random() - 0.5
+    const vy = Math.random() - 0.5
+    const vz = Math.random() - 0.5  // full-range z velocity for true 3D drift
+    const len = Math.hypot(vx, vy, vz) || 1
+    velocities[i * 3] = (vx / len) * DRIFT_SPEED
+    velocities[i * 3 + 1] = (vy / len) * DRIFT_SPEED
+    velocities[i * 3 + 2] = (vz / len) * DRIFT_SPEED
+  }
+
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  const mat = new THREE.PointsMaterial({
+    color: '#3b5dd9',  // matches glyph fill so it reads as a single visual system
+    size: 0.018,
+    transparent: true,
+    opacity: 0.42,
+    depthWrite: false,
+    sizeAttenuation: true,
+  })
+  const points = new THREE.Points(geo, mat)
+  points.renderOrder = -1
+  return { points, positions, velocities }
+}
+
+function useDrift(bundle: DriftBundle, reducedMotion: boolean) {
+  useFrame((_, delta) => {
+    if (reducedMotion) return
+    const pos = bundle.positions
+    const vel = bundle.velocities
+    const halfX = DRIFT_BOX.x / 2
+    const halfY = DRIFT_BOX.y / 2
+
+    for (let i = 0; i < DRIFT_COUNT; i++) {
+      pos[i * 3] += vel[i * 3] * delta
+      pos[i * 3 + 1] += vel[i * 3 + 1] * delta
+      pos[i * 3 + 2] += vel[i * 3 + 2] * delta
+
+      if (pos[i * 3] > halfX) pos[i * 3] = -halfX
+      if (pos[i * 3] < -halfX) pos[i * 3] = halfX
+      if (pos[i * 3 + 1] > halfY) pos[i * 3 + 1] = -halfY
+      if (pos[i * 3 + 1] < -halfY) pos[i * 3 + 1] = halfY
+      if (pos[i * 3 + 2] > DRIFT_BOX.zMax) pos[i * 3 + 2] = DRIFT_BOX.zMin
+      if (pos[i * 3 + 2] < DRIFT_BOX.zMin) pos[i * 3 + 2] = DRIFT_BOX.zMax
+    }
+
+    const attr = bundle.points.geometry.getAttribute('position') as THREE.BufferAttribute
+    attr.needsUpdate = true
+  })
 }
 
 // ── CSS keyframes injected once ───────────────────────────────────────────────
@@ -171,7 +461,7 @@ function useKeyframes() {
 
 // ── Custom orbit controller ───────────────────────────────────────────────────
 
-function useOrbit(groupRef: React.RefObject<THREE.Group | null>) {
+function useOrbit(groupRef: React.RefObject<THREE.Group | null>, reducedMotion: boolean) {
   const { gl } = useThree()
   const velY = useRef(0)
   const velX = useRef(0)
@@ -207,7 +497,7 @@ function useOrbit(groupRef: React.RefObject<THREE.Group | null>) {
   useFrame((_, delta) => {
     if (!groupRef.current) return
     if (!d.current.active) {
-      const target = AUTO_SPEED * delta
+      const target = reducedMotion ? 0 : AUTO_SPEED * delta
       velY.current = velY.current * 0.90 + target * 0.10
       velX.current *= 0.90
     }
@@ -330,6 +620,15 @@ function ServiceNode({
     document.body.style.cursor = 'default'
   }, [])
 
+  const serviceName = SERVICES[serviceIdx].name
+
+  const onKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onHover(pos, serviceIdx)
+    }
+  }
+
   return (
     <group position={pos}>
       {/* Large halo — extends the hover hitbox and adds soft glow */}
@@ -350,15 +649,62 @@ function ServiceNode({
           emissiveIntensity={0.32}
         />
       </mesh>
+      {/* Always-on-top hit target — sits in screen space via <Html>, so it
+          works for keyboard (Tab, Enter/Space) AND pointer hover when the
+          underlying 3D mesh rotates behind the sphere and gets occluded by
+          glyphs. Without this, hover only worked on front-facing nodes. */}
+      <Html center zIndexRange={[20, 20]}>
+        <button
+          type="button"
+          aria-label={`View ${serviceName} service`}
+          onKeyDown={onKey}
+          onFocus={() => onHover(pos, serviceIdx)}
+          onMouseEnter={() => {
+            document.body.style.cursor = 'pointer'
+            onHover(pos, serviceIdx)
+          }}
+          onMouseLeave={() => { document.body.style.cursor = 'default' }}
+          className="w-11 h-11 lg:w-6 lg:h-6 rounded-full bg-transparent border-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2"
+          style={{ outlineColor: color }}
+        />
+      </Html>
     </group>
   )
 }
 
 // ── Controller ────────────────────────────────────────────────────────────────
 
-function OrbController({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> }) {
-  useOrbit(groupRef)
+function OrbController({
+  groupRef,
+  reducedMotion,
+}: {
+  groupRef: React.RefObject<THREE.Group | null>
+  reducedMotion: boolean
+}) {
+  useOrbit(groupRef, reducedMotion)
   return null
+}
+
+function EdgePulse({
+  bundle,
+  reducedMotion,
+}: {
+  bundle: EdgeBundle
+  reducedMotion: boolean
+}) {
+  useEdgePulse(bundle, reducedMotion)
+  return null
+}
+
+function Drift({
+  bundle,
+  reducedMotion,
+}: {
+  bundle: DriftBundle
+  reducedMotion: boolean
+}) {
+  useDrift(bundle, reducedMotion)
+  return <primitive object={bundle.points} />
 }
 
 // ── Main scene ────────────────────────────────────────────────────────────────
@@ -368,33 +714,78 @@ export function OrbScene() {
 
   const groupRef = useRef<THREE.Group>(null)
 
-  const { blueMesh, edgeLines } = useMemo(() => ({
-    blueMesh: buildBlueMesh(),
-    edgeLines: buildEdgeLines(),
+  const { glyphSprites, edgeBundle, drift } = useMemo(() => ({
+    glyphSprites: buildGlyphSprites(),
+    edgeBundle: buildEdgeLines(),
+    drift: buildDrift(),
   }), [])
 
   useEffect(() => () => {
-    blueMesh.geometry.dispose()
-      ; (blueMesh.material as THREE.Material).dispose()
-    blueMesh.dispose()
-    edgeLines.geometry.dispose()
-      ; (edgeLines.material as THREE.Material).dispose()
-  }, [blueMesh, edgeLines])
+    glyphSprites.traverse(obj => {
+      if (obj instanceof THREE.Sprite) {
+        ; (obj.material as THREE.SpriteMaterial).dispose()
+      }
+    })
+    edgeBundle.lines.geometry.dispose()
+      ; (edgeBundle.lines.material as THREE.Material).dispose()
+    edgeBundle.pulseLines.geometry.dispose()
+      ; (edgeBundle.pulseLines.material as THREE.Material).dispose()
+    drift.points.geometry.dispose()
+      ; (drift.points.material as THREE.Material).dispose()
+    _glyphTextureCache.forEach(tex => tex.dispose())
+    _glyphTextureCache.clear()
+  }, [glyphSprites, edgeBundle, drift])
 
   const [label, setLabel] = useState<LabelState | null>(null)
+  const lastUserInteractionRef = useRef(0)
 
   const handleHover = useCallback((localPos: THREE.Vector3, idx: number) => {
     const worldX = groupRef.current
       ? localPos.clone().applyMatrix4(groupRef.current.matrixWorld).x
       : localPos.x
+    lastUserInteractionRef.current = Date.now()
     setLabel({ id: Date.now(), localPos, svc: SERVICES[idx], openLeft: worldX > 0 })
   }, [])
 
   const clearLabel = useCallback(() => setLabel(null), [])
 
+  const reducedMotion = useReducedMotion()
+
+  // ── Layer 4 — random label cycle ───────────────────────────────────────────
+  // Every ~6s (5-7s jitter), pick a random service node and surface its label,
+  // making the orb feel alive when no one's interacting. Suppressed if the
+  // user just interacted (within 4s) or under prefers-reduced-motion.
+  useEffect(() => {
+    if (reducedMotion) return
+    let timeoutId: ReturnType<typeof setTimeout>
+
+    const fire = () => {
+      const sinceUser = Date.now() - lastUserInteractionRef.current
+      if (sinceUser > 4000) {
+        const idx = Math.floor(Math.random() * N_ORANGE)
+        const localPos = _orangePts[idx]
+        const worldX = groupRef.current
+          ? localPos.clone().applyMatrix4(groupRef.current.matrixWorld).x
+          : localPos.x
+        setLabel({
+          id: Date.now(),
+          localPos,
+          svc: SERVICES[idx],
+          openLeft: worldX > 0,
+        })
+      }
+      timeoutId = setTimeout(fire, 5000 + Math.random() * 2000)
+    }
+
+    timeoutId = setTimeout(fire, 3000) // wait 3s after mount before first auto-trigger
+    return () => clearTimeout(timeoutId)
+  }, [reducedMotion])
+
   return (
     <>
-      <OrbController groupRef={groupRef} />
+      <OrbController groupRef={groupRef} reducedMotion={reducedMotion} />
+      <EdgePulse bundle={edgeBundle} reducedMotion={reducedMotion} />
+      <Drift bundle={drift} reducedMotion={reducedMotion} />
 
       {/* Lights live in world-space so they DON'T rotate with the group.
           This means service nodes get a shifting highlight as they rotate —
@@ -403,8 +794,9 @@ export function OrbScene() {
       <directionalLight position={[3, 4, 3]} intensity={1.0} />
 
       <group ref={groupRef}>
-        <primitive object={edgeLines} />
-        <primitive object={blueMesh} />
+        <primitive object={edgeBundle.lines} />
+        <primitive object={edgeBundle.pulseLines} />
+        <primitive object={glyphSprites} />
 
         {_orangeIdxs.map((_, si) => (
           <ServiceNode
@@ -415,6 +807,18 @@ export function OrbScene() {
             onHover={handleHover}
           />
         ))}
+
+        <Html center zIndexRange={[10, 10]}>
+          <div style={{ pointerEvents: 'none', userSelect: 'none' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="78" height="45"
+              viewBox="0 0 52.082 30.457" fill="none" aria-hidden="true">
+              <path
+                d="M 10.421 5.234 C 10.421 2.343 12.754 0 15.631 0 C 18.509 0 20.842 2.343 20.842 5.234 L 20.842 10.326 C 20.842 10.326 21.153 12.766 22.164 13.809 C 23.206 14.886 25.723 15.229 25.723 15.229 L 26.382 15.229 C 26.382 15.229 28.898 14.886 29.941 13.809 C 30.799 12.924 31.153 11.031 31.24 10.48 L 31.24 5.234 C 31.24 2.343 33.573 0 36.451 0 C 39.328 0 41.661 2.343 41.661 5.234 L 41.661 10.326 C 41.661 10.326 41.972 12.766 42.983 13.809 C 44.026 14.886 46.542 15.229 46.542 15.229 L 47.852 15.229 C 50.188 15.229 52.082 17.131 52.082 19.477 L 52.082 30.457 L 41.661 30.457 L 41.661 15.229 L 36.121 15.229 C 36.121 15.229 33.605 15.571 32.562 16.648 C 31.704 17.534 31.35 19.426 31.263 19.977 L 31.263 25.224 C 31.263 28.114 28.93 30.457 26.052 30.457 C 23.175 30.457 20.842 28.114 20.842 25.224 L 20.842 20.131 C 20.842 20.131 20.501 17.604 19.429 16.556 C 18.39 15.541 15.961 15.229 15.961 15.229 L 10.421 15.229 L 10.421 30.457 L 0 30.457 L 0 19.477 C 0 17.131 1.894 15.229 4.23 15.229 L 5.54 15.229 C 5.54 15.229 8.056 14.886 9.099 13.809 C 10.11 12.766 10.421 10.326 10.421 10.326 L 10.421 5.234 Z"
+                fill="#204AF8" fillRule="evenodd"
+              />
+            </svg>
+          </div>
+        </Html>
 
         {label && <FloatingLabel key={label.id} state={label} onExpire={clearLabel} />}
       </group>

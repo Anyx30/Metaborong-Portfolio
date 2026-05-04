@@ -65,10 +65,10 @@ export function Logo({
       </div>
       {showWordmark && (
         <span
-          className={`${textSizes[size]} font-medium`}
-          style={{ color: wordmarkColor, letterSpacing: '-0.02em', fontFamily: 'var(--font-brand)' }}
+          className={`${textSizes[size]} font-semibold tracking-[-0.03em] leading-none`}
+          style={{ color: wordmarkColor, fontFamily: 'var(--font-brand)' }}
         >
-          metaborong
+          Metaborong
         </span>
       )}
     </a>

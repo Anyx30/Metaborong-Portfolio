@@ -48,9 +48,12 @@ All major decisions, milestones, and changes to this project.
 - **InstancedMesh + LineSegments** — entire orb is 2 WebGL draw calls regardless of node count; 60fps on any modern GPU
 - **Geometry built at module load time** — Fibonacci sphere, edge graph, and mesh objects computed once on first import; no per-render allocation
 
-### Superseded / dead code (kept, not deleted)
-- `components/genesis-cube/` — original ASCII canvas renderer, no longer used by any page
-- `components/sections/isometric-lattice.tsx` — SVG lattice attempt, no longer imported
+### Removed (cleanup 2026-04-30)
+- `components/genesis-cube/` — deleted; original ASCII canvas renderer, never used in production
+- `components/sections/isometric-lattice.tsx` — deleted; SVG lattice attempt, never used
+- `docs/superpowers/specs/2026-04-30-orb-robot-icon-design.md` — deleted; robot icon brainstorm, abandoned in favour of keeping M-mark
+- `screenshots/` — deleted; dev-session captures, not production assets (now gitignored)
+- `.superpowers/brainstorm/` — deleted; brainstorm session artifacts (now gitignored)
 
 ---
 
@@ -150,4 +153,4 @@ All major decisions, milestones, and changes to this project.
 | Mobile responsiveness pass | Pending | Breakpoints: 320/768/1024/1440; hero built desktop-first |
 | Core Web Vitals audit | Pending | LCP < 2.5s, INP < 200ms, CLS < 0.1 |
 | Founders LinkedIn URLs | Pending | Placeholders in `components/sections/founders.tsx` |
-| Clean up dead code | Pending | `components/genesis-cube/` and `isometric-lattice.tsx` unused |
+| Clean up dead code | ✅ Done | Deleted `genesis-cube/`, `isometric-lattice.tsx`, screenshots, brainstorm artifacts |

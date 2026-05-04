@@ -31,6 +31,11 @@
   --color-bg-subtle:    #f5f7ff;
   --color-canvas:       #0a0a0a;
 
+  /* Third pillar + borders */
+  --color-ai:             #10b981;
+  --color-border:         #e5e7eb;
+  --color-border-subtle:  #f3f4f6;
+
   /* Typography */
   --font-brand: 'Satoshi', 'Space Grotesk', sans-serif;
   --font-mono:  'JetBrains Mono', 'Courier New', monospace;
@@ -52,26 +57,59 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 20px;
+
+  /* Animations */
+  --animate-marquee: trustBarScroll 24s linear infinite;
+
+  @keyframes trustBarScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
 }
 
 /* ── Base styles ─────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-family: var(--font-brand);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-dark);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
 }
 
-html {
-  font-family: var(--font-brand);
-  -webkit-font-smoothing: antialiased;
-  scroll-behavior: smooth;
+/* ── Nav dropdown enter ──────────────────────────────────────────────────── */
+@keyframes navDropdownIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes navDropdownRowIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.nav-dd-row {
+  opacity: 0;
+  animation: navDropdownRowIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.nav-dd-card {
+  animation: navDropdownIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-body {
-  background-color: var(--color-bg);
-  color: var(--color-dark);
-  line-height: 1.5;
-  letter-spacing: -0.01em;
+/* ── Hero scroll affordance ──────────────────────────────────────────── */
+@keyframes heroScrollBounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, 8px); }
 }
 
 /* ── Hero orb HUD label ──────────────────────────────────────────────────── */
