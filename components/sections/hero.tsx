@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
+import { useGeo } from '@/lib/use-geo'
 import { Reveal } from '@/components/ui/reveal'
 
 // Three.js: client-only, lazy-loaded after paint — no LCP impact
@@ -13,14 +14,63 @@ const HeroOrb = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const STATIC_MICROCOPY = 'No pitch decks. No retainers. Direct from founders.'
+
+/** Two-letter ISO country code → flag emoji via Regional Indicator Symbols.
+ *  Returns '' for invalid input. */
+function countryFlag(code: string): string {
+  if (!code || code.length !== 2) return ''
+  const upper = code.toUpperCase()
+  const A = 0x1F1E6
+  const offset = 'A'.charCodeAt(0)
+  const cp1 = A + upper.charCodeAt(0) - offset
+  const cp2 = A + upper.charCodeAt(1) - offset
+  if (cp1 < A || cp1 > A + 25 || cp2 < A || cp2 > A + 25) return ''
+  return String.fromCodePoint(cp1, cp2)
+}
+
 export function HeroSection() {
   const [scrolled, setScrolled] = useState(false)
+  // SSR-stable default; client effect swaps in a timezone-aware variant after
+  // mount so search engines and the first paint show the brand-on-message line.
+  const [microCopy, setMicroCopy] = useState(STATIC_MICROCOPY)
+  const geo = useGeo()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 100)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Re-run when geo changes (post-consent) so the line picks up the country
+  // immediately on Accept without waiting for the next minute tick.
+  useEffect(() => {
+    const update = () => {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        // IANA strings can be "Etc/GMT" / "UTC" / region-only; prefer the trailing
+        // segment when there's a slash, otherwise fall back to the full id.
+        const tzCity = tz.includes('/')
+          ? tz.split('/').pop()!.replace(/_/g, ' ')
+          : tz
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        // When geo is present (consent accepted + Vercel edge headers available),
+        // the line names the visitor's country and uses their city if known.
+        const city = geo?.city || tzCity
+        const country = geo?.country
+        setMicroCopy(
+          country
+            ? `Shipping Web3 to ${country} from ${city}, currently ${time}.`
+            : `Shipping from ${city}, currently ${time}.`,
+        )
+      } catch {
+        // Older browser without Intl.DateTimeFormat — keep current copy.
+      }
+    }
+    update()
+    const id = setInterval(update, 60_000)
+    return () => clearInterval(id)
+  }, [geo])
 
   return (
     <section className="relative min-h-screen bg-bg-subtle">
@@ -30,7 +80,10 @@ export function HeroSection() {
           {/* Eyebrow chip */}
           <div className="inline-flex items-center gap-2 mb-7 bg-bg border border-border rounded-sm px-3 py-[5px] w-fit">
             <span className="w-2 h-2 bg-brand rounded-sm shrink-0 inline-block" />
-            <Eyebrow>Web3 Development · AI Agents · Product Studio</Eyebrow>
+            <Eyebrow>
+              Web3 Development · AI Agents · Product Studio
+              {geo?.country && geo?.city && ` · ${countryFlag(geo.country)} ${geo.city}`}
+            </Eyebrow>
           </div>
 
           {/* H1 */}
@@ -62,9 +115,9 @@ export function HeroSection() {
             <Button href="/work/" variant="ghost" size="lg">See Our Work</Button>
           </div>
 
-          {/* Micro-copy */}
+          {/* Micro-copy — context-aware after hydration (timezone + local time) */}
           <p className="text-xs text-gray tracking-[-0.01em]">
-            No pitch decks. No retainers. Direct from founders.
+            {microCopy}
           </p>
         </Reveal>
 

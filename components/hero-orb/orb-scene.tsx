@@ -4,6 +4,9 @@ import { useRef, useMemo, useEffect, useState, useCallback, type KeyboardEvent }
 import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
+import { useTimeOfDay } from '@/lib/use-time-of-day'
+import { useDeviceTier, type DeviceTier } from '@/lib/use-device-tier'
+import { useGeo, regionFor, type Region } from '@/lib/use-geo'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -201,8 +204,11 @@ function buildEdgeLines(): EdgeBundle {
   const pos = new Float32Array(n * 3)
   const col = new Float32Array(n * 3)
 
+  // Brand-locked: do NOT tint the front-facing blue. Time-of-day shift only
+  // applies to the dim baseline so the visual identity stays consistent.
   const blue = new THREE.Color('#204AF8')
-  const dim = new THREE.Color('#99aeff')
+  const dim  = new THREE.Color('#99aeff')
+  if (hueShiftDeg !== 0) dim.offsetHSL(hueShiftDeg / 360, 0, 0)
 
   for (let i = 0; i < n; i++) {
     const wp = _worldPts[pairs[i]]
@@ -363,13 +369,34 @@ function useEdgePulse(bundle: EdgeBundle, reducedMotion: boolean) {
   })
 }
 
-// ── Background drift particles: 120 dots living behind the orb ───────────────
+// ── Background drift particles ───────────────────────────────────────────────
+// Count is hardware-tier-aware (set by useDeviceTier in OrbScene); buildDrift
+// receives it as a parameter rather than reading a module constant.
 
-const DRIFT_COUNT = 180
 const DRIFT_SPEED = 0.02 // units / second
 // Symmetric box around the orb so particles fill the surrounding space evenly
 // from the camera's fixed viewing angle, not clustered behind.
 const DRIFT_BOX = { x: 3.4, y: 3.4, zMin: -1.6, zMax: 1.0 }
+
+const DRIFT_COUNT_BY_TIER: Record<DeviceTier, number> = {
+  high: 180,
+  mid:  90,
+  low:  45,
+}
+
+// Service indices to feature more often in the auto-cycle, bucketed by region.
+// Indices match the SERVICES array order. When the visitor has consented to
+// geo and the country resolves to a known region, the auto-cycle picks 60% of
+// the time from this list; the remaining 40% stays uniform random for variety.
+// 'other' (and the no-consent default) means pure uniform.
+const FEATURED_BY_REGION: Record<Region, number[]> = {
+  americas: [0, 7, 8],            // DeFi Protocol, Agentic AI, Generative AI
+  emea:     [1, 6, 9],            // Smart Contract Security, DAO & Governance, AI Workflow
+  apac:     [4, 5, 10, 11],       // Token Launchpad, Liquid Staking, Voice Agent, RAG
+  other:    [],                   // no bias
+}
+
+const FEATURED_PICK_RATE = 0.6    // 60% of auto-fires draw from the featured list
 
 interface DriftBundle {
   points: THREE.Points
@@ -377,11 +404,11 @@ interface DriftBundle {
   velocities: Float32Array
 }
 
-function buildDrift(): DriftBundle {
-  const positions = new Float32Array(DRIFT_COUNT * 3)
-  const velocities = new Float32Array(DRIFT_COUNT * 3)
-  for (let i = 0; i < DRIFT_COUNT; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * DRIFT_BOX.x
+function buildDrift(count: number, hueShiftDeg: number): DriftBundle {
+  const positions  = new Float32Array(count * 3)
+  const velocities = new Float32Array(count * 3)
+  for (let i = 0; i < count; i++) {
+    positions[i * 3]     = (Math.random() - 0.5) * DRIFT_BOX.x
     positions[i * 3 + 1] = (Math.random() - 0.5) * DRIFT_BOX.y
     positions[i * 3 + 2] = DRIFT_BOX.zMin + Math.random() * (DRIFT_BOX.zMax - DRIFT_BOX.zMin)
 
@@ -393,6 +420,9 @@ function buildDrift(): DriftBundle {
     velocities[i * 3 + 1] = (vy / len) * DRIFT_SPEED
     velocities[i * 3 + 2] = (vz / len) * DRIFT_SPEED
   }
+
+  const driftColor = new THREE.Color('#3b5dd9') // matches glyph fill
+  if (hueShiftDeg !== 0) driftColor.offsetHSL(hueShiftDeg / 360, 0, 0)
 
   const geo = new THREE.BufferGeometry()
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
@@ -414,11 +444,12 @@ function useDrift(bundle: DriftBundle, reducedMotion: boolean) {
     if (reducedMotion) return
     const pos = bundle.positions
     const vel = bundle.velocities
+    const count = pos.length / 3   // derived from bundle so loop bound matches the actual buffer
     const halfX = DRIFT_BOX.x / 2
     const halfY = DRIFT_BOX.y / 2
 
-    for (let i = 0; i < DRIFT_COUNT; i++) {
-      pos[i * 3] += vel[i * 3] * delta
+    for (let i = 0; i < count; i++) {
+      pos[i * 3]     += vel[i * 3]     * delta
       pos[i * 3 + 1] += vel[i * 3 + 1] * delta
       pos[i * 3 + 2] += vel[i * 3 + 2] * delta
 
@@ -594,9 +625,13 @@ function FloatingLabel({ state, onExpire }: { state: LabelState; onExpire: () =>
 // Staggered sine pulse on each node — each node gets its own phase in [0, 2π].
 
 function ServiceNode({
-  pos, color, serviceIdx, onHover,
+  pos, color, serviceIdx, isFeatured, onHover,
 }: {
   pos: THREE.Vector3; color: string; serviceIdx: number
+  /** When true (region-featured), the pulse amplitude is bumped from ±7% to
+   * ±9% so the regional bias is visible at a glance, not just inferable from
+   * the auto-cycle's label rotation. */
+  isFeatured: boolean
   onHover: (pos: THREE.Vector3, idx: number) => void
 }) {
   const coreRef = useRef<THREE.Mesh>(null)
@@ -605,7 +640,8 @@ function ServiceNode({
 
   useFrame(({ clock }) => {
     if (!coreRef.current) return
-    const s = 1 + Math.sin(clock.elapsedTime * 1.6 + phase) * 0.07
+    const amp = isFeatured ? 0.09 : 0.07
+    const s = 1 + Math.sin(clock.elapsedTime * 1.6 + phase) * amp
     coreRef.current.scale.setScalar(s)
   })
 
@@ -714,6 +750,35 @@ export function OrbScene() {
 
   const groupRef = useRef<THREE.Group>(null)
 
+  // Time + hardware accents. Both hooks use lazy state initializers so the
+  // values are real on the first client render — orb mounts client-only
+  // (ssr:false in hero.tsx), so there's no hydration boundary to coordinate.
+  const tod  = useTimeOfDay()
+  const tier = useDeviceTier()
+  const driftCount = DRIFT_COUNT_BY_TIER[tier]
+
+  // Geo from the consent-gated cookie. Null until the visitor accepts. Drives:
+  //  1) the auto-cycle's regional service bias (FEATURED_BY_REGION)
+  //  2) per-node pulse amplitude (featured nodes throb harder)
+  //  3) orb oblateness (high-latitude visitors see a squashed sphere)
+  const geo = useGeo()
+  const region = regionFor(geo?.country)
+  const featuredSet = useMemo(() => new Set(FEATURED_BY_REGION[region]), [region])
+
+  // Hour-of-day breath: orb scales smoothly from 0.97× at midnight to 1.03×
+  // at solar noon. Captured at mount; visitors who linger across an hour
+  // boundary won't see the orb resize mid-session (intentional — see plan).
+  const breath  = 1 + 0.03 * Math.sin(((tod.hour - 6) / 24) * 2 * Math.PI)
+  // Latitude oblateness: equatorial visitors see a perfect sphere; the y-axis
+  // squashes up to 3% as |lat| approaches 60°+. Subtle, geographically coherent.
+  const oblate  = 1 - Math.min(Math.abs(geo?.latitude ?? 0) / 60, 1) * 0.03
+  const groupScale: [number, number, number] = [breath, breath * oblate, breath]
+
+  // Captured ONCE on mount. The hue and drift count picked at first render
+  // are fixed for the session — rebuilding the geometry mid-session (e.g. on
+  // a partOfDay change every 4-8 hours) would require re-disposing all GPU
+  // resources and would visibly flash the orb. Acceptable tradeoff.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const { glyphSprites, edgeBundle, drift } = useMemo(() => ({
     glyphSprites: buildGlyphSprites(),
     edgeBundle: buildEdgeLines(),
@@ -759,10 +824,17 @@ export function OrbScene() {
     if (reducedMotion) return
     let timeoutId: ReturnType<typeof setTimeout>
 
+    const featured = FEATURED_BY_REGION[region]
+
     const fire = () => {
       const sinceUser = Date.now() - lastUserInteractionRef.current
       if (sinceUser > 4000) {
-        const idx = Math.floor(Math.random() * N_ORANGE)
+        // Region-aware pick: when there are featured indices, draw from them
+        // FEATURED_PICK_RATE of the time; otherwise fall through to uniform.
+        const useFeatured = featured.length > 0 && Math.random() < FEATURED_PICK_RATE
+        const idx = useFeatured
+          ? featured[Math.floor(Math.random() * featured.length)]
+          : Math.floor(Math.random() * N_ORANGE)
         const localPos = _orangePts[idx]
         const worldX = groupRef.current
           ? localPos.clone().applyMatrix4(groupRef.current.matrixWorld).x
@@ -779,7 +851,7 @@ export function OrbScene() {
 
     timeoutId = setTimeout(fire, 3000) // wait 3s after mount before first auto-trigger
     return () => clearTimeout(timeoutId)
-  }, [reducedMotion])
+  }, [reducedMotion, region])
 
   return (
     <>
@@ -793,7 +865,7 @@ export function OrbScene() {
       <ambientLight intensity={0.5} />
       <directionalLight position={[3, 4, 3]} intensity={1.0} />
 
-      <group ref={groupRef}>
+      <group ref={groupRef} scale={groupScale}>
         <primitive object={edgeBundle.lines} />
         <primitive object={edgeBundle.pulseLines} />
         <primitive object={glyphSprites} />
@@ -804,9 +876,11 @@ export function OrbScene() {
             pos={_orangePts[si]}
             color={CAT_COLOR[SERVICES[si].cat]}
             serviceIdx={si}
+            isFeatured={featuredSet.has(si)}
             onHover={handleHover}
           />
         ))}
+
 
         <Html center zIndexRange={[10, 10]}>
           <div style={{ pointerEvents: 'none', userSelect: 'none' }}>
