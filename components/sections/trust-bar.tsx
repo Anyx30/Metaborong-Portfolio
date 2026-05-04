@@ -9,24 +9,25 @@ type Client = {
   keepSilhouette?: boolean
   /** Source asset is a dense / fully-opaque badge — `brightness(0)` would flatten the whole rectangle to black. Use grayscale instead. */
   softMute?: boolean
+  /** Manually colorize a white logo using mask-image on hover */
+  customColor?: string
 }
 
 const clients: Client[] = [
-  { name: 'KGEN',       src: '/clients/kgen.svg',       href: 'https://kgen.io/',           keepSilhouette: true },
-  { name: 'GetSmart',   src: '/clients/getsmart.png',   href: 'https://get-smart.net/',     scale: 1.25, softMute: true },
-  { name: 'Nero',       src: '/clients/nero.svg',       href: 'https://nerochain.io/',      keepSilhouette: true },
-  { name: 'Sedax',      src: '/clients/sedax.svg',      href: 'https://www.sedax.in/' },
-  { name: 'DDAF',       src: '/clients/ddaf.svg',       href: 'https://www.ddaf.io/',       scale: 0.7 },
-  { name: 'Near',       src: '/clients/near.svg',       href: 'https://near.org/' },
-  { name: 'Diamante',   src: '/clients/diamante.svg',   href: 'https://www.diamante.io/' },
-  { name: 'OrbitX',     src: '/clients/orbitx.svg',     href: 'https://orbitxpay.com/' },
-  { name: 'PredictRAM', src: '/clients/predictram.svg', href: 'https://predictram.com/' },
-  { name: 'magic',      src: '/clients/magic.svg',      href: 'https://omagic.ai/' },
+  { name: 'KGEN',       src: '/clients/kgen.svg',       href: 'https://kgen.io/',           scale: 1.4, customColor: '#CCFF00' },
+  { name: 'GetSmart',   src: '/clients/getsmart.png',   href: 'https://get-smart.net/',     scale: 1.2, softMute: true },
+  { name: 'Nero',       src: '/clients/nero.svg',       href: 'https://nerochain.io/',      keepSilhouette: true, scale: 1.4 },
+  { name: 'Sedax',      src: '/clients/sedax.svg',      href: 'https://www.sedax.in/',      scale: 0.8 },
+  { name: 'DDAF',       src: '/clients/ddaf.svg',       href: 'https://www.ddaf.io/',       scale: 1.2 },
+  { name: 'Near',       src: '/clients/near.svg',       href: 'https://near.org/',          scale: 1.3 },
+  { name: 'Diamante',   src: '/clients/diamante.svg',   href: 'https://www.diamante.io/',   scale: 1.3, customColor: '#B026FF' },
+  { name: 'OrbitX',     src: '/clients/orbitx.svg',     href: 'https://orbitxpay.com/',     scale: 1.1 },
+  { name: 'PredictRAM', src: '/clients/predictram.png', href: 'https://predictram.com/',    scale: 1.5, softMute: true },
+  { name: 'magic',      src: '/clients/magic.svg',      href: 'https://omagic.ai/',         scale: 1.2 },
 ]
 
-const CELL_WIDTH = 180
 const CELL_HEIGHT = 64
-const CAP_HEIGHT = 38
+const CAP_HEIGHT = 40 // increased base height to give the small logos more room
 
 export function TrustBar() {
   const doubled = [...clients, ...clients]
@@ -36,11 +37,50 @@ export function TrustBar() {
       className="relative overflow-hidden border-y border-border bg-bg py-[36px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]"
     >
       <Reveal>
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-[2] w-24 bg-gradient-to-r from-bg to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-[2] w-24 bg-gradient-to-l from-bg to-transparent" />
-      <ul className="flex w-max items-center gap-[8px] animate-marquee m-0 p-0 list-none">
+      <ul className="flex w-max items-center gap-[64px] md:gap-[96px] animate-marquee m-0 p-0 list-none will-change-transform">
         {doubled.map((c, i) => {
           const cap = Math.round(CAP_HEIGHT * (c.scale ?? 1))
+          
+          if (c.customColor) {
+            return (
+              <li key={`${c.name}-${i}`} className="shrink-0">
+                <a
+                  href={c.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${c.name} — visit site`}
+                  className="group relative flex items-center justify-center rounded-md transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                  style={{ height: CELL_HEIGHT }}
+                >
+                  {/* Invisible image forces the parent 'a' tag to automatically snap to the exact intrinsic layout width/height */}
+                  <img
+                    src={c.src}
+                    alt={c.name}
+                    className="opacity-0 pointer-events-none select-none object-contain"
+                    style={{ height: cap, width: 'auto' }}
+                  />
+                  {/* The mask-image div sits perfectly on top of the invisible image, completely eliminating math gaps! */}
+                  <div
+                    className="absolute inset-0 m-auto select-none transition-colors duration-200 ease-out bg-black/60 group-hover:bg-[var(--custom-color)]"
+                    style={{
+                      '--custom-color': c.customColor,
+                      WebkitMaskImage: `url(${c.src})`,
+                      WebkitMaskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      maskImage: `url(${c.src})`,
+                      maskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                      height: cap,
+                      width: '100%',
+                    } as React.CSSProperties}
+                  />
+                </a>
+              </li>
+            )
+          }
+
           const revealClasses = c.keepSilhouette
             ? '[filter:brightness(0)] hover:[filter:brightness(0)] focus-visible:[filter:brightness(0)]'
             : c.softMute
@@ -54,7 +94,7 @@ export function TrustBar() {
                 rel="noopener noreferrer"
                 aria-label={`${c.name} — visit site`}
                 className="group flex items-center justify-center rounded-md opacity-60 transition-opacity duration-200 ease-out hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                style={{ width: CELL_WIDTH, height: CELL_HEIGHT }}
+                style={{ height: CELL_HEIGHT }}
               >
                 <img
                   src={c.src}
@@ -63,8 +103,8 @@ export function TrustBar() {
                   loading="lazy"
                   className={`select-none object-contain transition-[filter] duration-200 ease-out ${revealClasses}`}
                   style={{
-                    maxHeight: cap,
-                    maxWidth: CELL_WIDTH - 16,
+                    height: cap,
+                    width: 'auto', // Let intrinsic width take over
                   }}
                 />
               </a>
