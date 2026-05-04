@@ -60,7 +60,7 @@ The locked **values** (not class names) are authoritative. The project's `@theme
 
 - Section vertical padding: 96px → `py-[96px]`.
 - Horizontal padding scale (apply to **nav, sections, footer** uniformly): `px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]` — 24px mobile, 48px tablet (≥768), 96px desktop (≥1024), 128px large desktop (≥1280). Gives the premium breathing room on standard monitors and avoids the prior 80px-only step that felt tight at 1440px+.
-- Section content max-width: 1280px wide; 960px for narrative-heavy (comparison, problem, founders intro); 760px for FAQ.
+- Section content max-width: **1120px wide; 880px narrow (comparison, founders intro); 720px prose (problem, FAQ).** *(Amended 2026-05-03 — Session 5. Tightened from 1280/960/760 to give the page an editorial, founder-direct register matching the brand voice. Linear/Mercury/Stripe/Anthropic-careers width band. Hero outer cap stays 1600 — the orb needs spatial room and the copy column at ~960px effective stays coherent with the new wide cap.)*
 - Nav stays full-bleed (no `max-w`) — chrome layer hugs viewport edges. Sections cap content at the `max-width` above. The two intentionally don't align on wide monitors; this matches Linear/Vercel/Stripe convention.
 - `<SectionHeader>` → content: 48px → `mb-[48px]`.
 - Card grid gap: 24px → `gap-6` (this one is unambiguous since 24px is also default `gap-6`).
@@ -121,13 +121,14 @@ Each section's master responsibility, layout, and what it inherits. Per-session 
 - 3-column pillar grid. Replace 1px-gap-bordered hack with normal `gap-6` grid + `<Card variant="featured">`.
 - Each pillar card has: pillar tag (eyebrow in pillar color), headline (H3), body, CTA link.
 - Background alternates: `bg-bg-subtle`.
+- **Intro copy must absorb the bridge function dropped from Problem (Session 5, 2026-05-04).** Current intro is generic ("operates across three interconnected service pillars..."). Rewrite to do the bridge job: introduce Metaborong as the *third option* to the agency-vs-freelance trap named in Problem. Suggested direction: lead with "A small, senior team. Three pillars. End to end." or similar — confident, declarative, and clearly positioned as the answer to Problem's setup. Locked phrasing TBD in Session 6 spec.
 
 ### 6. Why Us (`components/sections/why-us.tsx`)
 - 3 default cards. Already close to right; just migrate to `<Card variant="default">` and `<SectionHeader>`.
 - Background: `bg-white`.
 
 ### 7. Work Preview (`components/sections/work-preview.tsx`)
-- 4 cards on desktop; 2 on tablet; 1 on mobile.
+- **3 cards on desktop** (amended 2026-05-03 from 4-up — at the new 1120 wide cap, 4-up cards become too tight; 3-up plus a "View all work →" link reads as more premium and matches Vercel/Linear case-study layouts); 2 on tablet; 1 on mobile.
 - Replace flat colored thumbnail with `aspect-[4/3]` placeholder using `bg-bg-subtle` + dotted brand-tinted overlay (until real case-study assets land).
 - Section header has trailing "View All Work →" link aligned right (already correct).
 - Background: `bg-bg-subtle`.
@@ -206,7 +207,9 @@ Two structural deviations from the original plan, both driven by user feedback o
 
 **Critical bug fix in `app/globals.css`:** The universal reset `*, *::before, *::after { margin: 0; padding: 0 }` was unlayered, which silently outranks every Tailwind v4 `@layer utilities` rule. Result: `p-*`, `m-*`, `gap-*` — including arbitrary-value forms like `p-[8px]` — were rendering as `0` everywhere. Wrapped the reset in `@layer base` to restore proper precedence. This affected Session 1's primitives too (they were importing fine but their `p-[36px]` etc. were no-ops). All future sessions can now rely on Tailwind utilities working as expected.
 
-**Session 3 onward:** Hero → Trust bar → Problem (new) → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
+**Session 5.5 (NEW — added 2026-05-04 from /plan-design-review on Problem):** Build the global enter animation promised in the master plan motion grammar (`opacity 0→1, translateY 8px→0, 400ms cubic-bezier(0.16, 1, 0.3, 1)`, triggered on intersection 50px before viewport). The motion grammar has been spec'd since Session 1 but never implemented; three shipped sections (Hero, Trust bar, Problem) currently render static on scroll. Implementation: small client component `<Reveal>` using `IntersectionObserver` (one observer instance, unobserve on first intersection). Must respect `prefers-reduced-motion` (skip the transform + duration → 0). Apply to Hero copy column, Trust bar marquee container, Problem section content, and bake into `<Section>` primitive so all future sections inherit it for free. Verify in agent-browser at `prefers-reduced-motion: reduce`. Defer to Session 5.5 — do NOT bundle into a content session.
+
+**Session 3 onward:** Hero → Trust bar → Problem (new) → **Session 5.5 global motion** → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
 
 ---
 
