@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
+import { Reveal } from '@/components/ui/reveal'
 
 // Three.js: client-only, lazy-loaded after paint — no LCP impact
 const HeroOrb = dynamic(
@@ -25,7 +26,7 @@ export function HeroSection() {
     <section className="relative min-h-screen bg-bg-subtle">
       <div className="max-w-[1600px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[60fr_40fr]">
         {/* Left: copy */}
-        <div className="flex flex-col justify-center py-[64px] lg:py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+        <Reveal className="flex flex-col justify-center py-[64px] lg:py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
           {/* Eyebrow chip */}
           <div className="inline-flex items-center gap-2 mb-7 bg-bg border border-border rounded-sm px-3 py-[5px] w-fit">
             <span className="w-2 h-2 bg-brand rounded-sm shrink-0 inline-block" />
@@ -65,7 +66,7 @@ export function HeroSection() {
           <p className="text-xs text-gray tracking-[-0.01em]">
             No pitch decks. No retainers. Direct from founders.
           </p>
-        </div>
+        </Reveal>
 
         {/* Right: Three.js orb */}
         <div className="relative overflow-hidden flex items-center justify-center h-[60vh] lg:h-auto lg:min-h-screen">

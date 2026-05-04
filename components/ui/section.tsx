@@ -1,4 +1,5 @@
 import { type HTMLAttributes } from 'react'
+import { Reveal } from '@/components/ui/reveal'
 
 type SectionBg = 'default' | 'subtle' | 'dark'
 type SectionMaxWidth = 'wide' | 'narrow' | 'prose'
@@ -34,7 +35,9 @@ export function Section({
       className={`${bgClass[bg]} py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px] ${className}`}
       {...props}
     >
-      <div className={`${maxWidthClass[maxWidth]} mx-auto`}>{children}</div>
+      <div className={`${maxWidthClass[maxWidth]} mx-auto`}>
+        <Reveal>{children}</Reveal>
+      </div>
     </Tag>
   )
 }

@@ -1,3 +1,5 @@
+import { Reveal } from '@/components/ui/reveal'
+
 type Client = {
   name: string
   src: string
@@ -33,6 +35,7 @@ export function TrustBar() {
       aria-label="Selected clients"
       className="relative overflow-hidden border-y border-border bg-bg py-[36px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]"
     >
+      <Reveal>
       <div className="pointer-events-none absolute inset-y-0 left-0 z-[2] w-24 bg-gradient-to-r from-bg to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-[2] w-24 bg-gradient-to-l from-bg to-transparent" />
       <ul className="flex w-max items-center gap-[8px] animate-marquee m-0 p-0 list-none">
@@ -69,6 +72,7 @@ export function TrustBar() {
           )
         })}
       </ul>
+      </Reveal>
     </section>
   )
 }
