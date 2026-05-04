@@ -1,5 +1,6 @@
 import { Section } from '@/components/ui/section'
 import { Eyebrow } from '@/components/ui/eyebrow'
+import { PhraseStamp } from '@/components/sections/phrase-stamp'
 
 export function ProblemSection() {
   return (
@@ -14,7 +15,7 @@ export function ProblemSection() {
 
       <p className="mt-[32px] text-[16px] text-gray leading-[1.65] tracking-[-0.01em]">
         Most founders end up choosing between two bad options: a large agency that{' '}
-        <strong className="font-medium text-dark">treats the project like a ticket in a queue</strong>
+        <PhraseStamp>treats the project like a ticket in a queue</PhraseStamp>
         , or a freelance team that lacks the architectural depth to ship something that scales. Either way, timelines slip and technical debt piles up before launch.
       </p>
     </Section>
