@@ -1,4 +1,5 @@
 import { type HTMLAttributes } from 'react'
+import { Reveal } from '@/components/ui/reveal'
 
 type SectionBg = 'default' | 'subtle' | 'dark'
 type SectionMaxWidth = 'wide' | 'narrow' | 'prose'
@@ -16,9 +17,9 @@ const bgClass: Record<SectionBg, string> = {
 }
 
 const maxWidthClass: Record<SectionMaxWidth, string> = {
-  wide: 'max-w-[1280px]',
-  narrow: 'max-w-[960px]',
-  prose: 'max-w-[760px]',
+  wide: 'max-w-[1120px]',
+  narrow: 'max-w-[880px]',
+  prose: 'max-w-[720px]',
 }
 
 export function Section({
@@ -31,10 +32,12 @@ export function Section({
 }: SectionProps) {
   return (
     <Tag
-      className={`${bgClass[bg]} py-[96px] px-6 md:px-[80px] ${className}`}
+      className={`${bgClass[bg]} py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px] ${className}`}
       {...props}
     >
-      <div className={`${maxWidthClass[maxWidth]} mx-auto`}>{children}</div>
+      <div className={`${maxWidthClass[maxWidth]} mx-auto`}>
+        <Reveal>{children}</Reveal>
+      </div>
     </Tag>
   )
 }

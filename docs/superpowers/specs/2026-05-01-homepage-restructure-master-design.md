@@ -24,7 +24,7 @@ The homepage renders all 12 sections (nav + 10 sections + footer) but visual qua
 | Card padding drift (`44/36`, `36/32`, `32/28`, `32`) | services, why-us, work, founders, testimonials | One `<Card>` primitive: `p-9` (36px) on default, `p-10` (40px) on featured |
 | Card radius drift (4/8/12/16/20) | hero eyebrow, work thumbs, cards, services wrapper | Two radii only: `rounded-md` (8px) for chips/thumbs, `rounded-lg` (12px) for cards |
 | Header→content margin drift (16/48/56) | every section | One value: 48px (`mb-12`) below `<SectionHeader>` |
-| Hero padding deviates (`96 64 96 80` vs `96 80`) | hero only | Hero conforms to `<Section>` defaults; left-column padding handled inside |
+| Hero padding deviates (`96 64 96 80` vs `96 80`) | hero only | Hero keeps its own `max-w-[1600px]` outer (orb needs spatial room — see Session 2 notes); left-column applies the locked horizontal scale internally |
 | Eyebrow size drift (11 vs 12) | hero vs others | One eyebrow: 11px, 700 weight, `0.1em` tracking, uppercase, `text-gray-light` |
 
 ---
@@ -60,7 +60,7 @@ The locked **values** (not class names) are authoritative. The project's `@theme
 
 - Section vertical padding: 96px → `py-[96px]`.
 - Horizontal padding scale (apply to **nav, sections, footer** uniformly): `px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]` — 24px mobile, 48px tablet (≥768), 96px desktop (≥1024), 128px large desktop (≥1280). Gives the premium breathing room on standard monitors and avoids the prior 80px-only step that felt tight at 1440px+.
-- Section content max-width: 1280px wide; 960px for narrative-heavy (comparison, problem, founders intro); 760px for FAQ.
+- Section content max-width: **1120px wide; 880px narrow (comparison, founders intro); 720px prose (problem, FAQ).** *(Amended 2026-05-03 — Session 5. Tightened from 1280/960/760 to give the page an editorial, founder-direct register matching the brand voice. Linear/Mercury/Stripe/Anthropic-careers width band. Hero outer cap stays 1600 — the orb needs spatial room and the copy column at ~960px effective stays coherent with the new wide cap.)*
 - Nav stays full-bleed (no `max-w`) — chrome layer hugs viewport edges. Sections cap content at the `max-width` above. The two intentionally don't align on wide monitors; this matches Linear/Vercel/Stripe convention.
 - `<SectionHeader>` → content: 48px → `mb-[48px]`.
 - Card grid gap: 24px → `gap-6` (this one is unambiguous since 24px is also default `gap-6`).
@@ -80,16 +80,19 @@ No "bordered grid" trick like the current services section — that's a 1px-gap 
 
 ### Motion grammar
 
-- One enter animation: `opacity 0 → 1`, `translateY(8px) → 0`, 400ms cubic-bezier(0.16, 1, 0.3, 1), triggered on intersection (50px before viewport).
+*Implemented 2026-05-04 in Session 5.5 — see `<Reveal>` primitive at `components/ui/reveal.tsx` and Session 5.5 entry below.*
+
+- One enter animation: `opacity 0 → 1`, `translateY(8px) → 0`, 400ms cubic-bezier(0.16, 1, 0.3, 1), triggered on intersection (50px before viewport). Respects `prefers-reduced-motion: reduce` (skipped entirely).
 - Card hover: 200ms.
 - No parallax. No big reveals. The orb keeps its existing animation.
 
 ### Primitives to build
 
-1. `components/ui/section.tsx` — `<Section bg="default" | "subtle" | "dark" maxWidth="wide" | "narrow" | "prose">`
+1. `components/ui/section.tsx` — `<Section bg="default" | "subtle" | "dark" maxWidth="wide" | "narrow" | "prose">`. Internally wraps children in `<Reveal>` so all sections inherit the enter animation for free.
 2. `components/ui/section-header.tsx` — eyebrow + h2 + optional intro, fixed bottom margin
 3. `components/ui/card.tsx` — variants above
 4. `components/ui/eyebrow.tsx` — extracted because it appears 11× (and currently drifts)
+5. `components/ui/reveal.tsx` *(added 2026-05-04, Session 5.5)* — client component that fires once on intersection, animates `opacity 0→1` + `translateY 8→0` over 400ms, respects `prefers-reduced-motion`
 
 Existing `Button`, `Logo`, `Badge` stay.
 
@@ -104,36 +107,42 @@ Each section's master responsibility, layout, and what it inherits. Per-session 
 - All inline styles migrated to Tailwind; no hex literals; dropdown card mirrors `<Card>` border + radius.
 - Flair: nav-link underline indicator, dropdown enter animation + caret, magnetic CTA hover (scale + glow).
 
-### 2. Hero (`components/sections/hero.tsx`)
-- 55/45 grid, light bg `bg-bg-subtle`, min-h-screen.
-- Left column conforms to section padding rules; eyebrow uses `<Eyebrow>`; H1 uses display-H1 scale unchanged; AEO blockquote keeps brand-blue left border but uses tokens.
-- Right column hosts existing Three.js orb — untouched.
+### 2. Hero (`components/sections/hero.tsx`) — done in Session 3
+- 60/40 grid (`lg:grid-cols-[60fr_40fr]`), light bg `bg-bg-subtle`, min-h-screen.
+- **Hero does NOT use `<Section>` primitive** — keeps its own `max-w-[1600px]` outer wrapper (orb needs the spatial room; copy column at ~960px effective stays coherent with the new wide cap). Left column applies the locked horizontal scale internally (`px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]`); eyebrow uses `<Eyebrow>`; H1 uses display-H1 scale unchanged; AEO blockquote keeps brand-blue left border but uses tokens.
+- Left column wrapped in `<Reveal>` for the global enter animation (Session 5.5).
+- Right column hosts existing Three.js orb — untouched, has its own motion.
 
-### 3. Trust bar (`components/sections/trust-bar.tsx`)
-- Thin band between sections. Migrate to Tailwind. Keep marquee animation. 14px font, gray-500.
+### 3. Trust bar (`components/sections/trust-bar.tsx`) — done in Session 4
+- Thin full-bleed band between sections. Marquee logo wall — no text caption. Per-logo silhouette / grayscale / reveal treatment encoded in the client list (`keepSilhouette` / `softMute` flags) so each asset reads correctly on the white background and lights up its real brand color on hover/focus. Marquee animation continues.
+- Wrapped in `<Reveal>` (Session 5.5).
 
-### 4. Problem (NEW — `components/sections/problem.tsx`)
-- Pulls from existing `homepage.md` "Building in Web3 and AI is still too hard" section.
-- Layout: narrow prose column (max-w-[760px]), centered eyebrow + H2, two paragraphs body, then a one-line bridge into Services.
-- Background: `bg-white`.
+### 4. Problem (`components/sections/problem.tsx`) — done in Session 5
+- Pulls from `docs/content/homepage.md:223-231`, **compressed 2026-05-04** to one pain paragraph (bridge + second pain paragraph dropped — see Session 5 spec for rationale).
+- Layout: prose column (`<Section maxWidth="prose">` = 720px, centered) with **left-aligned** editorial typography (eyebrow, H2, body). 40×2px brand-blue accent rule above the eyebrow.
+- Typographic emphasis on `treats the project like a ticket in a queue` via `<strong className="font-medium text-dark">` (semantic + visual).
+- Section gets `id="problem"` for in-page anchoring + future schema work.
+- Background: `bg-bg` (white).
+- Bridge into Services dropped — Services Session 6 must rewrite its intro to absorb that role.
 
 ### 5. Services (`components/sections/services.tsx`)
 - 3-column pillar grid. Replace 1px-gap-bordered hack with normal `gap-6` grid + `<Card variant="featured">`.
 - Each pillar card has: pillar tag (eyebrow in pillar color), headline (H3), body, CTA link.
 - Background alternates: `bg-bg-subtle`.
+- **Intro copy must absorb the bridge function dropped from Problem (Session 5, 2026-05-04).** Current intro is generic ("operates across three interconnected service pillars..."). Rewrite to do the bridge job: introduce Metaborong as the *third option* to the agency-vs-freelance trap named in Problem. Suggested direction: lead with "A small, senior team. Three pillars. End to end." or similar — confident, declarative, and clearly positioned as the answer to Problem's setup. Locked phrasing TBD in Session 6 spec.
 
 ### 6. Why Us (`components/sections/why-us.tsx`)
 - 3 default cards. Already close to right; just migrate to `<Card variant="default">` and `<SectionHeader>`.
 - Background: `bg-white`.
 
 ### 7. Work Preview (`components/sections/work-preview.tsx`)
-- 4 cards on desktop; 2 on tablet; 1 on mobile.
+- **3 cards on desktop** (amended 2026-05-03 from 4-up — at the new 1120 wide cap, 4-up cards become too tight; 3-up plus a "View all work →" link reads as more premium and matches Vercel/Linear case-study layouts); 2 on tablet; 1 on mobile.
 - Replace flat colored thumbnail with `aspect-[4/3]` placeholder using `bg-bg-subtle` + dotted brand-tinted overlay (until real case-study assets land).
 - Section header has trailing "View All Work →" link aligned right (already correct).
 - Background: `bg-bg-subtle`.
 
 ### 8. Comparison (`components/sections/comparison.tsx`)
-- Narrow column (max-w-[960px]), table with token-driven borders.
+- Narrow column (`<Section maxWidth="narrow">` = 880px), table with token-driven borders.
 - Highlight Metaborong column with `bg-bg-subtle` + brand-colored top accent.
 - Footnote in micro style.
 - Background: `bg-white`.
@@ -149,7 +158,7 @@ Each section's master responsibility, layout, and what it inherits. Per-session 
 - Background: `bg-white`.
 
 ### 11. FAQ (`components/sections/faq.tsx`)
-- Narrow column (max-w-[760px]), accordion with token-driven borders.
+- Prose column (`<Section maxWidth="prose">` = 720px), accordion with token-driven borders.
 - Already close to right; just migrate styles + use `<SectionHeader>`.
 - Background: `bg-bg-subtle`.
 
@@ -206,7 +215,9 @@ Two structural deviations from the original plan, both driven by user feedback o
 
 **Critical bug fix in `app/globals.css`:** The universal reset `*, *::before, *::after { margin: 0; padding: 0 }` was unlayered, which silently outranks every Tailwind v4 `@layer utilities` rule. Result: `p-*`, `m-*`, `gap-*` — including arbitrary-value forms like `p-[8px]` — were rendering as `0` everywhere. Wrapped the reset in `@layer base` to restore proper precedence. This affected Session 1's primitives too (they were importing fine but their `p-[36px]` etc. were no-ops). All future sessions can now rely on Tailwind utilities working as expected.
 
-**Session 3 onward:** Hero → Trust bar → Problem (new) → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
+**Session 5.5 (NEW — added 2026-05-04 from /plan-design-review on Problem):** Build the global enter animation promised in the master plan motion grammar (`opacity 0→1, translateY 8px→0, 400ms cubic-bezier(0.16, 1, 0.3, 1)`, triggered on intersection 50px before viewport). The motion grammar has been spec'd since Session 1 but never implemented; three shipped sections (Hero, Trust bar, Problem) currently render static on scroll. Implementation: small client component `<Reveal>` using `IntersectionObserver` (one observer instance, unobserve on first intersection). Must respect `prefers-reduced-motion` (skip the transform + duration → 0). Apply to Hero copy column, Trust bar marquee container, Problem section content, and bake into `<Section>` primitive so all future sections inherit it for free. Verify in agent-browser at `prefers-reduced-motion: reduce`. Defer to Session 5.5 — do NOT bundle into a content session.
+
+**Session 3 onward:** Hero → Trust bar → Problem (new) → **Session 5.5 global motion** → Services → Why Us → Work → Comparison → Testimonials → Founders → FAQ → Contact CTA → Footer. Stop after each.
 
 ---
 
@@ -217,6 +228,7 @@ Two structural deviations from the original plan, both driven by user feedback o
 - `components/ui/section-header.tsx`
 - `components/ui/card.tsx`
 - `components/ui/eyebrow.tsx`
+- `components/ui/reveal.tsx` *(added Session 5.5, 2026-05-04)*
 - `components/sections/problem.tsx` (Session 4 or 5)
 
 **To modify (one per session):**
