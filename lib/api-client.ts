@@ -135,6 +135,14 @@ interface RequestOptions {
   signal?: AbortSignal
   /** When true, bypass the global 401 redirect (used by the layout-level auth probe). */
   skipAuthRedirect?: boolean
+  /**
+   * When true, allow non-GET requests to proceed without an mb_csrf cookie.
+   * Login is the only endpoint where this is appropriate — the cookie is what
+   * a successful login *issues*, so it cannot pre-exist on the very first
+   * attempt. Backend's CSRF check carves login out server-side; this flag
+   * carves it out on the client too. Do NOT use anywhere else.
+   */
+  skipCsrf?: boolean
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
@@ -156,8 +164,11 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
 
   if (isMutating(method)) {
     const token = readCookie(CSRF_COOKIE_NAME)
-    if (!token) throw new CsrfMissingError()
-    headers['X-CSRF-Token'] = token
+    if (token) {
+      headers['X-CSRF-Token'] = token
+    } else if (!opts.skipCsrf) {
+      throw new CsrfMissingError()
+    }
   }
 
   let res: Response

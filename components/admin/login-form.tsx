@@ -90,7 +90,9 @@ export function LoginForm() {
     setFieldError(null)
     setBusy(true)
     try {
-      await api.post<{ ok: true }>('/api/admin/login', values)
+      // skipCsrf: login is the one endpoint where mb_csrf can't pre-exist —
+      // it's the call that issues the cookie. BE carves login out server-side.
+      await api.post<{ ok: true }>('/api/admin/login', values, { skipCsrf: true })
       router.push(next)
       router.refresh()
     } catch (err) {
@@ -98,10 +100,9 @@ export function LoginForm() {
       setPassword('')
 
       if (err instanceof CsrfMissingError) {
-        // Login is the one place where the CSRF cookie may legitimately be
-        // missing on the very first call — no prior session means no cookie.
-        // Backend issues both cookies on a successful login response, so this
-        // path means something went wrong before we even tried.
+        // Defensive only — with skipCsrf:true on the login POST above this
+        // path is unreachable. Kept as a friendly fallback in case the
+        // api-client contract changes.
         setError('Could not establish a session — please refresh and try again.')
         setBusy(false)
         return
