@@ -1,6 +1,7 @@
 import { Section } from '@/components/ui/section'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { ServicesTrefoil } from '@/components/sections/services-trefoil'
+import { ServicesMobile } from '@/components/sections/services-mobile'
 
 export function ServicesSection() {
   return (
@@ -14,7 +15,8 @@ export function ServicesSection() {
           We build what large agencies under-deliver and freelancers can't architect — across Web3 protocols, AI agents, and SaaS products. One team takes you from spec to production.
         </p>
       </div>
-      <ServicesTrefoil />
+      <ServicesTrefoil className="hidden lg:grid" />
+      <ServicesMobile className="lg:hidden" />
     </Section>
   )
 }
