@@ -50,6 +50,21 @@ export function ServicesTrefoil({ className = '' }: Props) {
 
   const primed = activeId !== null
 
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return
+    e.preventDefault()
+    const idx = pillars.findIndex((p) => p.id === activeId)
+    let next = idx
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = (idx + 1) % pillars.length
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = (idx - 1 + pillars.length) % pillars.length
+    if (e.key === 'Home') next = 0
+    if (e.key === 'End') next = pillars.length - 1
+    setActiveId(pillars[next].id)
+    const newTabId = `services-tab-${pillars[next].id}`
+    const el = document.getElementById(newTabId)
+    el?.focus()
+  }
+
   return (
     <>
       <style precedence="default">{`
@@ -142,7 +157,7 @@ export function ServicesTrefoil({ className = '' }: Props) {
         </svg>
       </div>
 
-      <div className="flex flex-col" role="tablist" aria-orientation="vertical">
+      <div className="flex flex-col" role="tablist" aria-orientation="vertical" onKeyDown={handleTabKeyDown}>
         {pillars.map((p) => {
           const isActive = p.id === activeId
           const panelId = `services-panel-${p.id}`
