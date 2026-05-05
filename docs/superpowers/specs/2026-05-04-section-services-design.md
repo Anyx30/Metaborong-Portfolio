@@ -291,3 +291,39 @@ After the 7.5 polish pass, the user reviewed live and called out:
 - For sub-pixel-typography sections (Problem, glyphs as marks), hand-authored SVG remains the right call.
 - For sections where the signature element is a *form/object* the user perceives spatially (cube, network, layered solid), Three.js earns its weight even at small scale — the dimensional reading carries the premium feel that flat SVG cannot deliver.
 - Visual review post-implementation is load-bearing. Plan-locked decisions about geometry and motion are best treated as defaults, not contracts. The user looked at the shipped result and corrected the direction in two places (geometry + render technology); both corrections were correct.
+
+---
+
+## Section 5 deviations from master plan (2026-05-04, post-impl polish pass)
+
+After implementation Tasks 1–11 shipped the plan's "Atmospheric Depth" geometry verbatim, the user reviewed the live result and called the in-canvas animations cheap. A `/frontend-design` polish pass reframed the section's aesthetic as **Swiss-engineering / technical-drawing** — the trefoil reads as an engineered diagram, not an atmospheric mood. Per-section overrides allowed under the policy locked in this session.
+
+### Dropped (master plan said to ship; we removed)
+- **Radial-gradient ground rect** (`<radialGradient id="services-ground">` over a `<rect>`). The 5%→0% blue tint was decorative, not architectural.
+- **Infinite spoke-flow animation** (`stroke-dasharray: 4 6` + `stroke-dashoffset: 0 → -10` 3s linear infinite). Marching-ants ambient loops read as "loading" not "engineered."
+- **`<filter id="soft-shadow">`** on every glyph. 2px Gaussian blur at 80×80 made hairlines fuzzy. Premium technical illustrations use crisp lines, not drop-shadows on small geometry.
+- **Scale-up assembly animation** (`transform: scale(0.92 → 1)` 700ms). Generic "thing pops in" — replaced with stroke-draw.
+- **AI Agents radial halo gradient** (`<radialGradient id="ai-halo">`). Cheap green smear; constellation reads cleaner without it.
+- **Hex hairline connectors** (6 × 0.5px lines between center hex and surrounding hexes). Visual noise at glyph scale.
+- **AI Agents inner ring at r=13.** 14 elements competing in 80×80 — cut to 9 with hierarchy.
+- **AI Agents curved arcs** (5 × `Q`-curve paths from center to outer dots). Replaced with straight rays. Arcs imply motion which clashed with restrained-at-rest posture.
+- **JS `useState` + `matchMedia` for reduced-motion.** Replaced with native `@media (prefers-reduced-motion: reduce)` block in inline `<style>`. Same outcome, no hydration cost, no client-side state.
+
+### Added / changed (locked in this polish pass)
+- **Datum baseline** — single 1px horizontal line across the full width at y=250, `#303030` stroke at 5% opacity. Reads as a technical drawing baseline.
+- **Hub cluster** — outer ring (r=24, 1px brand-blue, 40% opacity) + inner ring (r=12, 1px brand-blue, 60% opacity) + 4 cardinal-axis tick marks (1px, 30% opacity, 8px arms from r=28 to r=36) + 3px solid brand-blue center dot. Reads as an engineered coordinate origin.
+- **One-shot energy pulse** — separate `<line>` overlay with `stroke-dasharray: 14 486` slides hub→active-node over 720ms `cubic-bezier(0.32, 0, 0.16, 1)`, fades on exit. Re-mounts via key-bump on each activation. Single-shot, never infinite.
+- **Stroke draw-on activation** — each `[data-draw]` element inside an active glyph reveals via `stroke-dashoffset` (length→0) over 620ms `cubic-bezier(0.65, 0, 0.35, 1)`. Per-element `--draw-len` CSS variable carries the path length.
+- **Inactive glyph treatment** — strokes stay full-opacity but the color shifts to neutral `#9ca3af` and fills go to `none`. Active = colored + filled. Inactive = monochrome wireframe. Replaces the previous uniform `opacity 0.4` ghosting which read washed-out.
+- **Web3 inner concentric hex** — at apothem ~6, 1px stroke. Locks lattice density without adding member count. Hairline connectors removed.
+- **Web3 stroke weight bump** — center hex now 1.25px (was 1px). Center anchor dot 1.5r solid.
+- **AI Agents instrumented points** — each of 5 outer dots paired with a 4px perpendicular tick mark along the radius normal. Reads as "instrumented sensors" rather than floating particles. Center solid dot bumped 4r → 5r.
+- **Product Studio center-axis weld** — 1px vertical hairline through center from y=-22 to y=38, ties the 3 stacked planes along one structural axis.
+- **Product Studio opacity ladder** — top/middle/bottom now 35%/22%/14% (was 28/18/12). More dimensional separation; top plane stroke 1.25px.
+- **Spoke color discipline** — spokes are neutral `#303030` at 10% opacity at rest; the active spoke transitions to its pillar color at 85% opacity, 1.5px width. Previously all spokes were brand-blue regardless of which pillar was active, which biased the visual toward Web3.
+
+### Why this stuck
+The locked C-variant's "Atmospheric Depth" treatment (drop shadows + radial tint + dashed flow) read as ambient/decorative when shipped. The Swiss-engineering reframe reads as designed: every line carries a structural job, motion happens once and stops, and the inactive state is a legible schematic rather than a faded version of the active state. Hard constraints honored — SVG-only, ARIA tablist unchanged, IntersectionObserver-gated first paint unchanged, mobile fallback untouched, brand colors unchanged.
+
+### Workflow lesson
+`/frontend-design` should run during implementation, not just during planning. Tasks 1–11 shipped plan geometry verbatim; the polish pass that should have happened during the build instead happened post-ship. For future sections, invoke `/frontend-design` at Task scaffold time and again at Task final verification — not just to lock the plan.
