@@ -12,8 +12,15 @@ export const config = {
 }
 
 export function proxy(req: NextRequest) {
+  // Expose the request pathname (with search) to server components — Next.js
+  // App Router doesn't otherwise hand layouts the URL they're rendering. The
+  // /admin auth gate needs this to build a /admin/login?next=<path> redirect
+  // from any nested admin route.
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set('x-pathname', req.nextUrl.pathname + req.nextUrl.search)
+
   const consent = req.cookies.get('mb_consent')?.value
-  const res     = NextResponse.next()
+  const res     = NextResponse.next({ request: { headers: requestHeaders } })
 
   if (consent === 'accepted') {
     // Vercel's edge sets these headers for incoming requests with geo data.
