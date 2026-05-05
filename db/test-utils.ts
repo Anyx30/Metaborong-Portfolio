@@ -7,8 +7,8 @@
 //
 // Tests use this helper directly when they need a real DB. Route-handler
 // tests that import from `db/client` should `vi.mock('@/db/client', …)`
-// to swap the production @vercel/postgres-backed client for one returned
-// by createTestDb().
+// to swap the production pg/Pool-backed client for one returned by
+// createTestDb().
 
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
