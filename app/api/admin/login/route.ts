@@ -33,15 +33,22 @@ const RATE_WINDOW_SECONDS = 15 * 60
 const RATE_MAX_ATTEMPTS   = 5
 
 async function countRecentFailures(ip: string): Promise<number> {
+  // The rate-limit window holds at most RATE_MAX_ATTEMPTS rows per IP — a
+  // successful login wipes them, the limit gate refuses further work past
+  // the cap, and a periodic prune (M8) keeps stragglers bounded. So
+  // selecting the rows directly with a LIMIT cap is cheap, and avoids a
+  // SELECT count(*)::int aggregate that pg-mem (used in tests) returns
+  // with no column-alias metadata, breaking the test harness.
   const since = new Date(Date.now() - RATE_WINDOW_SECONDS * 1000)
   const rows = await db
-    .select({ count: sql<number>`count(*)::int` })
+    .select({ id: login_attempts.id })
     .from(login_attempts)
     .where(and(
       sql`${login_attempts.ip} = ${ip}`,
       gte(login_attempts.attempted_at, since),
     ))
-  return rows[0]?.count ?? 0
+    .limit(RATE_MAX_ATTEMPTS + 1)
+  return rows.length
 }
 
 async function recordFailure(ip: string): Promise<void> {
