@@ -14,9 +14,9 @@ The PRD is the **single source of truth for what to build**. This doc is the
 
 | Role        | Owns                                                                         | Does NOT do                              |
 |-------------|------------------------------------------------------------------------------|------------------------------------------|
-| Backend     | DB schema, migrations, route handlers under `app/api/admin/**`, server-side validation, MCP proxy, env-var wiring, server-side rendering data fetches | UI work, styling, client components |
-| Frontend    | Admin UI, public blog UI, design system extensions, calling Backend APIs, client-side validation, edge-case UX | DB, route handlers, server-only logic |
-| Tester      | Read both branches, run dev server, hit the APIs, walk the UI, produce a report | Fix anything, write production code, push code |
+| Backend     | DB schema, migrations, route handlers under `app/api/admin/**`, server-side validation, MCP proxy, env-var wiring, server-side rendering data fetches, **Vitest unit + integration tests for everything they own** | UI work, styling, client components |
+| Frontend    | Admin UI, public blog UI, design system extensions, calling Backend APIs, client-side validation, edge-case UX, **Vitest + @testing-library/react component tests + Playwright E2E specs** | DB, route handlers, server-only logic |
+| Tester      | Run the existing test suites, walk the UI, hit APIs manually, run Lighthouse / JSON-LD validators / a11y checks, produce a written report | Author production tests, install frameworks, fix anything, push code |
 | TPM (human) | Dispatches agents, reviews tester's report, approves merges, pushes to GitHub, merges feature branches into `cms-dev` | Manual coding |
 
 ---
@@ -215,6 +215,72 @@ export type Image = {
 Frontend should show inline errors for these BEFORE submitting; Backend
 re-validates and returns 422 with `field` populated if Frontend missed one.
 
+### 2.6 Testing infrastructure & ownership
+
+The Tester agent does NOT author tests — Tester audits, runs the existing
+suites, and does manual / qualitative checks. The Backend and Frontend
+agents each write tests for the code they own as part of every milestone.
+This keeps test architecture coherent and prevents three agents from
+installing conflicting frameworks across milestones.
+
+**Stack (locked for v1, no substitutions without TPM approval):**
+
+| Layer                              | Tool                                                     | Where tests live                            |
+|------------------------------------|----------------------------------------------------------|---------------------------------------------|
+| Unit + integration (server)        | Vitest                                                   | `*.test.ts` colocated next to source        |
+| Postgres in tests                  | `pg-mem` (in-memory PG for unit-level)                   | `db/test-utils.ts` bootstrap helper         |
+| Component tests (client)           | Vitest + `@testing-library/react` + `happy-dom`          | `*.test.tsx` colocated next to component    |
+| End-to-end (browser)               | Playwright                                               | `e2e/*.spec.ts`                             |
+
+**Who installs what (one-time, in M1; never touched again):**
+
+- **Backend agent** in M1 installs: `vitest`, `@vitest/coverage-v8`,
+  `pg-mem`. Writes `vitest.config.ts`. Adds `package.json` scripts:
+  `"test": "vitest run"`, `"test:watch": "vitest"`,
+  `"test:coverage": "vitest run --coverage"`.
+- **Frontend agent** in M1 installs: `@testing-library/react`,
+  `@testing-library/jest-dom`, `happy-dom`, `@playwright/test`. Writes
+  `playwright.config.ts`. Creates the `e2e/` directory. Adds
+  `package.json` script: `"test:e2e": "playwright test"`.
+- After M1, no agent in M2–M8 reinstalls or reconfigures. New tests
+  reuse the existing config.
+
+**Coverage targets per milestone (soft — Tester flags gaps as MEDIUM
+defects, not blockers):**
+
+- **Backend**: every route handler the milestone introduces gets ≥1
+  happy-path test and ≥2 error-path tests (pick from auth/CSRF/
+  validation/rate-limit/MCP-disabled depending on what applies). Every
+  Zod schema gets a parse-success and a parse-failure test. `lib/auth.ts`
+  fully covered in M1.
+- **Frontend**: every client component with logic (forms, drawers,
+  editor blocks) gets a render test plus an interaction test. Every
+  error-path branch in `lib/api-client.ts` (CSRF attach, 401 redirect,
+  403 reload, 429 parsing) gets a test. M1 baseline for api-client is
+  fully covered.
+- **E2E**: each milestone adds at least one Playwright spec for its
+  golden path. M1's spec: visit `/admin` (unauthed) → redirected to
+  `/admin/login` → submit valid credentials → redirected to `/admin` →
+  click sign-out → back at login.
+
+**What the Tester runs and what the Tester is allowed to modify:**
+
+- **Runs first**: `npm test` and `npm run test:e2e` on each branch
+  before any manual check. If either fails, attribute the failure (BE
+  vs FE), STOP further checks, write a short "tests broken — re-test
+  required" report, and bounce the branch back.
+- **Allowed to write** (uncommitted): throwaway scripts in `/tmp/*` —
+  mock MCP servers, fixture generators, stress harnesses. Mention them
+  in the report's "Files I touched" section.
+- **Allowed to write under protest** (committed only with TPM blessing):
+  test fixtures in `e2e/fixtures/` IF Tester cannot proceed without
+  them and BE/FE didn't supply them. Flag as a gap defect against the
+  responsible agent rather than silently committing.
+- **NOT allowed**: installing npm packages, editing `vitest.config.ts`,
+  editing `playwright.config.ts`, modifying `package.json` scripts, or
+  authoring `*.test.ts(x)` files. If any of those need changing, that
+  is a defect against BE or FE, reported, not fixed.
+
 ---
 
 ## 3. Frontend Agent Prompt
@@ -305,6 +371,28 @@ EDGE CASES YOU OWN
   in modals.
 - A11y: every form field has a label, every button has an accessible name,
   focus rings visible (use brand color outline), color contrast ≥ 4.5:1.
+
+TESTS YOU WRITE (binding — see §2.6)
+- Vitest + @testing-library/react component tests for every client
+  component you author that has logic (forms, modals, drawers, editor
+  blocks). Cover at minimum: render with default props, primary
+  interaction (submit / click / type), error / disabled state.
+- Unit tests for lib/api-client.ts covering: CSRF header attachment from
+  cookie (mock cookies), CsrfMissingError when cookie absent, 401
+  triggering window.location redirect (mock window.location), 403 with
+  code='CSRF_FAILED' triggering reload, 429 with Retry-After parsed
+  into the thrown error, 2xx returning the parsed typed body.
+- Exactly one Playwright E2E spec per milestone covering the milestone's
+  golden path. Specs go in e2e/m{N}-{slug}.spec.ts. Run against the dev
+  server you start; do NOT mock backend in E2E specs.
+- M1 ONLY: install @testing-library/react, @testing-library/jest-dom,
+  happy-dom, @playwright/test. Add playwright.config.ts and the e2e/
+  directory. Add `"test:e2e": "playwright test"` to package.json. Do not
+  touch the other test scripts (Backend agent owns those).
+- After M1, no test infrastructure changes — only new test files.
+- Mocking guidance: mock fetch at the api-client boundary in component
+  tests. In E2E specs, hit the real backend; if the backend isn't ready,
+  flag in your handoff and skip-mark the spec.
 
 DO NOT
 - Add a UI library. Tailwind + the existing primitives in components/ui/* only.
@@ -434,6 +522,30 @@ EDGE CASES YOU OWN
 - Cookies: HttpOnly, Secure, SameSite=Lax. CSRF cookie is NOT HttpOnly
   (so client JS can read and echo it).
 
+TESTS YOU WRITE (binding — see §2.6)
+- Vitest unit/integration tests covering everything in WHAT YOU OWN that
+  the milestone introduces.
+- For each route handler in this milestone: ≥1 happy-path test plus ≥2
+  error-path tests. Pick the relevant errors per endpoint:
+    · auth-protected routes → 401 (no session) and 403 (bad CSRF)
+    · routes with a body → 422 (Zod parse failure, with `field` populated)
+    · rate-limited routes → 429 with Retry-After
+    · MCP-gated routes → 503 (env unset) and 504 (upstream timeout)
+- For lib/auth.ts: round-trip a session (createSession → verifySession),
+  reject tampered tokens, reject expired tokens, hash and verify password.
+- For lib/blog-schema.ts Zod schemas: parse-success and parse-failure per
+  schema. Heading-block test must reject level=1 and accept level=2..6.
+  Image-block test must reject empty alt.
+- For lib/seo.ts builders (when they land in M5): JSON-LD output is
+  schema.org-valid (snapshot or structural assertion).
+- Postgres tests: use pg-mem via a shared db/test-utils.ts helper that
+  spins up a fresh in-memory DB with all migrations applied. Each test
+  gets a clean DB. Backend agent in M1 creates this helper; M2-M8 reuse.
+- M1 ONLY: install vitest, @vitest/coverage-v8, pg-mem. Write
+  vitest.config.ts. Add to package.json scripts: "test", "test:watch",
+  "test:coverage". Do not touch test:e2e (Frontend owns it).
+- After M1, no test infrastructure changes — only new test files.
+
 DO NOT
 - Expose the MCP URL, MCP auth token, or DB credentials to any client
   response, log line, or error message.
@@ -490,6 +602,22 @@ Branches to test:
   - cms/m{N}-fe-{fe-slug}
 
 TEST IN THIS ORDER
+
+0. Run the existing test suites FIRST (gate everything else on this)
+   On EACH branch, before any manual checks:
+   - git fetch origin && git checkout <branch>
+   - npm install
+   - npm test                  (Vitest unit + integration)
+   - npm run test:e2e          (Playwright; spin up dev server per
+                                playwright.config.ts webServer setting)
+   If anything fails:
+   - Attribute the failure to BE or FE based on what file the failing
+     test covers.
+   - STOP further checks for that branch.
+   - Write a short report titled "tests broken — re-test required" with
+     the failing test names and stderr. Mark verdict FAIL. Do not
+     continue to step 1+ until the responsible agent fixes their branch.
+   If everything is green, proceed to step 1.
 
 1. Backend in isolation (BE branch)
    - git fetch origin && git checkout cms/m{N}-be-{be-slug}
@@ -608,8 +736,26 @@ in a clean run.)
 - Re-test required after fixes? Y/N
 ```
 
+WHAT YOU CAN INSTALL/WRITE (see §2.6 for the full policy)
+- Throwaway scripts in /tmp/* — mock MCP servers, fixture generators,
+  stress / soak harnesses. Not committed. Reference them in the report's
+  "Files I touched" section so the TPM can audit.
+- Test fixtures under e2e/fixtures/ ONLY if they're missing and you
+  cannot proceed without them. Flag this as a defect in the report and
+  do not commit silently — wait for TPM approval.
+
+WHAT YOU CANNOT INSTALL/WRITE
+- No `npm install` of new packages. Production deps are owned by BE/FE.
+- No edits to vitest.config.ts, playwright.config.ts, package.json, or
+  package-lock.json.
+- No authoring of *.test.ts, *.test.tsx, or e2e/*.spec.ts files. Missing
+  test coverage IS a defect — report it against the responsible agent
+  rather than fixing it yourself. Authoring tests would conceal the
+  gap and undermine the audit.
+
 DO NOT
-- Edit any file outside docs/cms/reports/.
+- Edit any file outside docs/cms/reports/ (with the narrow /tmp and
+  fixtures carve-outs above).
 - Push branches. The TPM pushes.
 - Mark a check as PASS without recording the evidence.
 - Skip any "EDGE CASES" item — if you can't test something, mark it
