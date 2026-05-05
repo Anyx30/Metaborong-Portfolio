@@ -327,3 +327,38 @@ The locked C-variant's "Atmospheric Depth" treatment (drop shadows + radial tint
 
 ### Workflow lesson
 `/frontend-design` should run during implementation, not just during planning. Tasks 1–11 shipped plan geometry verbatim; the polish pass that should have happened during the build instead happened post-ship. For future sections, invoke `/frontend-design` at Task scaffold time and again at Task final verification — not just to lock the plan.
+
+---
+
+## 2026-05-05 — Polish pass #2 (frontend-design after agent-browser review)
+
+User feedback after live review: "the animations in the <rect> part is shit" and "the section on the right, the pattern is right but the execution is messy." Agent-browser screenshots confirmed: glyphs too small, inactive glyphs read as disabled-grey, hub generic, spokes invisible, accordion toggles unicode placeholders, child-list rhythm cramped, CTA blends with bullets.
+
+### Trefoil canvas
+- **Glyph footprint 80px → 120px** (50% larger). foreignObject + inner SVG width/height bumped, viewBox unchanged so geometry constants stay valid.
+- **HUB y 250 → 230, SPOKE_LENGTH 160 → 150.** Recenters the trefoil's optical centroid above the geometric center, leaving controlled negative space at the bottom anchored by the radial gradient.
+- **Datum line removed.** At 5% opacity it read as stray noise rather than a baseline.
+- **Spokes — dashed-when-inactive.** Inactive: `#94a3b8` at 0.30 opacity, `strokeDasharray="4 6"`. Active: pillar color, 0.85 opacity, 1.75 stroke. Inactive spokes now read as deliberate dotted connections instead of vanishing hairlines.
+- **Hub redesigned.** Outer dotted ring (r=28, dashed `2 4`), middle solid ring (r=18, brand 0.55), inner glow disc (r=9, brand 0.5, gaussian blur), inner solid disc (r=6, brand). Reads "energy source" not "blueprint marker." Stays permanently brand-blue (the hub is the company, not the active pillar).
+- **Atmospheric backdrop added.** `<radialGradient>` at center, color tracks active pillar at 0.06 opacity, fades to transparent at 55% radius. Rect opacity 0→1 once primed (600ms transition).
+- **Active node halo added.** `<circle r=58>` filled with active pillar color, animates `opacity 0 → 0.10` and `scale 0.7 → 1` over 500ms (200ms delay). Sits behind the foreignObject so the glyph reads as "spotlit." Re-mounts via key-bump per activation.
+- **Pulse line → traveling dot.** Replaced the dashed-line `stroke-dasharray` trick with a small `<circle r=3>` that travels hub→active-node via CSS `transform: translate(var(--dx)px, var(--dy)px)` over 900ms with a `drop-shadow` glow. Reads as energy traveling along the spoke instead of a thin animated line.
+
+### Inactive glyph treatment
+- **Two-tone neutral** instead of single `#9ca3af` line. Stroke `#cbd5e1`, fill `#e2e8f0` at varying low opacity, dot `#94a3b8`. Inactive glyphs now have body — slate forms with structure — rather than reading as washed-out outlines. Reads "dormant," not "disabled."
+- Per-shape inactive fillOpacities tuned: Web3 center hex 0.45, outer hexes 0.25; AI ring 0.35; Product Studio planes 0.55/0.40/0.28 (top→bottom).
+
+### Accordion (right column)
+- **Continuous 1px `border-l`** on the tablist column (`border-border-subtle`), with the active tab overlaying a 3px pillar-colored absolutely-positioned bar at `-left-px`. Replaces the previous border-l-on-active-only pattern that broke the visual rail.
+- **Unicode `▴/▾` → lucide `Plus`/`Minus`** at 16px. Matches site-wide lucide convention.
+- **Child link rhythm** — `gap` between li bumped 10px → 14px; inner title→description gap 2px → 4px. Title and description no longer fuse.
+- **Child link hover** added — `-mx-[8px] px-[8px] py-[6px] rounded-md hover:bg-border-subtle/60`, plus arrow nudges 2px right on group-hover. Provides clear interactive affordance.
+- **Final CTA distinguished from bullets.** `text-[15px] font-bold` with `border-t border-border-subtle pt-[16px] mt-[8px]` divider above. Reads as primary path, not another row.
+- **Tab number** — `text-gray-light text-[12px]` → `text-gray text-[13px] font-mono tabular-nums`. Editorial run, not afterthought.
+- **Active panel `pr-[8px]` → `pr-0`.** Toggle has its own slot; right padding was awkward.
+
+### Why this stuck
+The first polish pass reframed motion grammar (one-shot, Swiss-engineering tone) but kept the canvas under-composed: too much empty area, inactive elements that read as broken, a hub that felt like a placeholder. This pass adds atmospheric depth (radial backdrop + active halo) and bigger glyphs so the trefoil claims its half of the section. The accordion changes are pure rhythm/iconography polish — pattern was already correct.
+
+### Workflow lesson
+Visual-companion HTML/CSS at design-shotgun time is necessary but not sufficient — sub-pixel SVG geometry needs verification at deployed-on-page scale. Agent-browser-driven review at the end of implementation caught problems the plan-time review couldn't have, because the issues were proportional/atmospheric (does this *feel* premium at section scale?) rather than structural. For future signature visuals: schedule an agent-browser review pass on the live page as the last step before marking complete.

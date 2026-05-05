@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Plus, Minus } from 'lucide-react'
 import { pillars } from '@/components/sections/services-data'
 import type { PillarId } from '@/components/sections/services-data'
 import { PillarGlyph } from '@/components/sections/services-glyphs'
@@ -9,8 +10,8 @@ type Props = {
   className?: string
 }
 
-const HUB = { x: 250, y: 250 }
-const SPOKE_LENGTH = 160
+const HUB = { x: 250, y: 230 }
+const SPOKE_LENGTH = 150
 const NODE_OFFSETS: Record<PillarId, { x: number; y: number }> = {
   web3: { x: HUB.x, y: HUB.y - SPOKE_LENGTH },
   'ai-agents': { x: HUB.x - SPOKE_LENGTH * Math.cos(Math.PI / 6), y: HUB.y + SPOKE_LENGTH * Math.sin(Math.PI / 6) },
@@ -25,7 +26,6 @@ const PILLAR_COLOR: Record<PillarId, string> = {
 
 export function ServicesTrefoil({ className = '' }: Props) {
   const [activeId, setActiveId] = useState<PillarId | null>(null)
-  // pulseTick increments on each activation — used as a key to remount the pulse element so its animation re-runs.
   const [pulseTick, setPulseTick] = useState(0)
   const rootRef = useRef<HTMLDivElement | null>(null)
 
@@ -77,7 +77,6 @@ export function ServicesTrefoil({ className = '' }: Props) {
   return (
     <>
       <style precedence="default">{`
-        /* All transitions are one-shot. No infinite loops on this section. */
         .services-spoke {
           transition:
             stroke 350ms cubic-bezier(0.32, 0, 0.16, 1),
@@ -85,20 +84,31 @@ export function ServicesTrefoil({ className = '' }: Props) {
             stroke-width 350ms cubic-bezier(0.32, 0, 0.16, 1);
         }
 
-        .services-pulse {
-          stroke-dasharray: 14 486;
-          stroke-dashoffset: 500;
-          opacity: 0;
-          animation: services-pulse-travel 720ms cubic-bezier(0.32, 0, 0.16, 1) forwards;
-        }
-        @keyframes services-pulse-travel {
-          0%   { stroke-dashoffset: 500; opacity: 0; }
-          14%  { opacity: 1; }
-          86%  { opacity: 1; }
-          100% { stroke-dashoffset: 0; opacity: 0; }
+        .services-atmo {
+          transition: opacity 600ms ease-out;
         }
 
-        /* Glyph stroke-draw: each [data-draw] element reveals via stroke-dashoffset. */
+        .services-pulse-dot {
+          filter: drop-shadow(0 0 4px currentColor);
+          opacity: 0;
+          animation: services-pulse-travel 900ms cubic-bezier(0.32, 0, 0.16, 1) forwards;
+        }
+        @keyframes services-pulse-travel {
+          0%   { transform: translate(0px, 0px); opacity: 0; }
+          18%  { opacity: 1; }
+          82%  { opacity: 1; }
+          100% { transform: translate(var(--dx, 0px), var(--dy, 0px)); opacity: 0; }
+        }
+
+        .services-halo {
+          opacity: 0;
+          animation: services-halo-in 500ms cubic-bezier(0.16, 1, 0.3, 1) 200ms forwards;
+        }
+        @keyframes services-halo-in {
+          from { opacity: 0; transform: scale(0.7); transform-origin: center; transform-box: fill-box; }
+          to   { opacity: 0.10; transform: scale(1); }
+        }
+
         .services-glyph[data-active="true"] [data-draw] {
           animation: services-stroke-draw 620ms cubic-bezier(0.65, 0, 0.35, 1) both;
         }
@@ -107,7 +117,6 @@ export function ServicesTrefoil({ className = '' }: Props) {
           to   { stroke-dashoffset: 0; }
         }
 
-        /* Focus ring fallback for buttons inside foreignObject. */
         .services-node-btn:focus-visible svg {
           outline: 2px solid var(--color-brand);
           outline-offset: 4px;
@@ -116,12 +125,15 @@ export function ServicesTrefoil({ className = '' }: Props) {
 
         @media (prefers-reduced-motion: reduce) {
           .services-spoke,
-          .services-pulse,
+          .services-pulse-dot,
+          .services-halo,
+          .services-atmo,
           .services-glyph * {
             transition: none !important;
             animation: none !important;
           }
-          .services-pulse { display: none !important; }
+          .services-pulse-dot { display: none !important; }
+          .services-halo { opacity: 0.10 !important; transform: none !important; }
           .services-glyph[data-active="true"] [data-draw] {
             stroke-dashoffset: 0 !important;
           }
@@ -133,19 +145,27 @@ export function ServicesTrefoil({ className = '' }: Props) {
       >
         <div className="relative aspect-square max-h-[520px] w-full">
           <svg viewBox="0 0 500 500" className="w-full h-full">
-            {/* Datum line — single horizontal architectural baseline */}
-            <line
-              x1="40"
-              x2="460"
-              y1={HUB.y}
-              y2={HUB.y}
-              stroke="#303030"
-              strokeOpacity="0.05"
-              strokeWidth="1"
+            <defs>
+              <radialGradient id="services-atmo-grad" cx="50%" cy="46%" r="55%">
+                <stop offset="0%" stopColor={activeColor} stopOpacity="0.06" />
+                <stop offset="100%" stopColor={activeColor} stopOpacity="0" />
+              </radialGradient>
+              <filter id="services-hub-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2.5" />
+              </filter>
+            </defs>
+
+            {/* Atmospheric backdrop — fades in once primed, color tracks active pillar */}
+            <rect
+              width="500"
+              height="500"
+              fill="url(#services-atmo-grad)"
+              className="services-atmo"
+              style={{ opacity: primed ? 1 : 0 }}
               aria-hidden="true"
             />
 
-            {/* Spokes — neutral at rest, pillar-colored when active */}
+            {/* Spokes — dashed when inactive, solid when active */}
             {pillars.map((p) => {
               const node = NODE_OFFSETS[p.id]
               const isActive = p.id === activeId
@@ -156,57 +176,90 @@ export function ServicesTrefoil({ className = '' }: Props) {
                   y1={HUB.y}
                   x2={node.x}
                   y2={node.y}
-                  stroke={isActive ? PILLAR_COLOR[p.id] : '#303030'}
-                  strokeOpacity={isActive ? 0.85 : 0.10}
-                  strokeWidth={isActive ? 1.5 : 1}
+                  stroke={isActive ? PILLAR_COLOR[p.id] : '#94a3b8'}
+                  strokeOpacity={isActive ? 0.85 : 0.30}
+                  strokeWidth={isActive ? 1.75 : 1}
+                  strokeDasharray={isActive ? undefined : '4 6'}
                   className="services-spoke"
                   aria-hidden="true"
                 />
               )
             })}
 
-            {/* One-shot energy pulse along active spoke */}
-            {activeNode && (
-              <line
-                key={`pulse-${activeId}-${pulseTick}`}
-                x1={HUB.x}
-                y1={HUB.y}
-                x2={activeNode.x}
-                y2={activeNode.y}
-                stroke={activeColor}
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="services-pulse"
+            {/* Active node halo — sits behind the glyph */}
+            {activeId && activeNode && (
+              <circle
+                key={`halo-${activeId}-${pulseTick}`}
+                cx={activeNode.x}
+                cy={activeNode.y}
+                r="58"
+                fill={activeColor}
+                className="services-halo"
                 aria-hidden="true"
               />
             )}
 
-            {/* Hub cluster — engineered centroid */}
+            {/* Traveling pulse dot — hub → active node */}
+            {activeNode && (
+              <circle
+                key={`pulse-${activeId}-${pulseTick}`}
+                cx={HUB.x}
+                cy={HUB.y}
+                r="3"
+                fill={activeColor}
+                color={activeColor}
+                className="services-pulse-dot"
+                style={{
+                  ['--dx' as string]: `${activeNode.x - HUB.x}px`,
+                  ['--dy' as string]: `${activeNode.y - HUB.y}px`,
+                }}
+                aria-hidden="true"
+              />
+            )}
+
+            {/* Hub — layered concentric structure with soft glow */}
             <g aria-hidden="true">
-              {/* Crosshair tick marks at cardinal axes */}
-              <line x1={HUB.x - 36} x2={HUB.x - 28} y1={HUB.y} y2={HUB.y} stroke="#204AF8" strokeWidth="1" strokeOpacity="0.3" />
-              <line x1={HUB.x + 28} x2={HUB.x + 36} y1={HUB.y} y2={HUB.y} stroke="#204AF8" strokeWidth="1" strokeOpacity="0.3" />
-              <line x1={HUB.x} x2={HUB.x} y1={HUB.y - 36} y2={HUB.y - 28} stroke="#204AF8" strokeWidth="1" strokeOpacity="0.3" />
-              <line x1={HUB.x} x2={HUB.x} y1={HUB.y + 28} y2={HUB.y + 36} stroke="#204AF8" strokeWidth="1" strokeOpacity="0.3" />
-              {/* Outer ring */}
-              <circle cx={HUB.x} cy={HUB.y} r="24" fill="none" stroke="#204AF8" strokeWidth="1" strokeOpacity="0.4" />
-              {/* Inner ring */}
-              <circle cx={HUB.x} cy={HUB.y} r="12" fill="none" stroke="#204AF8" strokeWidth="1" strokeOpacity="0.6" />
-              {/* Center dot */}
-              <circle cx={HUB.x} cy={HUB.y} r="3" fill="#204AF8" />
+              <circle
+                cx={HUB.x}
+                cy={HUB.y}
+                r="28"
+                fill="none"
+                stroke="#204AF8"
+                strokeWidth="1"
+                strokeOpacity="0.32"
+                strokeDasharray="2 4"
+              />
+              <circle
+                cx={HUB.x}
+                cy={HUB.y}
+                r="18"
+                fill="none"
+                stroke="#204AF8"
+                strokeWidth="1.25"
+                strokeOpacity="0.55"
+              />
+              <circle
+                cx={HUB.x}
+                cy={HUB.y}
+                r="9"
+                fill="#204AF8"
+                opacity="0.5"
+                filter="url(#services-hub-glow)"
+              />
+              <circle cx={HUB.x} cy={HUB.y} r="6" fill="#204AF8" />
             </g>
 
-            {/* Pillar nodes */}
+            {/* Pillar nodes — glyphs at 120px footprint */}
             {pillars.map((p) => {
               const node = NODE_OFFSETS[p.id]
               const isActive = p.id === activeId
               return (
                 <foreignObject
                   key={`node-${p.id}`}
-                  x={node.x - 40}
-                  y={node.y - 40}
-                  width="80"
-                  height="80"
+                  x={node.x - 60}
+                  y={node.y - 60}
+                  width="120"
+                  height="120"
                   style={{ overflow: 'visible' }}
                 >
                   <button
@@ -223,7 +276,12 @@ export function ServicesTrefoil({ className = '' }: Props) {
           </svg>
         </div>
 
-        <div className="flex flex-col" role="tablist" aria-orientation="vertical" onKeyDown={handleTabKeyDown}>
+        <div
+          className="relative flex flex-col border-l border-border-subtle"
+          role="tablist"
+          aria-orientation="vertical"
+          onKeyDown={handleTabKeyDown}
+        >
           {pillars.map((p) => {
             const isActive = p.id === activeId
             const panelId = `services-panel-${p.id}`
@@ -231,9 +289,15 @@ export function ServicesTrefoil({ className = '' }: Props) {
             return (
               <div
                 key={p.id}
-                className={`border-b border-border-subtle last:border-b-0 ${isActive ? 'border-l-[3px] pl-[24px]' : 'border-l-0 pl-[27px]'}`}
-                style={isActive ? { borderLeftColor: p.color } : undefined}
+                className="relative border-b border-border-subtle last:border-b-0 pl-[24px]"
               >
+                {isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -left-px top-0 bottom-0 w-[3px]"
+                    style={{ background: p.color }}
+                  />
+                )}
                 <button
                   type="button"
                   role="tab"
@@ -244,7 +308,7 @@ export function ServicesTrefoil({ className = '' }: Props) {
                   onClick={() => activate(p.id)}
                   className="w-full flex items-center gap-[16px] py-[20px] bg-transparent border-0 cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                 >
-                  <span className="text-[12px] font-mono text-gray-light">{p.num}</span>
+                  <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
                   <span className="w-[8px] h-[8px] rounded-full" style={{ background: p.color }} />
                   <span
                     className="text-[18px] font-semibold tracking-[-0.02em] text-dark"
@@ -252,26 +316,33 @@ export function ServicesTrefoil({ className = '' }: Props) {
                   >
                     {p.label}
                   </span>
-                  <span className="ml-auto text-gray-light" aria-hidden="true">{isActive ? '▴' : '▾'}</span>
+                  <span className="ml-auto text-gray-light flex items-center" aria-hidden="true">
+                    {isActive ? <Minus size={16} /> : <Plus size={16} />}
+                  </span>
                 </button>
                 {isActive && (
-                  <div role="tabpanel" id={panelId} aria-labelledby={tabId} className="pb-[24px] pr-[8px]">
+                  <div role="tabpanel" id={panelId} aria-labelledby={tabId} className="pb-[24px]">
                     <h3 className="text-[20px] font-bold tracking-[-0.025em] leading-[1.2] text-dark mb-[12px]">
                       {p.headline}
                     </h3>
                     <p className="text-[14px] text-gray leading-[1.75] tracking-[-0.005em] mb-[20px]">
                       {p.body}
                     </p>
-                    <ul className="flex flex-col gap-[10px] list-none p-0 m-0 mb-[20px]">
+                    <ul className="flex flex-col gap-[14px] list-none p-0 m-0 mb-[8px]">
                       {p.children.map((c) => (
                         <li key={c.slug}>
                           <a
                             href={`${p.hubHref}${c.slug}/`}
-                            className="group flex flex-col gap-[2px] no-underline"
+                            className="group flex flex-col gap-[4px] no-underline -mx-[8px] px-[8px] py-[6px] rounded-md transition-colors hover:bg-border-subtle/60"
                           >
                             <span className="flex items-center gap-[6px] text-[14px] font-semibold text-dark">
                               {c.name}
-                              <span aria-hidden="true">→</span>
+                              <span
+                                aria-hidden="true"
+                                className="inline-block transition-transform duration-200 group-hover:translate-x-[2px]"
+                              >
+                                →
+                              </span>
                             </span>
                             <span className="text-[13px] text-gray leading-[1.5]">
                               {c.description}
@@ -280,13 +351,15 @@ export function ServicesTrefoil({ className = '' }: Props) {
                         </li>
                       ))}
                     </ul>
-                    <a
-                      href={p.hubHref}
-                      className="text-[14px] font-semibold tracking-[-0.01em] no-underline"
-                      style={{ color: p.color }}
-                    >
-                      {p.hubCta} →
-                    </a>
+                    <div className="border-t border-border-subtle pt-[16px] mt-[8px]">
+                      <a
+                        href={p.hubHref}
+                        className="text-[15px] font-bold tracking-[-0.01em] no-underline hover:underline"
+                        style={{ color: p.color }}
+                      >
+                        {p.hubCta} →
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
