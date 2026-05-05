@@ -265,3 +265,29 @@ The locked decisions in question (#8, #9, #11) were all "decided here so we don'
 Reference artifacts updated:
 - New baseline screenshot: `/tmp/services-after-v3.png` (web3 active), `/tmp/services-ai-active.png`, `/tmp/services-ps-active.png`.
 - Original `~/.gstack/projects/.../section-services-trefoil-20260504/approved.json` retained for historical reference but no longer the source of truth for shipped geometry.
+
+---
+
+## Section 5 deviations — Session 7.6 3D rebuild (2026-05-05)
+
+After the 7.5 polish pass, the user reviewed live and called out:
+- Hub still reads as "broken" — the 38px breathing radial glow looks like a render artifact, not a designed center.
+- Spoke gradient (vivid-at-hub fade-to-node) makes the lines appear to stop short of the glyphs.
+- The SVG glyphs read as static ornaments — no premium dimensionality.
+- Glyph concept assignment wasn't right: Web3 should be the cube (block), Product Studio should be layered slabs (matching the nav dropdown's `Layers` icon), AI should be a neural network.
+
+**Rebuild:**
+
+1. **Glyphs moved off SVG to WebGL via react-three-fiber + drei.** Each glyph is now its own 104×104 R3F `<Canvas>` inside the trefoil's `<foreignObject>`. R3F + drei already in deps (hero-orb uses them); no new packages.
+2. **Web3 → beveled iso cube.** `RoundedBox` (drei), `MeshStandardMaterial` (metalness 0.3, roughness 0.42, env-map intensity 0.6), orthographic camera, two directional lights (key from upper-front-right + cool fill from lower-back-left). Auto-rotates only when active. Reads as a blockchain block.
+3. **AI Agents → neural network.** 4 spheres at varied 3D positions (top, left-front, right-back, bottom) connected by 5 `TubeGeometry` edges along quadratic bezier curves with a slight inward-bowed midpoint offset for organic feel. Emissive green nodes (intensity 0.18) for inner glow. Perspective camera. Slow Y-rotation always (0.15 rad/s inactive, 0.45 active) plus subtle X-axis nod via `Math.sin(t)`.
+4. **Product Studio → stacked layered slabs.** 3 thin `RoundedBox` slabs (1.55×0.18×1.15) stacked with Y offset (0.42 / 0 / -0.42), three orange tones (#FFB068, #F6851B, #C56612), ascending metalness/roughness. Iso pose via `rotation={[π/7, -π/5, 0]}`. `ContactShadows` from drei underneath (opacity 0.32, blur 2.2) for real grounding. Mirrors the lucide `Layers` icon used in the nav dropdown's Product Studio entry.
+5. **All marks respect `prefers-reduced-motion: reduce`** — rotation skipped when matched.
+6. **Hub rebuilt.** Killed the 38px breathing radial-gradient glow + 7s breath animation entirely. Hub is now 3 layers: 11px hairline ring (0.35 opacity) + 6px solid #204AF8 core + 2px white pinhole highlight. Precise center, no smudge.
+7. **Spokes rebuilt.** Killed the linear gradient (vivid-at-hub→fade-at-node, was the source of the "lines stop short" perception). Spokes are now solid #204AF8 stroke, 0.4 opacity inactive / 0.85 active, 1px / 1.5px width, full-length from hub center to node center. The 3D glyph mass covers the endpoint cleanly.
+8. **Mobile fallback unchanged.** Mobile (<lg) keeps the SVG `services-glyphs.tsx` path because three R3F canvases on mobile is the wrong perf trade. SVG glyphs there were already reasonable as visual anchors at small scale.
+
+**Lessons added to the file:**
+- For sub-pixel-typography sections (Problem, glyphs as marks), hand-authored SVG remains the right call.
+- For sections where the signature element is a *form/object* the user perceives spatially (cube, network, layered solid), Three.js earns its weight even at small scale — the dimensional reading carries the premium feel that flat SVG cannot deliver.
+- Visual review post-implementation is load-bearing. Plan-locked decisions about geometry and motion are best treated as defaults, not contracts. The user looked at the shipped result and corrected the direction in two places (geometry + render technology); both corrections were correct.
