@@ -202,21 +202,24 @@ export type AiReadinessReport = z.infer<typeof aiReadinessReportSchema>
 export const postStatusSchema = z.enum(['draft', 'published'])
 export type PostStatus = z.infer<typeof postStatusSchema>
 
+// Length caps mirror the PATCH body schema in lib/post-validation.ts —
+// see that file's comment block for rationale. Caps are enforced at the
+// wire-shape layer so anything we round-trip is also bounded.
 export const postSchema = z.object({
   id:                       z.string().uuid(),
   slug:                     z.string().regex(slugRegex).min(1).max(80),
   title:                    z.string().trim().min(1).max(200),
-  excerpt:                  z.string().nullable(),
+  excerpt:                  z.string().max(500).nullable(),
   status:                   postStatusSchema,
   content_json:             contentJsonSchema,
   content_schema_version:   z.literal(1),
   cover_image_id:           z.string().uuid().nullable(),
   og_image_id:              z.string().uuid().nullable(),
-  tags:                     z.array(z.string().regex(tagRegex)).max(10),
-  author_name:              z.string().min(1),
+  tags:                     z.array(z.string().regex(tagRegex).max(40)).max(10),
+  author_name:              z.string().min(1).max(120),
   author_url:               z.string().url().nullable(),
-  meta_title:               z.string().nullable(),
-  meta_description:         z.string().nullable(),
+  meta_title:               z.string().max(200).nullable(),
+  meta_description:         z.string().max(160).nullable(),
   canonical_url:            z.string().url().nullable(),
   geo_variants:             geoVariantsSchema,
   ai_readiness_score:       z.number().int().min(0).max(100).nullable(),
