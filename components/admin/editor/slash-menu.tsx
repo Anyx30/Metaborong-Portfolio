@@ -82,12 +82,15 @@ export function SlashMenu({ editor }: SlashMenuProps) {
     function onKeyDown(e: KeyboardEvent) {
       if (open) return
       if (e.key !== '/') return
-      // Position the menu where the caret is.
+      // Position the menu where the caret is. The keydown fires *before*
+      // ProseMirror inserts the `/`, so the slash itself lives at
+      // (selection.from - 1) once the rAF tick runs.
       requestAnimationFrame(() => {
         const sel = editor.state.selection
-        const start = sel.from
+        const after = sel.from
+        const start = Math.max(0, after - 1)
         slashStartRef.current = start
-        const coords = editor.view.coordsAtPos(start)
+        const coords = editor.view.coordsAtPos(after)
         const root = dom.getBoundingClientRect()
         setPos({
           top: coords.bottom - root.top + 4,
