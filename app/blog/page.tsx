@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   title: 'Blog — Web3, AI agents, and product engineering — Metaborong',
   description:
     'Notes from the Metaborong studio on shipping Web3 protocols, AI agents, and product systems.',
+  alternates: {
+    // Tag-filtered URLs (?tag=foo) and paginated URLs (?page=2) all
+    // canonicalize to /blog so search engines don't index them as
+    // duplicate-content competitors of the unfiltered index.
+    canonical: '/blog',
+  },
 }
 
 // Per PRD §5.4 — published posts revalidate every 60s; publish/unpublish

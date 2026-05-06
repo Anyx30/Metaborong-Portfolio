@@ -91,6 +91,11 @@ export function ImagePicker({ open, mode, onClose, onSelect }: ImagePickerProps)
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const altInputRef = useRef<HTMLInputElement | null>(null)
+  // Captures the element that opened the picker so focus returns there
+  // on close. WCAG 2.4.3: focus order should not jump to <body> when a
+  // dialog dismisses — keyboard users would otherwise be tabbing back
+  // through the entire page.
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   // ── Reset when reopening ──
   useEffect(() => {
@@ -162,10 +167,18 @@ export function ImagePicker({ open, mode, onClose, onSelect }: ImagePickerProps)
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  // Focus the close button on open so screen readers announce the dialog.
+  // Focus the close button on open so screen readers announce the dialog,
+  // and restore focus to the opening trigger on close.
   useEffect(() => {
-    if (!open) return
-    requestAnimationFrame(() => closeBtnRef.current?.focus())
+    if (open) {
+      const active = document.activeElement
+      if (active instanceof HTMLElement) triggerRef.current = active
+      requestAnimationFrame(() => closeBtnRef.current?.focus())
+      return
+    }
+    const trigger = triggerRef.current
+    if (trigger && document.body.contains(trigger)) trigger.focus()
+    triggerRef.current = null
   }, [open])
 
   // ── Paste-from-clipboard ──
