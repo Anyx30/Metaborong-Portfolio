@@ -37,7 +37,12 @@ export function HeadingNodeView({ node, updateAttributes, selected }: NodeViewPr
     >
       <div
         contentEditable={false}
-        className="absolute -top-[18px] left-0 hidden items-center gap-1 group-hover:flex group-focus-within:flex"
+        // Always visible — the heading-level control is the heading
+        // block's primary affordance and must be reachable without a
+        // hover or focus-within trick (Tiptap's contenteditable host is
+        // an *ancestor* of the NodeView, so `:focus-within` on the
+        // wrapper never matches when the caret is inside the heading).
+        className="absolute -top-[16px] left-0 flex items-center gap-1"
       >
         <label className="sr-only" htmlFor={`heading-level-${node.attrs.id ?? 'new'}`}>
           Heading level
