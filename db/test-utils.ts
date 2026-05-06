@@ -77,10 +77,14 @@ export function createTestDb(): TestDbHandle {
   // type handling). Strip that key before each query reaches pg-mem.
   // Pool and Client are the same class in pg-mem; one patch covers both.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // pg-mem returns a fresh Pool class per createPg() call, so the patch
+  // below must run on every test bootstrap — there is no prototype reuse
+  // to gate against.
   const proto = adapter.Pool.prototype as any
-  if (!proto.__mb_typesStripped) {
+  {
     const origQuery = proto.query
-    proto.query = function patchedQuery(config: unknown, ...rest: unknown[]) {
+    proto.query = async function patchedQuery(config: unknown, ...rest: unknown[]) {
+      let cleanConfig: unknown = config
       if (config && typeof config === 'object') {
         const obj = config as Record<string, unknown>
         if ('types' in obj || 'rowMode' in obj) {
@@ -91,12 +95,40 @@ export function createTestDb(): TestDbHandle {
           // values that pg-mem returns already match Drizzle's expectations.
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { types: _t, rowMode: _r, ...clean } = obj
-          return origQuery.call(this, clean, ...rest)
+          cleanConfig = clean
         }
       }
-      return origQuery.call(this, config, ...rest)
+      const result = await origQuery.call(this, cleanConfig, ...rest)
+      // Two pg-mem ↔ drizzle impedance mismatches to bridge here:
+      //   1. pg-mem returns `fields: []` (no column metadata).
+      //   2. pg-mem ignores rowMode='array' (we strip it above) and returns
+      //      object rows like `{id: 'a', tags: [...]}`.
+      // drizzle's mapResultRow uses POSITIONAL access (`row[columnIndex]`),
+      // so it needs array-mode rows. Convert objects to arrays in the
+      // order of the synthesized fields so drizzle's positional decoder
+      // resolves correctly. Empty result sets pass through unchanged.
+      if (
+        result && typeof result === 'object' &&
+        Array.isArray((result as { rows?: unknown[] }).rows) &&
+        (result as { rows: unknown[] }).rows.length > 0 &&
+        typeof (result as { rows: unknown[] }).rows[0] === 'object' &&
+        (result as { rows: unknown[] }).rows[0] !== null &&
+        !Array.isArray((result as { rows: unknown[] }).rows[0])
+      ) {
+        const r = result as {
+          rows: Array<Record<string, unknown>>
+          rowCount: number
+          command: string
+        }
+        const columnNames = Object.keys(r.rows[0])
+        const fields = columnNames.map((name) => ({ name, dataTypeID: 0 }))
+        const arrayRows = r.rows.map((row) => columnNames.map((name) => row[name]))
+        // pg-mem's `fields` is a getter-only property on the original
+        // object; return a shallow-copied result so we can override safely.
+        return { ...r, rows: arrayRows, fields }
+      }
+      return result
     }
-    proto.__mb_typesStripped = true
   }
   void pgTypes // keep the import live for callers that want a real parser
 
