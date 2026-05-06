@@ -83,7 +83,9 @@ export async function POST(req: NextRequest) {
     const replay = new Request(req.url, {
       method:  'POST',
       headers: req.headers,
-      body:    wireBuf,
+      // Node Buffer is not in the BodyInit union; wrap as Uint8Array so
+      // the Web Request constructor accepts it.
+      body:    new Uint8Array(wireBuf),
     })
     formData = await replay.formData()
   } catch {
