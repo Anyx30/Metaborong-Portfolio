@@ -220,6 +220,88 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   throw new ApiError({ status: res.status, code, error: message, field, retryAfter })
 }
 
+export interface MultipartOptions {
+  /** Called as the upload streams up. Reflects ProgressEvent.loaded / .total. */
+  onProgress?: (loaded: number, total: number) => void
+  signal?: AbortSignal
+}
+
+/**
+ * POST a FormData body with upload-progress callbacks. Implemented via
+ * XMLHttpRequest because `fetch()` does not expose `progress` events for
+ * the request body — only response bodies. Reuses the same CSRF / 401 /
+ * 403 / 429 handling as the fetch-based `request()` so callers see one
+ * error shape across both.
+ *
+ * Returns the parsed 2xx body typed via the generic. Throws ApiError /
+ * NetworkError / CsrfMissingError just like the rest of the client.
+ */
+function postMultipart<T>(path: string, formData: FormData, opts: MultipartOptions = {}): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const csrf = readCookie(CSRF_COOKIE_NAME)
+    if (!csrf) {
+      reject(new CsrfMissingError())
+      return
+    }
+
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', path, true)
+    xhr.withCredentials = true
+    xhr.setRequestHeader('Accept', 'application/json')
+    xhr.setRequestHeader('X-CSRF-Token', csrf)
+    // Don't set Content-Type — the browser supplies the multipart boundary.
+
+    if (opts.onProgress && xhr.upload) {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) opts.onProgress!(e.loaded, e.total)
+      })
+    }
+
+    xhr.addEventListener('load', () => {
+      const status = xhr.status
+      const text = xhr.responseText
+      let parsed: unknown = null
+      if (text) {
+        try { parsed = JSON.parse(text) } catch { /* fall through */ }
+      }
+
+      if (status >= 200 && status < 300) {
+        resolve(parsed as T)
+        return
+      }
+
+      const envelope: Partial<ApiErrorEnvelope> =
+        parsed && typeof parsed === 'object' ? (parsed as Partial<ApiErrorEnvelope>) : {}
+      const code: ApiErrorCode = (envelope.code as ApiErrorCode) || 'INTERNAL'
+      const message = envelope.error || `Upload failed with status ${status}.`
+      const field = envelope.field
+
+      if (status === 401) redirectToLogin()
+      if (status === 403 && code === 'CSRF_FAILED') reloadForCsrf()
+
+      const retryAfter = status === 429 ? parseRetryAfter(xhr.getResponseHeader('Retry-After')) : undefined
+      reject(new ApiError({ status, code, error: message, field, retryAfter }))
+    })
+
+    xhr.addEventListener('error', () => {
+      reject(new NetworkError())
+    })
+    xhr.addEventListener('abort', () => {
+      reject(new DOMException('aborted', 'AbortError'))
+    })
+
+    if (opts.signal) {
+      if (opts.signal.aborted) {
+        xhr.abort()
+        return
+      }
+      opts.signal.addEventListener('abort', () => xhr.abort(), { once: true })
+    }
+
+    xhr.send(formData)
+  })
+}
+
 export const api = {
   get: <T>(path: string, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...opts, method: 'GET' }),
@@ -229,4 +311,5 @@ export const api = {
     request<T>(path, { ...opts, method: 'PATCH', body }),
   delete: <T>(path: string, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...opts, method: 'DELETE' }),
+  postMultipart,
 }
