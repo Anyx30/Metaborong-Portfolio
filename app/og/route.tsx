@@ -3,7 +3,10 @@
 // editorial team needing to upload one.
 //
 // Usage:  /og?slug=<post-slug>
-// Cached by edge per the response's Cache-Control headers (set by ImageResponse).
+// Cache: explicit Cache-Control on the response so Vercel's edge caches the
+// rendered PNG for 24h with a 7d stale-while-revalidate window. The browser
+// itself revalidates on every navigation (max-age=0) since the post title
+// can change post-publish.
 
 import { ImageResponse } from 'next/og'
 import { getPostBySlug } from '@/lib/posts'
@@ -28,7 +31,7 @@ export async function GET(req: Request): Promise<Response> {
   const tagline = post?.excerpt ?? 'Web3 protocols. AI agents. Custom SaaS.'
   const tags = post?.tags ?? []
 
-  return new ImageResponse(
+  const response = new ImageResponse(
     (
       <div
         style={{
@@ -139,4 +142,11 @@ export async function GET(req: Request): Promise<Response> {
       height: HEIGHT,
     },
   )
+
+  response.headers.set(
+    'Cache-Control',
+    'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800',
+  )
+
+  return response
 }
