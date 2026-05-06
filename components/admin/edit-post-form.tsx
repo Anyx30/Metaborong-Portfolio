@@ -725,9 +725,12 @@ function SaveIndicator({
     return () => clearInterval(id)
   }, [state.kind])
 
+  // Idle / saving / saved transitions all announce through a single
+  // role="status" aria-live="polite" region so screen-reader users hear
+  // the autosave lifecycle. Errors promote to role="alert" (assertive).
   if (state.kind === 'error') {
     return (
-      <div role="alert" className="flex items-center gap-2 text-[12px] text-[#b42318] tracking-[-0.005em]">
+      <div role="alert" aria-live="assertive" className="flex items-center gap-2 text-[12px] text-[#b42318] tracking-[-0.005em]">
         <span className="inline-block h-2 w-2 rounded-full bg-[#b42318]" aria-hidden="true" />
         {state.message}
         <button
@@ -742,7 +745,7 @@ function SaveIndicator({
   }
   if (state.kind === 'saving') {
     return (
-      <div className="flex items-center gap-2 text-[12px] text-gray tracking-[-0.005em]">
+      <div role="status" aria-live="polite" className="flex items-center gap-2 text-[12px] text-gray tracking-[-0.005em]">
         <span aria-hidden="true" className="inline-block h-[10px] w-[10px] animate-spin rounded-full border-2 border-gray/30 border-t-gray" />
         Saving…
       </div>
@@ -750,14 +753,14 @@ function SaveIndicator({
   }
   if (state.kind === 'saved') {
     return (
-      <div className="flex items-center gap-2 text-[12px] text-gray tracking-[-0.005em]">
+      <div role="status" aria-live="polite" className="flex items-center gap-2 text-[12px] text-gray tracking-[-0.005em]">
         <span className="inline-block h-2 w-2 rounded-full bg-[#10b981]" aria-hidden="true" />
         Saved {relativeTime(state.at)}
       </div>
     )
   }
   return (
-    <div className="flex items-center gap-2 text-[12px] text-gray-light tracking-[-0.005em]">
+    <div role="status" aria-live="polite" className="flex items-center gap-2 text-[12px] text-gray-light tracking-[-0.005em]">
       <span className="inline-block h-2 w-2 rounded-full bg-gray-subtle" aria-hidden="true" />
       {dirty ? 'Unsaved changes' : validationOk ? 'Up to date' : 'Fix validation errors to save'}
     </div>
@@ -778,8 +781,19 @@ function DeleteModal({
   const inputRef = useRef<HTMLInputElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
+  // Element that opened the modal — focus returns there on close so the
+  // keyboard user lands on the Delete button they invoked, not <body>.
+  const triggerRef = useRef<HTMLElement | null>(null)
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  useEffect(() => {
+    const active = document.activeElement
+    if (active instanceof HTMLElement) triggerRef.current = active
+    inputRef.current?.focus()
+    return () => {
+      const trigger = triggerRef.current
+      if (trigger && document.body.contains(trigger)) trigger.focus()
+    }
+  }, [])
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape' && !busy) onCancel()

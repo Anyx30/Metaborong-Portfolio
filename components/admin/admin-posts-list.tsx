@@ -213,9 +213,19 @@ function DeleteConfirmModal({
   const inputRef = useRef<HTMLInputElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
+  // Captures the per-row Delete button so focus returns there on cancel.
+  // On a successful delete the row is removed; the trigger is gone, so
+  // the restore is a no-op (handled by the document.body.contains gate).
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
+    const active = document.activeElement
+    if (active instanceof HTMLElement) triggerRef.current = active
     inputRef.current?.focus()
+    return () => {
+      const trigger = triggerRef.current
+      if (trigger && document.body.contains(trigger)) trigger.focus()
+    }
   }, [])
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
