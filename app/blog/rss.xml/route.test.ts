@@ -28,6 +28,8 @@ async function insertPublished(opts: {
   title: string
   publishedAt: Date
   tags?: string[]
+  excerpt?: string | null
+  content_json?: unknown[]
 }) {
   await testHandle.db.insert(postsTable).values({
     slug: opts.slug,
@@ -35,6 +37,8 @@ async function insertPublished(opts: {
     status: 'published',
     author_name: 'admin',
     tags: opts.tags ?? [],
+    excerpt: opts.excerpt ?? null,
+    content_json: (opts.content_json ?? []) as never,
     published_at: opts.publishedAt,
     updated_at: opts.publishedAt,
   })
@@ -132,5 +136,76 @@ describe('GET /blog/rss.xml', () => {
     const { GET } = await loadRoute()
     const xml = await (await GET()).text()
     expect(xml).not.toContain('<title>Cooking</title>')
+  })
+
+  // M8-core hardening — fixes the M5-core carryover gap where items
+  // shipped without <description>. Every item must now carry one.
+  it('emits <description> using post.excerpt when set', async () => {
+    await insertPublished({
+      slug: 'has-excerpt',
+      title: 'Excerpted post',
+      excerpt: 'A short, editor-written summary.',
+      publishedAt: new Date('2026-04-10T00:00:00Z'),
+    })
+    const { GET } = await loadRoute()
+    const xml = await (await GET()).text()
+    expect(xml).toContain('<description>A short, editor-written summary.</description>')
+  })
+
+  it('falls back to a derived snippet when excerpt is null', async () => {
+    await insertPublished({
+      slug: 'derived',
+      title: 'No excerpt',
+      excerpt: null,
+      content_json: [
+        {
+          id: 'p1',
+          type: 'paragraph',
+          role: 'intro',
+          data: {
+            text:
+              'Reactive scaling is the muscle our agents grow first; observability is the nervous system that lets us correct them.',
+          },
+        },
+      ],
+      publishedAt: new Date('2026-04-11T00:00:00Z'),
+    })
+    const { GET } = await loadRoute()
+    const xml = await (await GET()).text()
+    // The description tag must exist with non-empty content.
+    expect(xml).toMatch(/<description>Reactive scaling[^<]*<\/description>/)
+  })
+
+  it('every item ships with a <description> element', async () => {
+    await insertPublished({
+      slug: 'a',
+      title: 'A',
+      excerpt: 'Aaaa',
+      publishedAt: new Date('2026-04-12T00:00:00Z'),
+    })
+    await insertPublished({
+      slug: 'b',
+      title: 'B',
+      excerpt: null,
+      content_json: [
+        { id: 'p', type: 'paragraph', data: { text: 'Body of B.' } },
+      ],
+      publishedAt: new Date('2026-04-13T00:00:00Z'),
+    })
+    await insertPublished({
+      // No content, no excerpt — falls back to title (worst case still
+      // a non-empty description element, never a missing one).
+      slug: 'c',
+      title: 'C',
+      publishedAt: new Date('2026-04-14T00:00:00Z'),
+    })
+
+    const { GET } = await loadRoute()
+    const xml = await (await GET()).text()
+    const itemCount        = (xml.match(/<item>/g) ?? []).length
+    const descriptionCount = (xml.match(/<description>/g) ?? []).length
+    // -1 because <channel><description> also matches.
+    expect(itemCount).toBeGreaterThanOrEqual(3)
+    expect(descriptionCount - 1).toBe(itemCount)
   })
 })

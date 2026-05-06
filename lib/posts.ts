@@ -172,6 +172,36 @@ export async function listPublishedPosts(
 }
 
 /**
+ * Newest-first published posts with the fields RSS / GEO surfaces need.
+ * `listPublishedPosts` returns `PostSummary` (no excerpt / content_json),
+ * which is the right shape for the dashboard but not for a feed item that
+ * needs a `<description>`. Rather than thicken every summary, we expose a
+ * narrow helper here that pulls just the columns the feed reads.
+ */
+export async function listPublishedForFeed(
+  limit: number,
+  dbHandle: DbLike = defaultDb,
+): Promise<Array<Pick<Post,
+  'slug' | 'title' | 'excerpt' | 'tags' | 'content_json' | 'published_at'
+>>> {
+  const cap = Math.min(200, Math.max(1, Math.floor(limit)))
+  const rows = (await dbHandle
+    .select()
+    .from(posts)
+    .where(eq(posts.status, 'published'))
+    .orderBy(desc(posts.published_at))
+    .limit(cap)) as PostRow[]
+  return rows.map((row) => ({
+    slug:         row.slug,
+    title:        row.title,
+    excerpt:      row.excerpt ?? null,
+    tags:         row.tags,
+    content_json: row.content_json,
+    published_at: toIso(row.published_at),
+  }))
+}
+
+/**
  * Admin-only read of a single post by id, regardless of status. The
  * caller MUST have already gated on requireAdmin(); this helper does not
  * check session itself (so it's reusable from server components, route

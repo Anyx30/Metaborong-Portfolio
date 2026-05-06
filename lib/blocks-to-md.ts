@@ -100,3 +100,74 @@ const TONE_LABEL: Record<'tip' | 'warn' | 'note', string> = {
 function escapeAlt(alt: string): string {
   return alt.replace(/\]/g, '\\]')
 }
+
+/**
+ * Derive a short plain-text description from a Block[] for surfaces that
+ * cannot render markdown — RSS `<description>`, social preview cards, llms.txt
+ * one-liners.
+ *
+ * Walks blocks in order, picks the first text-bearing block (preferring an
+ * intro/tldr-roled paragraph), strips markdown decorations, and truncates to
+ * `maxChars` at a word boundary so partial words don't spill out.
+ */
+export function deriveTextDescription(blocks: Block[], maxChars = 280): string {
+  if (!blocks || blocks.length === 0) return ''
+
+  // Prefer a block with role 'tldr' or 'intro' if any; otherwise first
+  // text-bearing block.
+  const candidate =
+    blocks.find((b) => b.role === 'tldr' && hasText(b)) ??
+    blocks.find((b) => b.role === 'intro' && hasText(b)) ??
+    blocks.find(hasText)
+
+  if (!candidate) return ''
+  const raw = pickText(candidate)
+  return truncateAtWord(raw, maxChars)
+}
+
+function hasText(block: Block): boolean {
+  switch (block.type) {
+    case 'paragraph':
+    case 'heading':
+    case 'quote':
+    case 'callout':
+    case 'key-takeaway':
+      return Boolean(block.data.text && block.data.text.trim())
+    case 'faq':
+      return Boolean(block.data.answer && block.data.answer.trim())
+    case 'list':
+      return block.data.items.some((it) => it.trim().length > 0)
+    default:
+      return false
+  }
+}
+
+function pickText(block: Block): string {
+  switch (block.type) {
+    case 'paragraph':
+    case 'heading':
+    case 'quote':
+    case 'callout':
+    case 'key-takeaway':
+      return block.data.text
+    case 'faq':
+      return block.data.answer
+    case 'list':
+      return block.data.items.join(' ')
+    default:
+      return ''
+  }
+}
+
+function truncateAtWord(input: string, maxChars: number): string {
+  // Collapse all whitespace (including newlines) into single spaces so
+  // line breaks in source markdown don't show up as literal newlines in
+  // a single-line description.
+  const flat = input.replace(/\s+/g, ' ').trim()
+  if (flat.length <= maxChars) return flat
+  const cut = flat.slice(0, maxChars)
+  const lastSpace = cut.lastIndexOf(' ')
+  // If we couldn't find a space to break on, hard-cut.
+  const trimmed = lastSpace > maxChars * 0.6 ? cut.slice(0, lastSpace) : cut
+  return trimmed.replace(/[\s,;:.\-—]+$/, '') + '…'
+}

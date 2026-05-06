@@ -6,7 +6,7 @@
 // md route) re-serve unnecessarily.
 
 import { describe, expect, it } from 'vitest'
-import { blocksToMarkdown } from './blocks-to-md'
+import { blocksToMarkdown, deriveTextDescription } from './blocks-to-md'
 import type { Block } from './blog-schema'
 
 describe('blocksToMarkdown', () => {
@@ -132,5 +132,67 @@ describe('blocksToMarkdown', () => {
 
   it('returns an empty string for an empty block array', () => {
     expect(blocksToMarkdown([])).toBe('')
+  })
+})
+
+describe('deriveTextDescription', () => {
+  it('returns "" for an empty content_json', () => {
+    expect(deriveTextDescription([])).toBe('')
+  })
+
+  it('prefers a tldr-roled block over earlier text', () => {
+    const blocks: Block[] = [
+      { id: '1', type: 'paragraph', data: { text: 'Some intro paragraph.' } },
+      { id: '2', type: 'paragraph', role: 'tldr', data: { text: 'The summary.' } },
+    ]
+    expect(deriveTextDescription(blocks)).toBe('The summary.')
+  })
+
+  it('prefers an intro-roled block over the first text-bearing block', () => {
+    const blocks: Block[] = [
+      { id: '1', type: 'heading', data: { text: 'Section', level: 2 } },
+      { id: '2', type: 'paragraph', role: 'intro', data: { text: 'The intro text.' } },
+      { id: '3', type: 'paragraph', data: { text: 'Body text.' } },
+    ]
+    expect(deriveTextDescription(blocks)).toBe('The intro text.')
+  })
+
+  it('falls back to the first text-bearing block when no roles are set', () => {
+    const blocks: Block[] = [
+      { id: '1', type: 'paragraph', data: { text: 'First paragraph.' } },
+    ]
+    expect(deriveTextDescription(blocks)).toBe('First paragraph.')
+  })
+
+  it('truncates at a word boundary near maxChars and appends an ellipsis', () => {
+    const long = 'word '.repeat(80).trim() // ~400 chars
+    const blocks: Block[] = [
+      { id: '1', type: 'paragraph', data: { text: long } },
+    ]
+    const out = deriveTextDescription(blocks, 50)
+    expect(out.length).toBeLessThanOrEqual(51)
+    expect(out.endsWith('…')).toBe(true)
+    expect(out).not.toMatch(/wor…$/) // didn't cut mid-word
+  })
+
+  it('collapses internal whitespace into single spaces', () => {
+    const blocks: Block[] = [
+      { id: '1', type: 'paragraph', data: { text: 'line one\n\nline two\twith\ttabs' } },
+    ]
+    expect(deriveTextDescription(blocks)).toBe('line one line two with tabs')
+  })
+
+  it('extracts FAQ answer text', () => {
+    const blocks: Block[] = [
+      { id: '1', type: 'faq', data: { question: 'Q?', answer: 'The answer to it.' } },
+    ]
+    expect(deriveTextDescription(blocks)).toBe('The answer to it.')
+  })
+
+  it('joins list items with spaces', () => {
+    const blocks: Block[] = [
+      { id: '1', type: 'list', data: { ordered: false, items: ['alpha', 'beta', 'gamma'] } },
+    ]
+    expect(deriveTextDescription(blocks)).toBe('alpha beta gamma')
   })
 })
