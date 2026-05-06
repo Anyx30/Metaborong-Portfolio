@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import type { Post, Image as ImageRow } from '@/lib/blog-schema'
 import { BlockRenderer } from './block-renderer'
+import { TableOfContents } from './table-of-contents'
 
 // Format an ISO timestamp as "Mar 14, 2026". Server-rendered, deterministic
 // output across regions — locale-agnostic to avoid a hydration mismatch
@@ -27,6 +28,12 @@ interface PostViewProps {
    * looking at the published page. Defaults to false (public reader).
    */
   draftBanner?: boolean
+  /**
+   * When true, wrap the article in a 2-column layout with a sticky TOC
+   * rail on lg+ viewports. Only the public /blog/[slug] route opts in;
+   * admin preview keeps the single-column reader.
+   */
+  withToc?: boolean
 }
 
 /**
@@ -37,12 +44,12 @@ interface PostViewProps {
  * One renderer, two call sites. Same DOM, same SEO output. PRD §5.9
  * specifically requires this — what previews is what publishes.
  */
-export function PostView({ post, resolveImage, draftBanner }: PostViewProps) {
+export function PostView({ post, resolveImage, draftBanner, withToc }: PostViewProps) {
   const published = formatDate(post.published_at)
   const updated = formatDate(post.updated_at)
   const cover = post.cover_image_id ? resolveImage?.(post.cover_image_id) ?? null : null
 
-  return (
+  const articleNode = (
     <article className="mx-auto max-w-[720px] px-[24px] py-[64px] md:px-[48px] md:py-[96px]">
       {draftBanner ? (
         <div className="mb-[24px] rounded-lg border border-dashed border-accent bg-[#fff8f1] px-4 py-3">
@@ -126,5 +133,25 @@ export function PostView({ post, resolveImage, draftBanner }: PostViewProps) {
         ))}
       </div>
     </article>
+  )
+
+  if (!withToc) return articleNode
+
+  // Public-reader layout: TOC rail on lg+, accordion on smaller. The
+  // mobile accordion sits above the article; the desktop rail goes in
+  // the right column. Each variant of the component handles its own
+  // visibility breakpoint via the wrapping div's CSS.
+  return (
+    <div className="mx-auto max-w-[1100px] px-[24px] md:px-[48px] py-[24px] lg:py-[64px]">
+      <div className="lg:hidden mb-[24px]">
+        <TableOfContents blocks={post.content_json} variant="mobile" />
+      </div>
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-[48px]">
+        <div className="min-w-0">{articleNode}</div>
+        <aside className="hidden lg:block pt-[64px]">
+          <TableOfContents blocks={post.content_json} variant="desktop" />
+        </aside>
+      </div>
+    </div>
   )
 }
