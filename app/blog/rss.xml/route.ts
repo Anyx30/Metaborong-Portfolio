@@ -3,7 +3,8 @@
 //
 // Reachable at /blog/rss.xml. Linked from the /blog header per M5-core.
 
-import { listPublishedPosts } from '@/lib/posts'
+import { listPublishedForFeed } from '@/lib/posts'
+import { deriveTextDescription } from '@/lib/blocks-to-md'
 
 const SITE_ORIGIN = 'https://www.metaborong.com'
 const FEED_TITLE = 'Metaborong — Field notes from the studio'
@@ -27,11 +28,11 @@ export async function GET(): Promise<Response> {
   // Up to 50 most-recent published posts. Bigger feeds rarely render in
   // readers and add ISR cost; if the back catalog grows past that, we can
   // start splitting feeds by tag.
-  const result = await listPublishedPosts({ page: 1, perPage: 50 })
+  const items_data = await listPublishedForFeed(50)
 
-  const lastBuild = result.posts[0]?.published_at ?? new Date().toISOString()
+  const lastBuild = items_data[0]?.published_at ?? new Date().toISOString()
 
-  const items = result.posts
+  const items = items_data
     .map((p) => {
       const url = `${SITE_ORIGIN}/blog/${p.slug}/`
       const pub = p.published_at
@@ -40,12 +41,21 @@ export async function GET(): Promise<Response> {
       const categories = p.tags
         .map((t) => `      <category>${xmlEscape(t)}</category>`)
         .join('\n')
+      // RSS 2.0 readers display <description> as the item summary. Prefer
+      // the explicit excerpt; if the editor never wrote one, derive a
+      // 280-char snippet from the post body so the feed never ships with
+      // empty descriptions (PRD §5.8 + M5-core handoff §7.1).
+      const description =
+        (p.excerpt && p.excerpt.trim()) ||
+        deriveTextDescription(p.content_json, 280) ||
+        p.title
       return [
         '    <item>',
         `      <title>${xmlEscape(p.title)}</title>`,
         `      <link>${url}</link>`,
         `      <guid isPermaLink="true">${url}</guid>`,
         `      <pubDate>${pub}</pubDate>`,
+        `      <description>${xmlEscape(description)}</description>`,
         categories,
         '    </item>',
       ]

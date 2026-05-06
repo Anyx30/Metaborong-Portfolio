@@ -148,6 +148,28 @@ describe('POST /api/admin/images', () => {
     expect(body.error).toMatch(/JPG\/PNG\/WebP/)
   })
 
+  // M8-core hardening — exhaustive negative coverage. Every non-allowlisted
+  // format must collapse to 415 even when the Content-Type lies.
+  it.each([
+    ['TIFF little-endian', Buffer.from([0x49, 0x49, 0x2a, 0x00, ...new Array(40).fill(0)])],
+    ['BMP',                Buffer.from([0x42, 0x4d, ...new Array(40).fill(0)])],
+    [
+      'SVG',
+      Buffer.from(
+        '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
+        'utf8',
+      ),
+    ],
+  ])('rejects a %s payload with 415 UPLOAD_BAD_TYPE', async (_name, payload) => {
+    const c = await authedCookies()
+    const fd = new FormData()
+    fd.append('file', new Blob([new Uint8Array(payload)], { type: 'image/jpeg' }), 'fake.jpg')
+    const { POST } = await loadRoute()
+    const res = await POST(uploadRequest(c, fd))
+    expect(res.status).toBe(415)
+    expect((await res.json()).code).toBe('UPLOAD_BAD_TYPE')
+  })
+
   it('rejects a 9 MB payload with 413 UPLOAD_TOO_LARGE', async () => {
     const c = await authedCookies()
     const fd = new FormData()

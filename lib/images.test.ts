@@ -40,6 +40,34 @@ describe('sniffImageFormat', () => {
     expect(sniffImageFormat(bmp)).toBeNull()
   })
 
+  // M8-core hardening — exhaustive negative coverage for the formats most
+  // likely to be smuggled past a Content-Type-only check. SVG is the
+  // particular concern because it's XML and could carry script payloads.
+  it('rejects TIFF little-endian (49 49 2A 00)', () => {
+    const tiff = Buffer.from([0x49, 0x49, 0x2a, 0x00, 0, 0, 0, 0, 0, 0, 0, 0])
+    expect(sniffImageFormat(tiff)).toBeNull()
+  })
+
+  it('rejects TIFF big-endian (4D 4D 00 2A)', () => {
+    const tiff = Buffer.from([0x4d, 0x4d, 0x00, 0x2a, 0, 0, 0, 0, 0, 0, 0, 0])
+    expect(sniffImageFormat(tiff)).toBeNull()
+  })
+
+  it('rejects GIF87a (47 49 46 38 37 61) — common XSS vector', () => {
+    const gif = Buffer.from([0x47, 0x49, 0x46, 0x38, 0x37, 0x61, 0, 0, 0, 0, 0, 0])
+    expect(sniffImageFormat(gif)).toBeNull()
+  })
+
+  it('rejects SVG with XML declaration (<?xml)', () => {
+    const svg = Buffer.from('<?xml version="1.0"', 'utf8')
+    expect(sniffImageFormat(svg)).toBeNull()
+  })
+
+  it('rejects SVG starting with <svg directly', () => {
+    const svg = Buffer.from('<svg xmlns="ht', 'utf8')
+    expect(sniffImageFormat(svg)).toBeNull()
+  })
+
   it('rejects an undersized buffer', () => {
     expect(sniffImageFormat(Buffer.from([0xff, 0xd8]))).toBeNull()
   })
