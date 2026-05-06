@@ -21,10 +21,17 @@ async function currentPathname(): Promise<string> {
   return '/admin'
 }
 
+// Standalone preview at /admin/posts/[id]/preview must render full-bleed
+// (PRD §5.9.B): no admin top bar, no max-width container — what publishes
+// is what previews. The page still requires an admin session, so we keep
+// the auth gate above and only skip the chrome wrapper here.
+const PREVIEW_ROUTE_RE = /^\/admin\/posts\/[^/]+\/preview\b/
+
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const path = await currentPathname()
   // The login route must NOT be gated — it's the way back in.
   const isLoginRoute = path.startsWith('/admin/login')
+  const isPreviewRoute = PREVIEW_ROUTE_RE.test(path)
 
   if (!isLoginRoute) {
     const session = await getAdminSession()
@@ -37,6 +44,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (isLoginRoute) {
     // Unauthenticated chrome — no top bar, no sign-out. Just render the
     // login page directly.
+    return <>{children}</>
+  }
+
+  if (isPreviewRoute) {
+    // Auth-gated above, but rendered chrome-free — the preview must
+    // match the public /blog/[slug] surface pixel-for-pixel.
     return <>{children}</>
   }
 
