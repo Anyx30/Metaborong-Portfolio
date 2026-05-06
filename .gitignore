@@ -47,6 +47,8 @@ next-env.d.ts
 .superpowers/
 screenshots/
 
+
 # Playwright test artifacts
 /test-results/
 /playwright-report/
+.gstack/

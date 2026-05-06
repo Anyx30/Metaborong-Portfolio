@@ -26,20 +26,18 @@ const clients: Client[] = [
   { name: 'magic',      src: '/clients/magic.svg',      href: 'https://omagic.ai/',         scale: 1.2 },
 ]
 
-const CELL_HEIGHT = 64
-const CAP_HEIGHT = 40 // increased base height to give the small logos more room
-
 export function TrustBar() {
   const doubled = [...clients, ...clients]
   return (
     <section
       aria-label="Selected clients"
-      className="relative overflow-hidden border-y border-border bg-bg py-[36px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]"
+      className="relative overflow-hidden border-y border-border bg-bg py-4 md:py-6 px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]"
     >
       <Reveal>
-      <ul className="flex w-max items-center gap-[64px] md:gap-[96px] animate-marquee m-0 p-0 list-none will-change-transform">
+      <ul className="flex w-max items-center gap-[48px] md:gap-[64px] lg:gap-[96px] animate-marquee m-0 p-0 list-none will-change-transform">
         {doubled.map((c, i) => {
-          const cap = Math.round(CAP_HEIGHT * (c.scale ?? 1))
+          const cap = `calc(${c.scale ?? 1} * clamp(20px, 3.5vw, 32px))`
+          const cellH = `clamp(40px, 6vw, 56px)`
           
           if (c.customColor) {
             return (
@@ -50,7 +48,7 @@ export function TrustBar() {
                   rel="noopener noreferrer"
                   aria-label={`${c.name} — visit site`}
                   className="group relative flex items-center justify-center rounded-md transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                  style={{ height: CELL_HEIGHT }}
+                  style={{ height: cellH }}
                 >
                   {/* Invisible image forces the parent 'a' tag to automatically snap to the exact intrinsic layout width/height */}
                   <img
@@ -94,7 +92,7 @@ export function TrustBar() {
                 rel="noopener noreferrer"
                 aria-label={`${c.name} — visit site`}
                 className="group flex items-center justify-center rounded-md opacity-60 transition-opacity duration-200 ease-out hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                style={{ height: CELL_HEIGHT }}
+                style={{ height: cellH }}
               >
                 <img
                   src={c.src}
@@ -116,3 +114,4 @@ export function TrustBar() {
     </section>
   )
 }
+
