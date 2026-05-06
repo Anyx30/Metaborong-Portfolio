@@ -32,7 +32,10 @@ export default defineConfig({
     include: [
       'lib/**/*.test.ts',
       'db/**/*.test.ts',
-      'app/api/**/*.test.ts',
+      // M5-core widened from `app/api/**/*.test.ts` to `app/**/*.test.ts`
+      // so route-tests for sitemap.ts, robots.ts, /og, /blog/rss.xml, and
+      // /blog/[slug]/raw.md run alongside the admin API tests.
+      'app/**/*.test.ts',
       // FE-added: pick up component tests + lib/api-client.test.ts.
       'components/**/*.test.tsx',
     ],
