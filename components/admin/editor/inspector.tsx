@@ -117,6 +117,11 @@ export function Inspector({ editor, tldrCount = 0, hasHeadingSkip = false }: Ins
             <option key={r.value || 'none'} value={r.value}>{r.label}</option>
           ))}
         </select>
+        {role === 'step' ? (
+          <span className="text-[11px] text-gray tracking-[-0.005em]">
+            3+ step blocks emit HowTo schema.
+          </span>
+        ) : null}
       </Field>
 
       {sel.nodeName === NODE_NAMES.heading ? (
