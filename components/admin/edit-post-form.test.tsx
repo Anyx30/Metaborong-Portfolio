@@ -27,10 +27,37 @@ vi.mock('@/lib/api-client', async () => {
 // The Tiptap-backed EditorShell is exercised in components/admin/editor/
 // editor-shell.test.tsx; the form-level tests stay focused on form
 // validation, save flow, status changes, and the delete modal. The mock
-// returns a minimal placeholder so happy-dom doesn't spin up a full
-// ProseMirror runtime per form test.
+// surfaces the inputs the form tests care about — `activeVariant`,
+// `variants`, and the `onSetBlockOverride` callback — through a couple of
+// hidden test buttons so a few variant-specific cases can drive the
+// callback without booting Tiptap.
 vi.mock('@/components/admin/editor/editor-shell', () => ({
-  EditorShell: () => null,
+  EditorShell: ({
+    activeVariant,
+    variants,
+    onSetBlockOverride,
+  }: {
+    activeVariant?: string
+    variants?: unknown
+    onSetBlockOverride?: (blockId: string, kind: 'text' | 'alt', value: string) => void
+  }) => (
+    <div
+      data-testid="mock-editor-shell"
+      data-active-variant={activeVariant ?? ''}
+      data-variants={JSON.stringify(variants ?? {})}
+    >
+      <button
+        type="button"
+        data-testid="mock-set-block-override"
+        onClick={() => onSetBlockOverride?.('h1', 'text', 'US heading override')}
+      />
+      <button
+        type="button"
+        data-testid="mock-clear-block-override"
+        onClick={() => onSetBlockOverride?.('h1', 'text', '')}
+      />
+    </div>
+  ),
 }))
 
 const apiPatch = api.patch as unknown as ReturnType<typeof vi.fn>
@@ -268,6 +295,126 @@ describe('<EditPostForm />', () => {
     expect(screen.getByRole('status', { name: /status: draft/i })).toBeInTheDocument()
     const errs = screen.getAllByRole('alert')
     expect(errs.some((el) => /cannot publish without an excerpt/i.test(el.textContent ?? ''))).toBe(true)
+  })
+
+  // ── M9-C variant authoring ────────────────────────────────────────────────
+
+  it('variant tab choice persists to localStorage under mb.editor.variant.<id> and re-hydrates on remount', () => {
+    const post = makePost({ id: '11111111-1111-1111-1111-111111111111' })
+    const key = `mb.editor.variant.${post.id}`
+    window.localStorage.removeItem(key)
+
+    const { unmount } = render(<EditPostForm initialPost={post} />)
+    expect(window.localStorage.getItem(key)).toBe('OTHER')
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+    expect(window.localStorage.getItem(key)).toBe('US')
+    expect(screen.getByRole('tab', { name: /^US$/ })).toHaveAttribute('aria-selected', 'true')
+
+    unmount()
+    cleanup()
+
+    // Fresh remount picks the persisted tab back up.
+    render(<EditPostForm initialPost={post} />)
+    expect(screen.getByRole('tab', { name: /^US$/ })).toHaveAttribute('aria-selected', 'true')
+    // The Title input on the US tab is now the variant overlay (initially empty
+    // because base post carries no US variant in this fixture).
+    expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe('')
+  })
+
+  it('variant autosave preserves the existing other-region variant when editing one region', async () => {
+    // Post arrives with an EU variant already set; user edits the US tab.
+    // The PATCH body must carry geo_variants with BOTH US (the new edit)
+    // and EU (the existing payload) — never clobber the other region.
+    const post = makePost({
+      geo_variants: { EU: { title: 'EU title' } },
+    })
+    apiPatch.mockResolvedValueOnce({
+      post: makePost({
+        geo_variants: {
+          US: { title: 'US title' },
+          EU: { title: 'EU title' },
+        },
+      }),
+    })
+    render(<EditPostForm initialPost={post} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+    fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value: 'US title' } })
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+
+    expect(apiPatch).toHaveBeenCalledTimes(1)
+    const [, body] = apiPatch.mock.calls[0]
+    expect(body.geo_variants).toEqual({
+      US: { title: 'US title' },
+      EU: { title: 'EU title' },
+    })
+  })
+
+  it('"Reset to base" deletes the variant override key — PATCH body omits it for that field', async () => {
+    const post = makePost({
+      geo_variants: { US: { title: 'US title', excerpt: 'US excerpt' } },
+    })
+    apiPatch.mockResolvedValueOnce({
+      post: makePost({
+        geo_variants: { US: { excerpt: 'US excerpt' } },
+      }),
+    })
+    render(<EditPostForm initialPost={post} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+    // The override chip is visible because the variant carries a non-empty title.
+    expect(screen.getByTestId('override-chip-f-title')).toBeInTheDocument()
+
+    // Click Reset to base for the title field.
+    fireEvent.click(screen.getByTestId('reset-override-f-title'))
+    // Chip clears immediately.
+    expect(screen.queryByTestId('override-chip-f-title')).toBeNull()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+    expect(apiPatch).toHaveBeenCalledTimes(1)
+    const [, body] = apiPatch.mock.calls[0]
+    // Title override is gone; excerpt override remains.
+    expect(body.geo_variants).toEqual({ US: { excerpt: 'US excerpt' } })
+    expect(body.geo_variants.US.title).toBeUndefined()
+  })
+
+  it('block override write/clear: PATCH carries block_overrides[id] and removes it on clear', async () => {
+    const post = makePost({ geo_variants: {} })
+    // Two saves: after writing the override, then after clearing it.
+    apiPatch
+      .mockResolvedValueOnce({
+        post: makePost({
+          geo_variants: { US: { block_overrides: { h1: { text: 'US heading override' } } } },
+        }),
+      })
+      .mockResolvedValueOnce({ post: makePost({ geo_variants: {} }) })
+    render(<EditPostForm initialPost={post} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+
+    // Mock callback writes a block override into geo_variants.
+    fireEvent.click(screen.getByTestId('mock-set-block-override'))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+    expect(apiPatch.mock.calls[0][1].geo_variants).toEqual({
+      US: { block_overrides: { h1: { text: 'US heading override' } } },
+    })
+
+    // Mock callback clears it (empty string). The form must drop the
+    // block id, the block_overrides key, and (since nothing else is set)
+    // the region key.
+    fireEvent.click(screen.getByTestId('mock-clear-block-override'))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+    expect(apiPatch.mock.calls[1][1].geo_variants).toEqual({})
   })
 
   it('Delete modal: typing the slug enables the destructive action; Esc cancels', () => {
