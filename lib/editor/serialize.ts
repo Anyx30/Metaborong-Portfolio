@@ -247,11 +247,37 @@ export function blocksToEditorState(blocks: Block[]): PMDoc {
 
 export function editorStateToBlocks(doc: PMDoc): Block[] {
   const out: Block[] = []
+  // Tiptap's default Enter / splitBlock copies the parent node's attrs to
+  // the new node, so a heading that gets split inherits its parent's `id`.
+  // Likewise copy/paste of a block reproduces the source id verbatim. The
+  // serializer is the right place to guarantee uniqueness — fresh-id any
+  // duplicate so React keys downstream stay unique and BlockRenderer never
+  // omits a block. Editor-side fix is more correct (Tiptap plugin) but
+  // this guards every consumer of the serializer regardless.
+  const seen = new Set<string>()
   for (const node of doc.content ?? []) {
     const block = nodeToBlock(node)
-    if (block) out.push(block)
+    if (!block) continue
+    if (seen.has(block.id)) {
+      block.id = freshId()
+    }
+    seen.add(block.id)
+    out.push(block)
   }
   return out
+}
+
+function freshId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  // Fallback for environments without crypto.randomUUID — same shape as
+  // insert-block's newId(), kept private here to keep the serializer
+  // import-free.
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+  })
 }
 
 // Convenience helper for editor UI: give me a fresh empty doc the editor
