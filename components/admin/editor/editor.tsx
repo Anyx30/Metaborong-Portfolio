@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Inspector } from './inspector'
 import { MB_NODES } from './nodes'
 import { SlashMenu } from './slash-menu'
+import { UniqueIds } from './unique-ids'
 import { blocksToEditorState, editorStateToBlocks, NODE_NAMES } from '@/lib/editor/serialize'
 import type { Block } from '@/lib/blog-schema'
 
@@ -47,6 +48,7 @@ export function BlockEditor({ initialBlocks, onChange, onSaveShortcut }: BlockEd
         horizontalRule: false,
       }),
       ...MB_NODES,
+      UniqueIds,
     ],
     content: initialContent,
     immediatelyRender: false,
