@@ -35,16 +35,16 @@ export function BlockRenderer({ block, resolveImage }: BlockRendererProps) {
         level === 5 ? 'text-[17px] tracking-[-0.015em] leading-[1.3] mt-[24px] mb-[8px]' :
         /* 6 */       'text-[15px] tracking-[-0.01em] leading-[1.3] mt-[20px] mb-[6px]'
       )
-      return <Tag id={id} className={`font-bold text-dark ${sizeClass}`}>{text}</Tag>
+      return <Tag id={id} data-block-id={block.id} className={`font-bold text-dark ${sizeClass}`}>{text}</Tag>
     }
     case 'paragraph': {
-      return <p className="my-[16px] text-[16px] leading-[1.65] tracking-[-0.005em] text-dark">{block.data.text}</p>
+      return <p data-block-id={block.id} className="my-[16px] text-[16px] leading-[1.65] tracking-[-0.005em] text-dark">{block.data.text}</p>
     }
     case 'image': {
       const { imageId, alt, caption } = block.data
       const resolved = resolveImage?.(imageId) ?? null
       return (
-        <figure className="my-[32px]">
+        <figure data-block-id={block.id} className="my-[32px]">
           {resolved ? (
             <Image
               src={resolved.blob_url}
@@ -76,6 +76,7 @@ export function BlockRenderer({ block, resolveImage }: BlockRendererProps) {
       const Tag = ordered ? 'ol' : 'ul'
       return (
         <Tag
+          data-block-id={block.id}
           className={`my-[16px] pl-[24px] text-[16px] leading-[1.65] tracking-[-0.005em] text-dark ${
             ordered ? 'list-decimal' : 'list-disc'
           }`}
@@ -88,7 +89,7 @@ export function BlockRenderer({ block, resolveImage }: BlockRendererProps) {
     }
     case 'quote': {
       return (
-        <blockquote className="my-[24px] border-l-[3px] border-brand pl-[20px] py-[4px]">
+        <blockquote data-block-id={block.id} className="my-[24px] border-l-[3px] border-brand pl-[20px] py-[4px]">
           <p className="text-[17px] leading-[1.6] tracking-[-0.01em] text-dark italic">
             {block.data.text}
           </p>
@@ -105,6 +106,7 @@ export function BlockRenderer({ block, resolveImage }: BlockRendererProps) {
       // attribute is preserved for future highlighting + accessibility.
       return (
         <pre
+          data-block-id={block.id}
           className="my-[24px] overflow-x-auto rounded-lg border border-border bg-bg-subtle p-[16px] text-[13px] leading-[1.55]"
           style={{ fontFamily: 'var(--font-mono)' }}
           data-lang={block.data.lang || undefined}
@@ -120,7 +122,7 @@ export function BlockRenderer({ block, resolveImage }: BlockRendererProps) {
         tone === 'warn' ? { border: 'border-accent', bg: 'bg-[#fff8f1]', label: 'Warning', dot: 'bg-accent' } :
                           { border: 'border-border', bg: 'bg-bg-subtle', label: 'Note',    dot: 'bg-gray-light' }
       return (
-        <aside className={`my-[24px] rounded-lg border ${palette.border} ${palette.bg} p-[16px]`}>
+        <aside data-block-id={block.id} className={`my-[24px] rounded-lg border ${palette.border} ${palette.bg} p-[16px]`}>
           <div className="mb-[6px] flex items-center gap-2">
             <span className={`inline-block h-2 w-2 rounded-sm ${palette.dot}`} aria-hidden="true" />
             <span
@@ -139,7 +141,7 @@ export function BlockRenderer({ block, resolveImage }: BlockRendererProps) {
     case 'faq': {
       const { question, answer } = block.data
       return (
-        <details className="my-[16px] rounded-lg border border-border bg-white p-[16px] open:bg-bg-subtle">
+        <details data-block-id={block.id} className="my-[16px] rounded-lg border border-border bg-white p-[16px] open:bg-bg-subtle">
           <summary className="cursor-pointer text-[16px] font-semibold tracking-[-0.01em] text-dark">
             {question}
           </summary>
@@ -151,7 +153,7 @@ export function BlockRenderer({ block, resolveImage }: BlockRendererProps) {
     }
     case 'key-takeaway': {
       return (
-        <aside className="my-[24px] rounded-lg border-l-[3px] border-brand bg-bg-subtle p-[16px]">
+        <aside data-block-id={block.id} className="my-[24px] rounded-lg border-l-[3px] border-brand bg-bg-subtle p-[16px]">
           <p
             className="mb-[6px] text-[11px] font-medium uppercase tracking-[0.12em] text-brand"
             style={{ fontFamily: 'var(--font-mono)' }}
