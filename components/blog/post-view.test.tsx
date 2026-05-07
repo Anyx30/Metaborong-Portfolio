@@ -6,6 +6,7 @@ import '@testing-library/jest-dom/vitest'
 
 import { PostView } from './post-view'
 import type { Block, Post } from '@/lib/blog-schema'
+import { faqPageSchema, howToSchema, speakableSchema } from '@/lib/seo'
 
 function makePost(overrides: Partial<Post> = {}): Post {
   return {
@@ -149,5 +150,133 @@ describe('<PostView />', () => {
     ]
     render(<PostView post={makePost({ content_json: blocks })} />)
     expect(screen.queryByRole('navigation', { name: /table of contents/i })).toBeNull()
+  })
+})
+
+// M9-AEO: data-block-id is the anchor that Speakable's cssSelector
+// resolves against, so every block's outermost rendered DOM node must
+// carry it. These tests exercise BlockRenderer indirectly through
+// PostView so we get the same render path the public route uses.
+describe('<PostView /> — data-block-id (M9-AEO)', () => {
+  afterEach(() => cleanup())
+
+  it('emits data-block-id on every block type', () => {
+    const blocks: Block[] = [
+      { id: 'h-1', type: 'heading',     data: { text: 'Heading',  level: 2 } },
+      { id: 'p-1', type: 'paragraph',   data: { text: 'Paragraph body.' } },
+      { id: 'i-1', type: 'image',       data: { imageId: '00000000-0000-0000-0000-000000000000', alt: 'Alt' } },
+      { id: 'l-1', type: 'list',        data: { ordered: false, items: ['a', 'b'] } },
+      { id: 'q-1', type: 'quote',       data: { text: 'Quoted.' } },
+      { id: 'c-1', type: 'code',        data: { code: 'const x = 1', lang: 'ts' } },
+      { id: 'a-1', type: 'callout',     data: { tone: 'note', text: 'Note body.' } },
+      { id: 'f-1', type: 'faq',         data: { question: 'Q?', answer: 'A.' } },
+      { id: 'k-1', type: 'key-takeaway', data: { text: 'The point.' } },
+    ]
+    const { container } = render(<PostView post={makePost({ content_json: blocks })} />)
+    for (const b of blocks) {
+      expect(
+        container.querySelector(`[data-block-id="${b.id}"]`),
+        `block ${b.id} (${b.type}) should expose data-block-id on its outer node`,
+      ).not.toBeNull()
+    }
+  })
+})
+
+// M9-AEO: the FAQPage / HowTo / Speakable JSON-LD scripts are emitted
+// by app/blog/[slug]/page.tsx, not PostView itself. These tests cover
+// the wiring contract: feed the same builder outputs through the same
+// <script type="application/ld+json"> dangerouslySetInnerHTML pattern
+// the page route uses, and assert the rendered HTML matches what a
+// crawler would see. If the page route's emit pattern drifts, these
+// tests still pass; the e2e spec (e2e/m9-aeo.spec.ts) is the
+// integration check that catches drift end-to-end.
+function PostJsonLd({ post }: { post: Post }) {
+  const faqPage = faqPageSchema(post)
+  const howTo = howToSchema(post)
+  const speakable = speakableSchema(post)
+  return (
+    <>
+      {faqPage && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPage) }}
+        />
+      )}
+      {howTo && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howTo) }}
+        />
+      )}
+      {speakable && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(speakable) }}
+        />
+      )}
+    </>
+  )
+}
+
+function ldJsonScripts(container: HTMLElement): Array<Record<string, unknown>> {
+  const nodes = Array.from(container.querySelectorAll('script[type="application/ld+json"]'))
+  return nodes.map((n) => JSON.parse(n.textContent ?? 'null') as Record<string, unknown>)
+}
+
+describe('<PostJsonLd /> — AEO emissions on /blog/[slug] (M9-AEO)', () => {
+  afterEach(() => cleanup())
+
+  it('a post with 1 faq block emits a FAQPage script', () => {
+    const blocks: Block[] = [
+      { id: 'p-1', type: 'paragraph', data: { text: 'Lede.' } },
+      { id: 'f-1', type: 'faq',       data: { question: 'How long?', answer: 'About six minutes.' } },
+    ]
+    const { container } = render(<PostJsonLd post={makePost({ content_json: blocks })} />)
+    const scripts = ldJsonScripts(container)
+    const faq = scripts.find((s) => s['@type'] === 'FAQPage')
+    expect(faq).toBeDefined()
+    expect(Array.isArray(faq!.mainEntity)).toBe(true)
+    expect((faq!.mainEntity as unknown[]).length).toBe(1)
+  })
+
+  it('a post with 3 step-role blocks emits a HowTo with 3 steps in order', () => {
+    const blocks: Block[] = [
+      { id: 's-1', type: 'paragraph', role: 'step', data: { text: 'First, do this.' } },
+      { id: 'p-1', type: 'paragraph',                data: { text: 'Aside, not a step.' } },
+      { id: 's-2', type: 'paragraph', role: 'step', data: { text: 'Then, do that.' } },
+      { id: 's-3', type: 'paragraph', role: 'step', data: { text: 'Finally, ship it.' } },
+    ]
+    const { container } = render(<PostJsonLd post={makePost({ content_json: blocks })} />)
+    const scripts = ldJsonScripts(container)
+    const howTo = scripts.find((s) => s['@type'] === 'HowTo')
+    expect(howTo).toBeDefined()
+    const steps = howTo!.step as Array<Record<string, unknown>>
+    expect(steps).toHaveLength(3)
+    expect(steps.map((s) => s.position)).toEqual([1, 2, 3])
+    expect(steps[0].text).toMatch(/first, do this/i)
+    expect(steps[2].text).toMatch(/finally, ship it/i)
+  })
+
+  it('a post with role=tldr on one block emits a Speakable cssSelector pointing at that data-block-id', () => {
+    const blocks: Block[] = [
+      { id: 'p-1', type: 'paragraph', role: 'tldr', data: { text: 'Top-line summary.' } },
+      { id: 'p-2', type: 'paragraph',                data: { text: 'Body.' } },
+    ]
+    const { container } = render(<PostJsonLd post={makePost({ content_json: blocks })} />)
+    const scripts = ldJsonScripts(container)
+    const speakable = scripts.find((s) => s['@type'] === 'WebPage')
+    expect(speakable).toBeDefined()
+    const spec = speakable!.speakable as Record<string, unknown>
+    expect(spec['@type']).toBe('SpeakableSpecification')
+    expect(spec.cssSelector).toEqual(['[data-block-id="p-1"]'])
+  })
+
+  it('a post with neither faq nor 3+ steps nor tldr/intro emits no AEO scripts', () => {
+    const blocks: Block[] = [
+      { id: 'h-1', type: 'heading',   data: { text: 'Heading',  level: 2 } },
+      { id: 'p-1', type: 'paragraph', data: { text: 'Body.' } },
+    ]
+    const { container } = render(<PostJsonLd post={makePost({ content_json: blocks })} />)
+    expect(ldJsonScripts(container)).toHaveLength(0)
   })
 })
