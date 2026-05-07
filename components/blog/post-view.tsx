@@ -3,6 +3,27 @@ import type { Post, Image as ImageRow } from '@/lib/blog-schema'
 import { BlockRenderer } from './block-renderer'
 import { TableOfContents } from './table-of-contents'
 
+import type { Block } from '@/lib/blog-schema'
+
+// Defensive: posts saved before the serializer's id-dedupe fix may carry
+// duplicate block.id values in their content_json (Tiptap's splitBlock
+// copies parent attrs, including id). When the serializer was patched
+// (commit 4196e03) the issue stopped being introduced on new saves, but
+// rows already in the DB still carry the duplicates and would otherwise
+// trip React's "two children with the same key" guard whenever they're
+// rendered. This helper de-suffixes only the duplicates, preserving the
+// first occurrence's id verbatim so reorder operations still reconcile
+// stably; the duplicate gets a deterministic `<id>-dup<n>` key based on
+// its order of appearance, so renders are stable across re-renders.
+function dedupeBlockKeys(blocks: Block[]): Array<{ block: Block; key: string }> {
+  const counts = new Map<string, number>()
+  return blocks.map((block) => {
+    const seen = counts.get(block.id) ?? 0
+    counts.set(block.id, seen + 1)
+    return { block, key: seen === 0 ? block.id : `${block.id}-dup${seen}` }
+  })
+}
+
 // Format an ISO timestamp as "Mar 14, 2026". Server-rendered, deterministic
 // output across regions — locale-agnostic to avoid a hydration mismatch
 // when the same post is fetched from different geo edges.
@@ -128,8 +149,8 @@ export function PostView({ post, resolveImage, draftBanner, withToc }: PostViewP
       </div>
 
       <div className="text-dark">
-        {post.content_json.map((block) => (
-          <BlockRenderer key={block.id} block={block} resolveImage={resolveImage} />
+        {dedupeBlockKeys(post.content_json).map(({ block, key }) => (
+          <BlockRenderer key={key} block={block} resolveImage={resolveImage} />
         ))}
       </div>
     </article>
