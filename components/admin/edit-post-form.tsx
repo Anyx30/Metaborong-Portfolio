@@ -146,7 +146,6 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [confirmSlug, setConfirmSlug] = useState('')
-  const [savedToastAt, setSavedToastAt] = useState(0)
   // Picker state — one modal serves both the cover and og slots; the
   // currently-active slot is encoded in the open value.
   const [pickerOpen, setPickerOpen] = useState<null | PickerMode>(null)
@@ -179,6 +178,20 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, dirty, validation.ok])
+
+  // After a save lands, the indicator lingers in the 'saved' state for a
+  // visible window so the user actually sees it landed, then fades back to
+  // 'idle'. Keeping this lifecycle in one place avoids the prior flicker
+  // where a stale "Saved Xs ago" toast and the live indicator could
+  // disagree across rapid keystrokes.
+  const SAVED_LINGER_MS = 2000
+  useEffect(() => {
+    if (save.kind !== 'saved') return
+    const id = setTimeout(() => {
+      setSave((cur) => (cur.kind === 'saved' ? { kind: 'idle' } : cur))
+    }, SAVED_LINGER_MS)
+    return () => clearTimeout(id)
+  }, [save])
 
   // Browser unload guard — warn if navigating away with unsaved changes.
   useEffect(() => {
@@ -239,7 +252,6 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
       setState(postToFormState(res.post))
       setBlocks(res.post.content_json)
       setSave({ kind: 'saved', at: Date.now() })
-      setSavedToastAt(Date.now())
       return true
     } catch (err) {
       const message =
@@ -382,12 +394,6 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
           </button>
         </div>
       </div>
-
-      {savedToastAt > 0 && save.kind === 'saved' ? (
-        <div role="status" aria-live="polite" className="rounded-md border border-[#10b981]/30 bg-[#ecfdf5] px-3 py-2 text-[12px] tracking-[-0.005em] text-[#047857]">
-          Saved {relativeTime(save.at)}
-        </div>
-      ) : null}
 
       {/* Form fields */}
       <div className="grid grid-cols-1 gap-[20px] rounded-xl border border-border bg-white p-[24px] md:grid-cols-2">
@@ -718,16 +724,11 @@ function SaveIndicator({
   validationOk: boolean
   onRetry: () => void
 }) {
-  const [, force] = useState(0)
-  useEffect(() => {
-    if (state.kind !== 'saved') return
-    const id = setInterval(() => force((n) => n + 1), 1000)
-    return () => clearInterval(id)
-  }, [state.kind])
-
   // Idle / saving / saved transitions all announce through a single
   // role="status" aria-live="polite" region so screen-reader users hear
   // the autosave lifecycle. Errors promote to role="alert" (assertive).
+  // The 'saved' state is short-lived (parent transitions it back to idle
+  // after ~2s) so a live-updating "Xs ago" timer would barely tick.
   if (state.kind === 'error') {
     return (
       <div role="alert" aria-live="assertive" className="flex items-center gap-2 text-[12px] text-[#b42318] tracking-[-0.005em]">

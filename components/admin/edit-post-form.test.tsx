@@ -151,6 +151,80 @@ describe('<EditPostForm />', () => {
     expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
   })
 
+  it('SaveState lifecycle: idle → saving → saved (lingers ≥2s) → idle', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      // Resolve the PATCH only when we say so, so we can observe the
+      // 'saving' state in the DOM.
+      let resolvePatch!: (value: { post: Post }) => void
+      apiPatch.mockImplementationOnce(
+        () => new Promise((res) => { resolvePatch = res }),
+      )
+
+      render(<EditPostForm initialPost={makePost()} />)
+      fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value: 'Renamed' } })
+
+      // Idle + dirty → indicator says "Unsaved changes".
+      expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument()
+
+      // Clicking Save kicks runSave() — state becomes 'saving' before
+      // the PATCH resolves. The "Saving…" text appears both in the
+      // role="status" SaveIndicator and as the disabled button label;
+      // assert via getAllByText which the test merely requires to be
+      // non-empty.
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /saving|^save$/i }))
+      })
+      expect(screen.getAllByText(/saving…/i).length).toBeGreaterThan(0)
+
+      // Resolve the PATCH; the indicator transitions to 'saved'.
+      await act(async () => {
+        resolvePatch({ post: makePost({ title: 'Renamed' }) })
+        await Promise.resolve()
+      })
+      expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
+
+      // 'saved' state lingers for 2s — a 1s tick must not flip it back yet.
+      await act(async () => { vi.advanceTimersByTime(1000) })
+      expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
+
+      // After ≥2s total, the indicator fades back to idle ("Up to date"
+      // since the form fields now match the saved post).
+      await act(async () => { vi.advanceTimersByTime(1500) })
+      expect(screen.queryByText(/saved\s+just now|saved\s+\d/i)).toBeNull()
+      expect(screen.getByText(/up to date/i)).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('SaveState: only one "Saving…" indicator appears per real save (no flicker on rapid keystrokes)', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      apiPatch.mockResolvedValue({ post: makePost({ title: 'Renamed five' }) })
+
+      render(<EditPostForm initialPost={makePost()} />)
+
+      // Five rapid keystrokes within the 2s autosave debounce window —
+      // none of them should surface a 'saving' indicator.
+      for (const value of ['R', 'Re', 'Ren', 'Rena', 'Renam']) {
+        fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value } })
+        await act(async () => { vi.advanceTimersByTime(200) })
+        expect(screen.queryAllByText(/saving…/i)).toHaveLength(0)
+      }
+
+      // After 2s of quiet, autosave fires once; observe a single 'saving'.
+      await act(async () => { vi.advanceTimersByTime(2100) })
+      // The PATCH resolves on the next tick of the microtask queue.
+      await act(async () => { await Promise.resolve() })
+      expect(apiPatch).toHaveBeenCalledTimes(1)
+      // The 'saved' indicator is visible after the resolved save.
+      expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('Save error surfaces an inline retry — clicking Retry re-invokes PATCH', async () => {
     apiPatch
       .mockRejectedValueOnce(new ApiError({ status: 500, code: 'INTERNAL', error: 'Database hiccup' }))
