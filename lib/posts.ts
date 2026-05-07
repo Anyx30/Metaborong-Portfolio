@@ -202,6 +202,38 @@ export async function listPublishedForFeed(
 }
 
 /**
+ * All published posts in the shape /llms.txt and /llms-full.txt need.
+ * Newest-first; no pagination — the llmstxt.org index files want the
+ * complete catalog in a single response so LLM crawlers can ground
+ * against everything in one fetch (PRD §5.7 GEO bundle).
+ *
+ * Drafts are filtered out at the SQL layer; nothing leaks except what
+ * /blog already exposes publicly.
+ */
+export async function listAllPublishedForLlms(
+  dbHandle: DbLike = defaultDb,
+): Promise<Array<Pick<Post,
+  'slug' | 'title' | 'excerpt' | 'meta_description' |
+  'published_at' | 'updated_at' | 'author_name' | 'content_json'
+>>> {
+  const rows = (await dbHandle
+    .select()
+    .from(posts)
+    .where(eq(posts.status, 'published'))
+    .orderBy(desc(posts.published_at))) as PostRow[]
+  return rows.map((row) => ({
+    slug:             row.slug,
+    title:            row.title,
+    excerpt:          row.excerpt ?? null,
+    meta_description: row.meta_description ?? null,
+    published_at:     toIso(row.published_at),
+    updated_at:       toIso(row.updated_at) ?? new Date(0).toISOString(),
+    author_name:      row.author_name,
+    content_json:     row.content_json,
+  }))
+}
+
+/**
  * Admin-only read of a single post by id, regardless of status. The
  * caller MUST have already gated on requireAdmin(); this helper does not
  * check session itself (so it's reusable from server components, route
