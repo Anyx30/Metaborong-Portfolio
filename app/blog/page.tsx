@@ -89,6 +89,16 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexProps) {
                   </svg>
                   RSS
                 </a>
+                {/* M9-GEO: surface the LLM-readable index so curious
+                    humans (and crawlers viewing the HTML) can find it. */}
+                <a
+                  href="/llms.txt"
+                  className="inline-flex items-center gap-[6px] text-gray no-underline hover:text-brand"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                  aria-label="LLM-readable index of all posts"
+                >
+                  LLMs.txt
+                </a>
               </div>
             </header>
 

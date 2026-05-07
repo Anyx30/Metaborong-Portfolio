@@ -38,6 +38,8 @@ export default defineConfig({
       'app/**/*.test.ts',
       // FE-added: pick up component tests + lib/api-client.test.ts.
       'components/**/*.test.tsx',
+      // M9-GEO: pick up page-level Server Component tests under app/.
+      'app/**/*.test.tsx',
     ],
     exclude: [
       'node_modules/**',
