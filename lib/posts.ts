@@ -56,7 +56,10 @@ export function rowToPost(row: PostRow): Post {
     canonical_url:            row.canonical_url ?? null,
     geo_variants:             row.geo_variants,
     ai_readiness_score:       row.ai_readiness_score ?? null,
-    ai_readiness_band:        row.ai_readiness_band ?? null,
+    // DB column is `text` (free-form); the wire shape narrows to the
+    // strong/adequate/weak enum. Cast at the boundary — the route handler
+    // only ever writes a value emitted by bandFor().
+    ai_readiness_band:        (row.ai_readiness_band ?? null) as Post['ai_readiness_band'],
     ai_readiness_report:      row.ai_readiness_report ?? null,
     ai_readiness_checked_at:  toIso(row.ai_readiness_checked_at),
     published_at:             toIso(row.published_at),
@@ -90,7 +93,7 @@ export function rowToSummary(row: PostRow): PostSummary {
     updated_at:          toIso(row.updated_at) ?? new Date(0).toISOString(),
     published_at:        toIso(row.published_at),
     ai_readiness_score:  row.ai_readiness_score ?? null,
-    ai_readiness_band:   row.ai_readiness_band ?? null,
+    ai_readiness_band:   (row.ai_readiness_band ?? null) as PostSummary['ai_readiness_band'],
     has_geo_variants:    variantRegions.length > 0,
     geo_variant_regions: variantRegions,
   }

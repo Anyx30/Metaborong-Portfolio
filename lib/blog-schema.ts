@@ -184,6 +184,16 @@ export const geoVariantsSchema = z.object({
 export type GeoVariants = z.infer<typeof geoVariantsSchema>
 
 // ── AI readiness ──────────────────────────────────────────────────────────────
+//
+// Wire shape mirrors the VerseOdin MCP tool `ai_readiness_scan` response —
+// see lib/ai-readiness/client.ts for the JSON-RPC envelope and curl-probe
+// fixture in docs/cms/handoffs/m7-be-*.md §Appendix.
+//
+// Kept legacy: aiReadinessSuggestionSchema. v1 doesn't surface block-scoped
+// suggestions because VerseOdin checks aren't block-scoped (see PRD §10
+// open questions). The schema is retained so consumers built against the
+// pre-M7 stub don't break their imports; report.suggestions is no longer
+// emitted and the FE drawer renders `report.checks` instead.
 
 export const aiReadinessSuggestionSchema = z.object({
   severity: z.enum(['info', 'warn', 'error']),
@@ -192,9 +202,61 @@ export const aiReadinessSuggestionSchema = z.object({
 })
 export type AiReadinessSuggestion = z.infer<typeof aiReadinessSuggestionSchema>
 
-export const aiReadinessReportSchema = z.object({
-  suggestions: z.array(aiReadinessSuggestionSchema),
+export const aiReadinessBandSchema = z.enum(['strong', 'adequate', 'weak'])
+export type AiReadinessBand = z.infer<typeof aiReadinessBandSchema>
+
+// 8 known check ids per VerseOdin v1 (probed 2026-05-08). `.passthrough()`
+// at the report level lets future check ids round-trip without a schema
+// bump, but the enum is the authoritative list for typing FE chip rows.
+export const aiReadinessCheckIdSchema = z.enum([
+  'robots-txt',
+  'sitemap',
+  'llms-txt',
+  'heading-structure',
+  'readability',
+  'meta-tags',
+  'semantic-html',
+  'accessibility',
+])
+export type AiReadinessCheckId = z.infer<typeof aiReadinessCheckIdSchema>
+
+export const aiReadinessCheckStatusSchema = z.enum(['pass', 'warning', 'fail'])
+export type AiReadinessCheckStatus = z.infer<typeof aiReadinessCheckStatusSchema>
+
+export const aiReadinessCheckScopeSchema = z.enum(['page', 'domain'])
+export type AiReadinessCheckScope = z.infer<typeof aiReadinessCheckScopeSchema>
+
+export const aiReadinessCheckSchema = z.object({
+  id:             aiReadinessCheckIdSchema,
+  label:          z.string(),
+  status:         aiReadinessCheckStatusSchema,
+  score:          z.number().min(0).max(100),
+  scope:          aiReadinessCheckScopeSchema,
+  details:        z.string(),
+  recommendation: z.string(),
 })
+export type AiReadinessCheck = z.infer<typeof aiReadinessCheckSchema>
+
+export const aiReadinessMetadataSchema = z.object({
+  title:       z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  analyzedAt:  z.string(), // ISO 8601 from VerseOdin
+})
+export type AiReadinessMetadata = z.infer<typeof aiReadinessMetadataSchema>
+
+// `.passthrough()` lets new VerseOdin top-level fields round-trip; new
+// `checks` ids are similarly tolerated via .passthrough() on the array
+// element. We pin the 8 known ids in the enum so FE typing is honest, but
+// an unknown id no longer hard-fails Zod — see client.ts for the relaxed
+// element schema used at parse time.
+export const aiReadinessReportSchema = z.object({
+  overallScore:           z.number().min(0).max(100),
+  pageScore:              z.number().min(0).max(100),
+  domainScore:            z.number().min(0).max(100),
+  domainReputationBonus:  z.number(),
+  metadata:               aiReadinessMetadataSchema,
+  checks:                 z.array(aiReadinessCheckSchema),
+}).passthrough()
 export type AiReadinessReport = z.infer<typeof aiReadinessReportSchema>
 
 // ── post + post summary + image ───────────────────────────────────────────────
@@ -223,7 +285,7 @@ export const postSchema = z.object({
   canonical_url:            z.string().url().nullable(),
   geo_variants:             geoVariantsSchema,
   ai_readiness_score:       z.number().int().min(0).max(100).nullable(),
-  ai_readiness_band:        z.string().nullable(),
+  ai_readiness_band:        aiReadinessBandSchema.nullable(),
   ai_readiness_report:      aiReadinessReportSchema.nullable(),
   ai_readiness_checked_at:  z.string().datetime().nullable(),
   published_at:             z.string().datetime().nullable(),
@@ -288,6 +350,13 @@ export const errorCodeSchema = z.enum([
   'UPLOAD_TOO_LARGE',
   'UPLOAD_BAD_TYPE',
   'INTERNAL',
+  // M7-BE additions for the AI Readiness route. POST_NOT_PUBLISHED
+  // signals the v1.5 carve-out (URL-based scoring requires a published
+  // post — pre-publish scoring is deferred to v1.6 per PRD §10).
+  // NOT_SCORED is the shape GET returns when the post has never been
+  // scanned yet (so the FE drawer can show its empty state).
+  'POST_NOT_PUBLISHED',
+  'NOT_SCORED',
 ])
 export type ErrorCode = z.infer<typeof errorCodeSchema>
 
