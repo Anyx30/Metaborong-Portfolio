@@ -13,7 +13,7 @@ import {
   AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
-import type { Block, GeoVariants, AiReadinessSuggestion } from '../lib/blog-schema'
+import type { Block, GeoVariants, AiReadinessReport } from '../lib/blog-schema'
 
 // ── images ────────────────────────────────────────────────────────────────────
 // Independent reusable assets. Posts reference image rows by id; deleting a post
@@ -57,7 +57,7 @@ export const posts = pgTable(
     geo_variants:             jsonb('geo_variants').$type<GeoVariants>().notNull().default(sql`'{}'::jsonb`),
     ai_readiness_score:       smallint('ai_readiness_score'),
     ai_readiness_band:        text('ai_readiness_band'),
-    ai_readiness_report:      jsonb('ai_readiness_report').$type<{ suggestions: AiReadinessSuggestion[] }>(),
+    ai_readiness_report:      jsonb('ai_readiness_report').$type<AiReadinessReport>(),
     ai_readiness_content_hash: text('ai_readiness_content_hash'),
     ai_readiness_checked_at:  timestamp('ai_readiness_checked_at', { withTimezone: true }),
     published_at:             timestamp('published_at', { withTimezone: true }),
@@ -85,6 +85,22 @@ export const login_attempts = pgTable(
   },
   (t) => [
     index('login_attempts_ip_attempted_at_idx').on(t.ip, t.attempted_at.desc()),
+  ]
+)
+
+// ── ai_readiness_attempts ─────────────────────────────────────────────────────
+// Same shape as login_attempts but bucketed per-admin (we identify the caller
+// via session.email). Drives the 30/hour cap on POST /api/admin/posts/[id]/ai-readiness.
+
+export const ai_readiness_attempts = pgTable(
+  'ai_readiness_attempts',
+  {
+    id:           uuid('id').primaryKey().defaultRandom(),
+    admin_email:  text('admin_email').notNull(),
+    attempted_at: timestamp('attempted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('ai_readiness_attempts_admin_attempted_at_idx').on(t.admin_email, t.attempted_at.desc()),
   ]
 )
 
