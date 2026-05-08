@@ -221,6 +221,42 @@ describe('<AiReadinessDrawer />', () => {
     expect(await screen.findByTestId('ai-readiness-overall-score')).toHaveTextContent('78')
   })
 
+  it('autoScanFiredRef latch survives same-prop re-render; close+reopen with cached state stays no-op', async () => {
+    // Mount with open=true → POST fires once. A re-render with the same
+    // open=true and the same post must NOT re-fire (latch held). Closing
+    // (open=false) returns null but doesn't unmount the component instance,
+    // so when open flips back to true the local state is still 'ready' and
+    // the auto-scan effect bails on `state.kind === 'ready'` — no second
+    // POST. Soft-prompt's "Score" CTA passes initialReport=null on a fresh
+    // *mount*; that path is covered separately by the existing
+    // 'auto-fires a POST when opened without an initialReport' case.
+    apiPost.mockResolvedValueOnce(makeResponse())
+    const props = {
+      onClose: () => {},
+      post: { id: 'p1', title: 'Hello', status: 'published' as const },
+      initialReport: null,
+    }
+
+    const { rerender } = render(<AiReadinessDrawer open {...props} />)
+    await waitFor(() => {
+      expect(apiPost).toHaveBeenCalledWith('/api/admin/posts/p1/ai-readiness')
+    })
+    expect(apiPost).toHaveBeenCalledTimes(1)
+
+    // Re-render with identical props — latch must hold; no second POST.
+    rerender(<AiReadinessDrawer open {...props} />)
+    await act(async () => { await Promise.resolve() })
+    expect(apiPost).toHaveBeenCalledTimes(1)
+
+    // Close → reopen on the same instance: latch resets, but the cached
+    // 'ready' state from the first scan persists, so the auto-scan effect
+    // bails on `state.kind === 'ready'` and POST stays at 1.
+    rerender(<AiReadinessDrawer open={false} {...props} />)
+    rerender(<AiReadinessDrawer open {...props} />)
+    await act(async () => { await Promise.resolve() })
+    expect(apiPost).toHaveBeenCalledTimes(1)
+  })
+
   it('does not render at all when open=false', () => {
     render(
       <AiReadinessDrawer
