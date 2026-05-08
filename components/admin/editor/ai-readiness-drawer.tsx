@@ -209,7 +209,7 @@ function renderBody(
         kind="error"
         testId="ai-readiness-banner-mcp-disabled"
         title="Service not configured"
-        body="Set the AI_READINESS_MCP_* env vars in your deployment and reload."
+        body="AI Readiness service isn't configured. Ask the site admin to enable it."
       />
     )
   }

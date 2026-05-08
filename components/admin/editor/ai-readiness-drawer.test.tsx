@@ -142,6 +142,11 @@ describe('<AiReadinessDrawer />', () => {
     )
     const banner = await screen.findByTestId('ai-readiness-banner-mcp-disabled')
     expect(banner).toHaveTextContent(/service not configured/i)
+    // Per the M7 Tester N1 defect — the rendered banner must not name any
+    // env var to the admin. Rule out both the AI_READINESS_ prefix and
+    // the broader MCP_ token used elsewhere in the wire contract.
+    expect(banner.textContent ?? '').not.toMatch(/AI_READINESS_/i)
+    expect(banner.textContent ?? '').not.toMatch(/MCP_/)
   })
 
   it('Re-scan button fires a fresh POST when a report is already shown', async () => {
