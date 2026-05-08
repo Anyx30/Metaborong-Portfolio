@@ -224,6 +224,13 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   const guard = await requireAdmin(req)
   if (guard instanceof NextResponse) return guard
 
+  // Mirror the POST handler's config gate so the FE button-hide probe
+  // (per agent-prompts §3 / M7-FE handoff §9.2) sees the same disabled
+  // signal from either method. Cheaper than a per-method fork on the FE.
+  if (isDisabled()) {
+    return errorResponse(503, 'MCP_DISABLED', 'AI Readiness service is not configured.')
+  }
+
   const { id } = await ctx.params
   if (!UUID_RE.test(id)) return errorResponse(404, 'NOT_FOUND', 'post not found')
 

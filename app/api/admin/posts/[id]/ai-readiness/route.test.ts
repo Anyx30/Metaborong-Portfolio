@@ -334,6 +334,19 @@ describe('GET /api/admin/posts/[id]/ai-readiness', () => {
     expect(res.status).toBe(401)
   })
 
+  it('503 MCP_DISABLED when env is unset (mirrors POST gate)', async () => {
+    disabledFlag = true
+    const c = await authedCookies()
+    const { GET } = await loadRoute()
+    const res = await GET(
+      new NextRequest('http://localhost/x', { headers: authHeaders(c, false) }),
+      ctx('00000000-0000-4000-a000-000000000001'),
+    )
+    expect(res.status).toBe(503)
+    const body = await res.json()
+    expect(body.code).toBe('MCP_DISABLED')
+  })
+
   it('404 NOT_SCORED when the post has never been scanned', async () => {
     const c = await authedCookies()
     const row = await seedPost()
