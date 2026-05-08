@@ -107,6 +107,43 @@ describe('<AiReadinessDrawer />', () => {
     expect(banner.textContent ?? '').toMatch(/Try again at \d{2}:\d{2}/)
   })
 
+  it('rate-limited banner renders the exact HH:MM derived from Retry-After', async () => {
+    // Pins the wall clock so the drawer's `new Date(Date.now() + retryAfter*1000)`
+    // computation lands on a known local-time HH:MM, then asserts the banner
+    // matches that exact pair. Catches off-by-one factor bugs (e.g. ms vs s)
+    // that the format-only `\d{2}:\d{2}` regex above would let through.
+    // `shouldAdvanceTime: true` keeps testing-library's findByTestId polling
+    // from stalling on fake timers.
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      vi.setSystemTime(new Date('2026-05-08T14:00:00Z'))
+      apiPost.mockRejectedValueOnce(
+        new ApiError({ status: 429, code: 'RATE_LIMITED', error: 'Too many', retryAfter: 1800 }),
+      )
+      render(
+        <AiReadinessDrawer
+          open
+          onClose={() => {}}
+          post={{ id: 'p1', title: 'Hello', status: 'published' }}
+          initialReport={null}
+        />,
+      )
+
+      const banner = await screen.findByTestId('ai-readiness-banner-rate-limited')
+
+      // Mirror the drawer's own math (line 192-202) in the runner's local TZ.
+      // 14:00:00Z + 1800s = 14:30:00Z; the banner uses .getHours() /
+      // .getMinutes() which read local time, so derive the expected pair the
+      // same way to stay TZ-agnostic.
+      const expected = new Date(Date.now() + 1800 * 1000)
+      const hh = expected.getHours().toString().padStart(2, '0')
+      const mm = expected.getMinutes().toString().padStart(2, '0')
+      expect(banner.textContent ?? '').toContain(`Try again at ${hh}:${mm}`)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('shows a "publish first" banner with a Publish-now button on POST_NOT_PUBLISHED', async () => {
     apiPost.mockRejectedValueOnce(
       new ApiError({ status: 409, code: 'POST_NOT_PUBLISHED', error: 'Score is only available after publish in v1.5.' }),
