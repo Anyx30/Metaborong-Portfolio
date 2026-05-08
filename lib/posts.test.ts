@@ -6,6 +6,7 @@ import {
   getDraftPostById,
   listPublishedPosts,
   listAllPostsForAdmin,
+  listAllPublishedForLlms,
   rowToPost,
   rowToSummary,
   slugifyTitle,
@@ -186,6 +187,65 @@ describe('listPublishedPosts', () => {
     const page3 = await listPublishedPosts({ page: 3, perPage: 3 }, db)
     expect(page3.posts.length).toBe(1)
     expect(page3.hasMore).toBe(false)
+  })
+})
+
+describe('listAllPublishedForLlms', () => {
+  it('returns only published posts ordered by published_at DESC', async () => {
+    const { db } = createTestDb()
+    await insertPost(db, {
+      slug: 'old', title: 'Old', status: 'published',
+      publishedAt: new Date('2024-01-01'),
+    })
+    await insertPost(db, {
+      slug: 'new', title: 'New', status: 'published',
+      publishedAt: new Date('2026-01-01'),
+    })
+    await insertPost(db, {
+      slug: 'mid', title: 'Mid', status: 'published',
+      publishedAt: new Date('2025-01-01'),
+    })
+    await insertPost(db, { slug: 'draft', title: 'Draft', status: 'draft' })
+    const list = await listAllPublishedForLlms(db)
+    expect(list.map((p) => p.slug)).toEqual(['new', 'mid', 'old'])
+    // No draft leaks through.
+    expect(list.find((p) => p.slug === 'draft')).toBeUndefined()
+  })
+
+  it('returns the narrow Pick<> shape with no extra fields (no geo_variants leak)', async () => {
+    const { db } = createTestDb()
+    await insertPost(db, {
+      slug: 'x', title: 'X', status: 'published',
+      publishedAt: new Date('2026-01-01'),
+      excerpt: 'an excerpt',
+      geoVariants: { US: { title: 'US' } },
+    })
+    const list = await listAllPublishedForLlms(db)
+    expect(list.length).toBe(1)
+    const item = list[0]
+    expect(Object.keys(item).sort()).toEqual([
+      'author_name',
+      'content_json',
+      'excerpt',
+      'meta_description',
+      'published_at',
+      'slug',
+      'title',
+      'updated_at',
+    ])
+    // Sanity-check field types / values.
+    expect(item.slug).toBe('x')
+    expect(item.title).toBe('X')
+    expect(item.excerpt).toBe('an excerpt')
+    expect(item.meta_description).toBeNull()
+    expect(typeof item.published_at).toBe('string')
+    expect(typeof item.updated_at).toBe('string')
+  })
+
+  it('returns an empty list for an empty catalog', async () => {
+    const { db } = createTestDb()
+    const list = await listAllPublishedForLlms(db)
+    expect(list).toEqual([])
   })
 })
 

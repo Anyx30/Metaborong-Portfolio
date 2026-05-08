@@ -12,6 +12,8 @@ import {
   loginBodySchema,
   aiReadinessSuggestionSchema,
   aiReadinessReportSchema,
+  aiReadinessBandSchema,
+  aiReadinessCheckSchema,
   errorCodeSchema,
 } from '@/lib/blog-schema'
 
@@ -273,6 +275,7 @@ describe('postSummarySchema', () => {
       ai_readiness_score: null,
       ai_readiness_band: null,
       has_geo_variants: false,
+      geo_variant_regions: [],
     }
     expect(postSummarySchema.safeParse(summary).success).toBe(true)
   })
@@ -350,7 +353,7 @@ describe('loginBodySchema', () => {
 
 // ── AI readiness ─────────────────────────────────────────────────────────────
 
-describe('aiReadinessSuggestionSchema + aiReadinessReportSchema', () => {
+describe('aiReadinessSuggestionSchema (legacy)', () => {
   it('accepts a suggestion with severity + message + optional blockId', () => {
     expect(aiReadinessSuggestionSchema.safeParse({ severity: 'info', message: 'm' }).success).toBe(true)
     expect(aiReadinessSuggestionSchema.safeParse({ severity: 'warn', message: 'm', blockId: 'b1' }).success).toBe(true)
@@ -359,9 +362,85 @@ describe('aiReadinessSuggestionSchema + aiReadinessReportSchema', () => {
   it('rejects invalid severity', () => {
     expect(aiReadinessSuggestionSchema.safeParse({ severity: 'critical', message: 'm' }).success).toBe(false)
   })
+})
 
-  it('aiReadinessReportSchema requires a suggestions array', () => {
-    expect(aiReadinessReportSchema.safeParse({ suggestions: [] }).success).toBe(true)
-    expect(aiReadinessReportSchema.safeParse({}).success).toBe(false)
+describe('aiReadinessBandSchema', () => {
+  it('accepts the three known bands', () => {
+    for (const band of ['strong', 'adequate', 'weak'] as const) {
+      expect(aiReadinessBandSchema.safeParse(band).success).toBe(true)
+    }
+  })
+
+  it('rejects unknown bands', () => {
+    expect(aiReadinessBandSchema.safeParse('great').success).toBe(false)
+    expect(aiReadinessBandSchema.safeParse('').success).toBe(false)
+  })
+})
+
+describe('aiReadinessCheckSchema', () => {
+  const sample = {
+    id: 'robots-txt',
+    label: 'Robots.txt',
+    status: 'fail',
+    score: 0,
+    scope: 'domain',
+    details: 'No robots.txt file found',
+    recommendation: 'Create a robots.txt file with AI crawler directives',
+  } as const
+
+  it('accepts a known check id with valid fields', () => {
+    expect(aiReadinessCheckSchema.safeParse(sample).success).toBe(true)
+  })
+
+  it('rejects an unknown check id (enum is the FE-typing surface)', () => {
+    expect(aiReadinessCheckSchema.safeParse({ ...sample, id: 'something-new' }).success).toBe(false)
+  })
+
+  it('rejects an out-of-range score', () => {
+    expect(aiReadinessCheckSchema.safeParse({ ...sample, score: 200 }).success).toBe(false)
+  })
+
+  it('rejects unknown status', () => {
+    expect(aiReadinessCheckSchema.safeParse({ ...sample, status: 'critical' }).success).toBe(false)
+  })
+})
+
+describe('aiReadinessReportSchema', () => {
+  const baseReport = {
+    overallScore: 41,
+    pageScore: 54,
+    domainScore: 0,
+    domainReputationBonus: 0,
+    metadata: {
+      title: 'METABORONG',
+      description: 'WE ARCHITECT SCALABLE WEB3 ECOSYSTEMS',
+      analyzedAt: '2026-05-08T07:44:02Z',
+    },
+    checks: [
+      {
+        id: 'meta-tags',
+        label: 'Metadata Quality',
+        status: 'pass',
+        score: 85,
+        scope: 'page',
+        details: 'Title ✓, Description',
+        recommendation: 'Metadata provides excellent context for AI',
+      },
+    ],
+  }
+
+  it('accepts a well-formed VerseOdin report', () => {
+    expect(aiReadinessReportSchema.safeParse(baseReport).success).toBe(true)
+  })
+
+  it('rejects a report missing overallScore', () => {
+    const { overallScore: _o, ...rest } = baseReport
+    void _o
+    expect(aiReadinessReportSchema.safeParse(rest).success).toBe(false)
+  })
+
+  it('passes through unknown top-level fields (forward-compat)', () => {
+    const parsed = aiReadinessReportSchema.safeParse({ ...baseReport, futureField: 'whatever' })
+    expect(parsed.success).toBe(true)
   })
 })

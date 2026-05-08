@@ -27,10 +27,64 @@ vi.mock('@/lib/api-client', async () => {
 // The Tiptap-backed EditorShell is exercised in components/admin/editor/
 // editor-shell.test.tsx; the form-level tests stay focused on form
 // validation, save flow, status changes, and the delete modal. The mock
-// returns a minimal placeholder so happy-dom doesn't spin up a full
-// ProseMirror runtime per form test.
+// surfaces the inputs the form tests care about — `activeVariant`,
+// `variants`, and the `onSetBlockOverride` callback — through a couple of
+// hidden test buttons so a few variant-specific cases can drive the
+// callback without booting Tiptap.
 vi.mock('@/components/admin/editor/editor-shell', () => ({
-  EditorShell: () => null,
+  EditorShell: ({
+    activeVariant,
+    variants,
+    onSetBlockOverride,
+  }: {
+    activeVariant?: string
+    variants?: unknown
+    onSetBlockOverride?: (blockId: string, kind: 'text' | 'alt', value: string) => void
+  }) => (
+    <div
+      data-testid="mock-editor-shell"
+      data-active-variant={activeVariant ?? ''}
+      data-variants={JSON.stringify(variants ?? {})}
+    >
+      <button
+        type="button"
+        data-testid="mock-set-block-override"
+        onClick={() => onSetBlockOverride?.('h1', 'text', 'US heading override')}
+      />
+      <button
+        type="button"
+        data-testid="mock-clear-block-override"
+        onClick={() => onSetBlockOverride?.('h1', 'text', '')}
+      />
+    </div>
+  ),
+}))
+
+// The AI readiness button + drawer are exercised in their own colocated
+// component tests. The form-level tests only care that the button renders
+// (so its onOpen wiring is in scope) and that the drawer's open prop
+// flips on the soft-prompt's "Score" CTA — both surfaceable through a
+// minimal render mock.
+vi.mock('@/components/admin/editor/ai-readiness-button', () => ({
+  AiReadinessButton: ({ onOpen }: { onOpen: () => void }) => (
+    <button type="button" data-testid="mock-ai-readiness-button" onClick={onOpen}>
+      AI readiness
+    </button>
+  ),
+}))
+vi.mock('@/components/admin/editor/ai-readiness-drawer', () => ({
+  AiReadinessDrawer: ({
+    open, initialReport,
+  }: {
+    open: boolean
+    initialReport: unknown
+  }) =>
+    open ? (
+      <div
+        data-testid="mock-ai-readiness-drawer"
+        data-initial-report={initialReport === null ? 'null' : 'present'}
+      />
+    ) : null,
 }))
 
 const apiPatch = api.patch as unknown as ReturnType<typeof vi.fn>
@@ -151,6 +205,80 @@ describe('<EditPostForm />', () => {
     expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
   })
 
+  it('SaveState lifecycle: idle → saving → saved (lingers ≥2s) → idle', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      // Resolve the PATCH only when we say so, so we can observe the
+      // 'saving' state in the DOM.
+      let resolvePatch!: (value: { post: Post }) => void
+      apiPatch.mockImplementationOnce(
+        () => new Promise((res) => { resolvePatch = res }),
+      )
+
+      render(<EditPostForm initialPost={makePost()} />)
+      fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value: 'Renamed' } })
+
+      // Idle + dirty → indicator says "Unsaved changes".
+      expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument()
+
+      // Clicking Save kicks runSave() — state becomes 'saving' before
+      // the PATCH resolves. The "Saving…" text appears both in the
+      // role="status" SaveIndicator and as the disabled button label;
+      // assert via getAllByText which the test merely requires to be
+      // non-empty.
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /saving|^save$/i }))
+      })
+      expect(screen.getAllByText(/saving…/i).length).toBeGreaterThan(0)
+
+      // Resolve the PATCH; the indicator transitions to 'saved'.
+      await act(async () => {
+        resolvePatch({ post: makePost({ title: 'Renamed' }) })
+        await Promise.resolve()
+      })
+      expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
+
+      // 'saved' state lingers for 2s — a 1s tick must not flip it back yet.
+      await act(async () => { vi.advanceTimersByTime(1000) })
+      expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
+
+      // After ≥2s total, the indicator fades back to idle ("Up to date"
+      // since the form fields now match the saved post).
+      await act(async () => { vi.advanceTimersByTime(1500) })
+      expect(screen.queryByText(/saved\s+just now|saved\s+\d/i)).toBeNull()
+      expect(screen.getByText(/up to date/i)).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('SaveState: only one "Saving…" indicator appears per real save (no flicker on rapid keystrokes)', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      apiPatch.mockResolvedValue({ post: makePost({ title: 'Renamed five' }) })
+
+      render(<EditPostForm initialPost={makePost()} />)
+
+      // Five rapid keystrokes within the 2s autosave debounce window —
+      // none of them should surface a 'saving' indicator.
+      for (const value of ['R', 'Re', 'Ren', 'Rena', 'Renam']) {
+        fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value } })
+        await act(async () => { vi.advanceTimersByTime(200) })
+        expect(screen.queryAllByText(/saving…/i)).toHaveLength(0)
+      }
+
+      // After 2s of quiet, autosave fires once; observe a single 'saving'.
+      await act(async () => { vi.advanceTimersByTime(2100) })
+      // The PATCH resolves on the next tick of the microtask queue.
+      await act(async () => { await Promise.resolve() })
+      expect(apiPatch).toHaveBeenCalledTimes(1)
+      // The 'saved' indicator is visible after the resolved save.
+      expect(screen.getAllByText(/saved\s+just now|saved\s+\d/i).length).toBeGreaterThan(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('Save error surfaces an inline retry — clicking Retry re-invokes PATCH', async () => {
     apiPatch
       .mockRejectedValueOnce(new ApiError({ status: 500, code: 'INTERNAL', error: 'Database hiccup' }))
@@ -194,6 +322,198 @@ describe('<EditPostForm />', () => {
     expect(screen.getByRole('status', { name: /status: draft/i })).toBeInTheDocument()
     const errs = screen.getAllByRole('alert')
     expect(errs.some((el) => /cannot publish without an excerpt/i.test(el.textContent ?? ''))).toBe(true)
+  })
+
+  // ── M9-C variant authoring ────────────────────────────────────────────────
+
+  it('variant tab choice persists to localStorage under mb.editor.variant.<id> and re-hydrates on remount', () => {
+    const post = makePost({ id: '11111111-1111-1111-1111-111111111111' })
+    const key = `mb.editor.variant.${post.id}`
+    window.localStorage.removeItem(key)
+
+    const { unmount } = render(<EditPostForm initialPost={post} />)
+    expect(window.localStorage.getItem(key)).toBe('OTHER')
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+    expect(window.localStorage.getItem(key)).toBe('US')
+    expect(screen.getByRole('tab', { name: /^US$/ })).toHaveAttribute('aria-selected', 'true')
+
+    unmount()
+    cleanup()
+
+    // Fresh remount picks the persisted tab back up.
+    render(<EditPostForm initialPost={post} />)
+    expect(screen.getByRole('tab', { name: /^US$/ })).toHaveAttribute('aria-selected', 'true')
+    // The Title input on the US tab is now the variant overlay (initially empty
+    // because base post carries no US variant in this fixture).
+    expect((screen.getByLabelText(/^title$/i) as HTMLInputElement).value).toBe('')
+  })
+
+  it('variant autosave preserves the existing other-region variant when editing one region', async () => {
+    // Post arrives with an EU variant already set; user edits the US tab.
+    // The PATCH body must carry geo_variants with BOTH US (the new edit)
+    // and EU (the existing payload) — never clobber the other region.
+    const post = makePost({
+      geo_variants: { EU: { title: 'EU title' } },
+    })
+    apiPatch.mockResolvedValueOnce({
+      post: makePost({
+        geo_variants: {
+          US: { title: 'US title' },
+          EU: { title: 'EU title' },
+        },
+      }),
+    })
+    render(<EditPostForm initialPost={post} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+    fireEvent.change(screen.getByLabelText(/^title$/i), { target: { value: 'US title' } })
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+
+    expect(apiPatch).toHaveBeenCalledTimes(1)
+    const [, body] = apiPatch.mock.calls[0]
+    expect(body.geo_variants).toEqual({
+      US: { title: 'US title' },
+      EU: { title: 'EU title' },
+    })
+  })
+
+  it('"Reset to base" deletes the variant override key — PATCH body omits it for that field', async () => {
+    const post = makePost({
+      geo_variants: { US: { title: 'US title', excerpt: 'US excerpt' } },
+    })
+    apiPatch.mockResolvedValueOnce({
+      post: makePost({
+        geo_variants: { US: { excerpt: 'US excerpt' } },
+      }),
+    })
+    render(<EditPostForm initialPost={post} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+    // The override chip is visible because the variant carries a non-empty title.
+    expect(screen.getByTestId('override-chip-f-title')).toBeInTheDocument()
+
+    // Click Reset to base for the title field.
+    fireEvent.click(screen.getByTestId('reset-override-f-title'))
+    // Chip clears immediately.
+    expect(screen.queryByTestId('override-chip-f-title')).toBeNull()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+    expect(apiPatch).toHaveBeenCalledTimes(1)
+    const [, body] = apiPatch.mock.calls[0]
+    // Title override is gone; excerpt override remains.
+    expect(body.geo_variants).toEqual({ US: { excerpt: 'US excerpt' } })
+    expect(body.geo_variants.US.title).toBeUndefined()
+  })
+
+  it('block override write/clear: PATCH carries block_overrides[id] and removes it on clear', async () => {
+    const post = makePost({ geo_variants: {} })
+    // Two saves: after writing the override, then after clearing it.
+    apiPatch
+      .mockResolvedValueOnce({
+        post: makePost({
+          geo_variants: { US: { block_overrides: { h1: { text: 'US heading override' } } } },
+        }),
+      })
+      .mockResolvedValueOnce({ post: makePost({ geo_variants: {} }) })
+    render(<EditPostForm initialPost={post} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /^US$/ }))
+
+    // Mock callback writes a block override into geo_variants.
+    fireEvent.click(screen.getByTestId('mock-set-block-override'))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+    expect(apiPatch.mock.calls[0][1].geo_variants).toEqual({
+      US: { block_overrides: { h1: { text: 'US heading override' } } },
+    })
+
+    // Mock callback clears it (empty string). The form must drop the
+    // block id, the block_overrides key, and (since nothing else is set)
+    // the region key.
+    fireEvent.click(screen.getByTestId('mock-clear-block-override'))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    })
+    expect(apiPatch.mock.calls[1][1].geo_variants).toEqual({})
+  })
+
+  // ── M7 AI readiness soft-prompt on publish ────────────────────────────────
+
+  it('soft-prompt appears after publish when ai_readiness_checked_at is null', async () => {
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_checked_at: null,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    expect(screen.getByTestId('ai-readiness-soft-prompt')).toBeInTheDocument()
+  })
+
+  it('soft-prompt appears after publish when ai_readiness_checked_at is older than 24h', async () => {
+    const oneDayAgo = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString()
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_score: 50,
+        ai_readiness_band: 'weak',
+        ai_readiness_checked_at: oneDayAgo,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    expect(screen.getByTestId('ai-readiness-soft-prompt')).toBeInTheDocument()
+  })
+
+  it('soft-prompt does NOT appear after publish when ai_readiness_checked_at is fresh (< 24h)', async () => {
+    const recently = new Date(Date.now() - 60 * 60 * 1000).toISOString() // 1h ago
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_score: 80,
+        ai_readiness_band: 'strong',
+        ai_readiness_checked_at: recently,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    expect(screen.queryByTestId('ai-readiness-soft-prompt')).toBeNull()
+  })
+
+  it('soft-prompt "Score" CTA opens the drawer with initialReport=null (force fresh scan)', async () => {
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_checked_at: null,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    fireEvent.click(screen.getByTestId('ai-readiness-soft-prompt-score'))
+    const drawer = screen.getByTestId('mock-ai-readiness-drawer')
+    expect(drawer).toBeInTheDocument()
+    expect(drawer).toHaveAttribute('data-initial-report', 'null')
+    expect(screen.queryByTestId('ai-readiness-soft-prompt')).toBeNull()
   })
 
   it('Delete modal: typing the slug enables the destructive action; Esc cancels', () => {

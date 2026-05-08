@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Block, Image as ImageRow, Post } from '@/lib/blog-schema'
+import type { Block, GeoRegion, GeoVariants, Image as ImageRow, Post } from '@/lib/blog-schema'
 import { BlockEditor } from './editor'
 import { PreviewPane } from './preview-pane'
 
@@ -26,6 +26,21 @@ interface EditorShellProps {
    * faithful for existing posts.
    */
   images?: ImageRow[]
+  /**
+   * Active geo-variant tab from the parent form. 'OTHER' = Base. Drives:
+   *   · The block editor's editable state (read-only on US/EU).
+   *   · The inspector's per-block override panel.
+   *   · The preview pane's region (when synced — see syncedRegion below).
+   */
+  activeVariant?: 'OTHER' | 'US' | 'EU'
+  /** Live geo_variants overlay (post-level + block_overrides). */
+  variants?: GeoVariants
+  /**
+   * Setter for a per-block override. The shell forwards it to the inspector
+   * so the right-rail panel can write directly into the parent's variants
+   * state. Only invoked when activeVariant is US or EU.
+   */
+  onSetBlockOverride?: (blockId: string, kind: 'text' | 'alt', value: string) => void
 }
 
 /**
@@ -47,12 +62,20 @@ export function EditorShell({
   onSaveShortcut,
   liveOverlay,
   images,
+  activeVariant = 'OTHER',
+  variants,
+  onSetBlockOverride,
 }: EditorShellProps) {
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
   const [split, setSplit] = useState<number>(DEFAULT_SPLIT)
   const [collapsed, setCollapsed] = useState<boolean>(false)
   const [isLg, setIsLg] = useState<boolean>(true)
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
+  // The preview pane's region tracks the editor variant tab by default. The
+  // user can break the lock with the "Sync with editor tab" toggle to
+  // free-form preview a different region while editing the active one.
+  const [previewSynced, setPreviewSynced] = useState<boolean>(true)
+  const [previewRegion, setPreviewRegion] = useState<GeoRegion>(activeVariant)
   const containerRef = useRef<HTMLDivElement>(null)
   const draggingRef = useRef(false)
   const lastSplitRef = useRef<number>(DEFAULT_SPLIT)
@@ -77,6 +100,12 @@ export function EditorShell({
     mq.addEventListener('change', update)
     return () => mq.removeEventListener('change', update)
   }, [])
+
+  // While synced, the preview region mirrors the editor's variant tab. The
+  // unsync toggle freezes whatever the preview was last showing.
+  useEffect(() => {
+    if (previewSynced) setPreviewRegion(activeVariant)
+  }, [activeVariant, previewSynced])
 
   // Forward block changes upstream + remember locally for the preview pane.
   const handleBlocksChange = useCallback((next: Block[]) => {
@@ -126,6 +155,37 @@ export function EditorShell({
     }
   }
 
+  const editable = activeVariant === 'OTHER'
+  const previewProps = {
+    basePost,
+    liveBlocks: blocks,
+    liveOverlay,
+    images,
+    region: previewRegion,
+    onRegionChange: (next: GeoRegion) => {
+      // User-driven region change always breaks the lock.
+      setPreviewSynced(false)
+      setPreviewRegion(next)
+    },
+    synced: previewSynced,
+    onToggleSync: () => {
+      setPreviewSynced((prev) => {
+        const next = !prev
+        if (next) setPreviewRegion(activeVariant)
+        return next
+      })
+    },
+  }
+  const editorProps = {
+    initialBlocks,
+    onChange: handleBlocksChange,
+    onSaveShortcut,
+    editable,
+    activeVariant,
+    variants,
+    onSetBlockOverride,
+  }
+
   // ── small-viewport tab layout ──────────────────────────────────────────
 
   if (!isLg) {
@@ -153,14 +213,10 @@ export function EditorShell({
         </div>
         <div className="flex-1 overflow-hidden">
           <div className={tab === 'edit' ? 'h-full' : 'hidden'}>
-            <BlockEditor
-              initialBlocks={initialBlocks}
-              onChange={handleBlocksChange}
-              onSaveShortcut={onSaveShortcut}
-            />
+            <BlockEditor {...editorProps} />
           </div>
           <div className={tab === 'preview' ? 'h-full' : 'hidden'}>
-            <PreviewPane basePost={basePost} liveBlocks={blocks} liveOverlay={liveOverlay} images={images} />
+            <PreviewPane {...previewProps} />
           </div>
         </div>
       </div>
@@ -192,11 +248,7 @@ export function EditorShell({
       </div>
       <div ref={containerRef} className="flex flex-1 overflow-hidden" data-testid="editor-shell">
         <div style={{ width: `${leftPct}%` }} className="h-full flex-shrink-0 overflow-hidden border-r border-border">
-          <BlockEditor
-            initialBlocks={initialBlocks}
-            onChange={handleBlocksChange}
-            onSaveShortcut={onSaveShortcut}
-          />
+          <BlockEditor {...editorProps} />
         </div>
         {!collapsed ? (
           <>
@@ -228,7 +280,7 @@ export function EditorShell({
               className="w-[6px] flex-shrink-0 cursor-col-resize bg-border hover:bg-brand/30 focus:outline-none focus-visible:bg-brand/50"
             />
             <div style={{ width: `${rightPct}%` }} className="h-full flex-shrink-0 overflow-hidden">
-              <PreviewPane basePost={basePost} liveBlocks={blocks} liveOverlay={liveOverlay} images={images} />
+              <PreviewPane {...previewProps} />
             </div>
           </>
         ) : null}

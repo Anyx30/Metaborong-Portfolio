@@ -2,8 +2,19 @@
 
 import type { Editor } from '@tiptap/react'
 import { useEffect, useId, useState } from 'react'
-import type { SemanticRole } from '@/lib/blog-schema'
+import type { GeoVariants, SemanticRole } from '@/lib/blog-schema'
 import { NODE_NAMES } from '@/lib/editor/serialize'
+
+// Block types that accept a per-block text override on a variant tab. The
+// `image` block accepts an alt override instead. List / code / faq are
+// excluded in v1.5 — see dispatch §5.
+const TEXT_OVERRIDABLE_NODE_NAMES: ReadonlySet<string> = new Set([
+  NODE_NAMES.heading,
+  NODE_NAMES.paragraph,
+  NODE_NAMES.quote,
+  NODE_NAMES.callout,
+  NODE_NAMES.keyTakeaway,
+])
 
 const ROLES: ReadonlyArray<{ value: '' | SemanticRole; label: string }> = [
   { value: '',           label: '— no role —' },
@@ -21,6 +32,16 @@ interface InspectorProps {
   tldrCount?: number
   /** True if the document contains a heading-level skip (h2 → h4 etc). */
   hasHeadingSkip?: boolean
+  /**
+   * Active variant tab. When 'US' or 'EU', the inspector swaps its body for
+   * a per-block override panel and stops emitting role / metadata edits.
+   * Block structure is base-only on variant tabs.
+   */
+  activeVariant?: 'OTHER' | 'US' | 'EU'
+  /** Live geo_variants from the parent — used to pre-fill override inputs. */
+  variants?: GeoVariants
+  /** Setter for the per-block override (provided when on a variant tab). */
+  onSetBlockOverride?: (blockId: string, kind: 'text' | 'alt', value: string) => void
 }
 
 interface SelectionSnapshot {
@@ -30,7 +51,14 @@ interface SelectionSnapshot {
 }
 
 /** Right-rail block inspector. Edits commit on blur or change for selects. */
-export function Inspector({ editor, tldrCount = 0, hasHeadingSkip = false }: InspectorProps) {
+export function Inspector({
+  editor,
+  tldrCount = 0,
+  hasHeadingSkip = false,
+  activeVariant = 'OTHER',
+  variants,
+  onSetBlockOverride,
+}: InspectorProps) {
   const [sel, setSel] = useState<SelectionSnapshot | null>(null)
 
   useEffect(() => {
@@ -82,6 +110,57 @@ export function Inspector({ editor, tldrCount = 0, hasHeadingSkip = false }: Ins
 
   const role = (sel.attrs.role as SemanticRole | null) ?? ''
   const blockType = friendlyType(sel.nodeName)
+
+  // Variant override panel: replaces the role / metadata inputs while a US
+  // or EU tab is active. The block's structure stays read-only; only the
+  // text (or alt for image blocks) overrides flow through.
+  if (activeVariant !== 'OTHER') {
+    const region = activeVariant
+    const blockId = (sel.attrs.id as string | undefined) ?? ''
+    const overridePayload = variants?.[region]?.block_overrides?.[blockId] ?? {}
+    const overrideKind: 'text' | 'alt' | null =
+      sel.nodeName === NODE_NAMES.image ? 'alt'
+      : TEXT_OVERRIDABLE_NODE_NAMES.has(sel.nodeName) ? 'text'
+      : null
+    const overrideValue =
+      overrideKind === 'text' ? (overridePayload.text ?? '')
+      : overrideKind === 'alt' ? (overridePayload.alt ?? '')
+      : ''
+    return (
+      <aside className="flex h-full w-full flex-col gap-[12px] overflow-y-auto border-l border-border bg-white p-[16px]" data-testid="inspector-variant">
+        <header className="flex flex-col gap-[2px]">
+          <h2
+            className="text-[10px] font-medium uppercase tracking-[0.16em] text-gray"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            Variant overrides · {region}
+          </h2>
+          <p className="text-[14px] font-semibold tracking-[-0.01em] text-dark">{blockType}</p>
+        </header>
+        {overrideKind === null ? (
+          <p className="rounded-md border border-border bg-bg-subtle px-2 py-1 text-[11px] text-gray tracking-[-0.005em]">
+            This block type isn&apos;t variant-overridable in v1.5. Lists,
+            code, and FAQ overrides are deferred to v1.6.
+          </p>
+        ) : (
+          <Field label={overrideKind === 'alt' ? `${region} alt override` : `${region} text override`}>
+            <input
+              type="text"
+              value={overrideValue}
+              onChange={(e) => onSetBlockOverride?.(blockId, overrideKind, e.target.value)}
+              placeholder={overrideKind === 'alt' ? 'Variant alt text' : 'Variant text'}
+              data-testid={`block-override-input-${overrideKind}`}
+              aria-label={`${region} ${overrideKind} override`}
+              className={inputCls()}
+            />
+            <span className="text-[11px] text-gray-light tracking-[-0.005em]">
+              Empty = falls back to base.
+            </span>
+          </Field>
+        )}
+      </aside>
+    )
+  }
 
   return (
     <aside className="flex h-full w-full flex-col gap-[12px] overflow-y-auto border-l border-border bg-white p-[16px]">

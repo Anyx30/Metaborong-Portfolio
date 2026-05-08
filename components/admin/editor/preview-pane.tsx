@@ -27,6 +27,21 @@ interface PreviewPaneProps {
    * them correctly via server-side getImagesByIds.
    */
   images?: ImageRow[]
+  /**
+   * Controlled region. When provided, the parent owns the region state and
+   * the preview reads it through. Default uncontrolled behavior remains
+   * available for tests / callers that don't wire it.
+   */
+  region?: GeoRegion
+  onRegionChange?: (next: GeoRegion) => void
+  /**
+   * Whether the preview region is locked to the editor's variant tab. Drives
+   * the "Sync with editor tab" toggle. Optional — when neither `synced` nor
+   * `onToggleSync` are provided, the toggle hides and the selector behaves
+   * like before.
+   */
+  synced?: boolean
+  onToggleSync?: () => void
 }
 
 /**
@@ -39,8 +54,24 @@ interface PreviewPaneProps {
  *     route will produce under each geo header.
  *   · Wraps PostView verbatim — same DOM as the public renderer.
  */
-export function PreviewPane({ basePost, liveBlocks, liveOverlay, images }: PreviewPaneProps) {
-  const [region, setRegion] = useState<GeoRegion>('OTHER')
+export function PreviewPane({
+  basePost,
+  liveBlocks,
+  liveOverlay,
+  images,
+  region: controlledRegion,
+  onRegionChange,
+  synced,
+  onToggleSync,
+}: PreviewPaneProps) {
+  const isControlled = controlledRegion !== undefined
+  const [internalRegion, setInternalRegion] = useState<GeoRegion>('OTHER')
+  const region = isControlled ? controlledRegion : internalRegion
+  const handleRegionChange = (next: GeoRegion) => {
+    if (onRegionChange) onRegionChange(next)
+    if (!isControlled) setInternalRegion(next)
+  }
+
   const [debouncedBlocks, setDebouncedBlocks] = useState<Block[]>(liveBlocks)
   const [debouncedOverlay, setDebouncedOverlay] = useState(liveOverlay ?? {})
   const [renderTick, setRenderTick] = useState(0)
@@ -78,33 +109,54 @@ export function PreviewPane({ basePost, liveBlocks, liveOverlay, images }: Previ
     return (imageId: string): ImageRow | null => map.get(imageId) ?? null
   }, [images])
 
+  const showSyncToggle = synced !== undefined && onToggleSync !== undefined
+
   return (
-    <div className="flex h-full flex-col" data-testid="preview-pane" data-render-tick={renderTick}>
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-bg-subtle px-[16px] py-[8px]">
+    <div className="flex h-full flex-col" data-testid="preview-pane" data-render-tick={renderTick} data-synced={synced ? '1' : '0'}>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-subtle px-[16px] py-[8px]">
         <p
           className="text-[10px] font-medium uppercase tracking-[0.16em] text-gray"
           style={{ fontFamily: 'var(--font-mono)' }}
         >
           Live preview
         </p>
-        <label className="flex items-center gap-2">
-          <span
-            className="text-[10px] font-medium uppercase tracking-[0.12em] text-gray"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            Region
-          </span>
-          <select
-            value={region}
-            onChange={(e) => setRegion(e.target.value as GeoRegion)}
-            aria-label="Preview region"
-            className="rounded-sm border border-border bg-white px-1 py-[2px] text-[12px] tracking-[-0.005em] text-dark focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          >
-            {REGIONS.map((r) => (
-              <option key={r} value={r}>{REGION_LABELS[r]}</option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          {showSyncToggle ? (
+            <button
+              type="button"
+              onClick={onToggleSync}
+              aria-pressed={synced}
+              data-testid="preview-sync-toggle"
+              className={`inline-flex h-[22px] items-center rounded-sm border px-2 text-[10px] font-medium uppercase tracking-[0.12em] transition-colors duration-150 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+                synced
+                  ? 'border-brand/40 bg-[#eef2ff] text-brand'
+                  : 'border-border bg-white text-gray hover:border-brand/30 hover:text-dark'
+              }`}
+              style={{ fontFamily: 'var(--font-mono)' }}
+              title={synced ? 'Synced with editor tab' : 'Free-form preview'}
+            >
+              {synced ? '· Synced' : 'Sync with tab'}
+            </button>
+          ) : null}
+          <label className="flex items-center gap-2">
+            <span
+              className="text-[10px] font-medium uppercase tracking-[0.12em] text-gray"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            >
+              Region
+            </span>
+            <select
+              value={region}
+              onChange={(e) => handleRegionChange(e.target.value as GeoRegion)}
+              aria-label="Preview region"
+              className="rounded-sm border border-border bg-white px-1 py-[2px] text-[12px] tracking-[-0.005em] text-dark focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              {REGIONS.map((r) => (
+                <option key={r} value={r}>{REGION_LABELS[r]}</option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto bg-white">
         <PostView post={previewPost} resolveImage={resolveImage} draftBanner />

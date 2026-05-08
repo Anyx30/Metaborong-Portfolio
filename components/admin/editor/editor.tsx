@@ -6,14 +6,27 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Inspector } from './inspector'
 import { MB_NODES } from './nodes'
 import { SlashMenu } from './slash-menu'
+import { UniqueIds } from './unique-ids'
 import { blocksToEditorState, editorStateToBlocks, NODE_NAMES } from '@/lib/editor/serialize'
-import type { Block } from '@/lib/blog-schema'
+import type { Block, GeoVariants } from '@/lib/blog-schema'
 
 interface BlockEditorProps {
   initialBlocks: Block[]
   onChange: (blocks: Block[]) => void
   /** Cmd/Ctrl+S handler — wired by the parent form for "save now". */
   onSaveShortcut?: () => void
+  /**
+   * Whether the editor accepts user input. False on US/EU variant tabs:
+   * block structure is base-only, but per-block text/alt overrides are
+   * editable through the inspector's variant-overrides panel.
+   */
+  editable?: boolean
+  /** Active variant tab — drives the inspector's override panel mode. */
+  activeVariant?: 'OTHER' | 'US' | 'EU'
+  /** Live geo_variants from the parent — used to pre-fill override inputs. */
+  variants?: GeoVariants
+  /** Setter for per-block override (forwarded to Inspector). */
+  onSetBlockOverride?: (blockId: string, kind: 'text' | 'alt', value: string) => void
 }
 
 /**
@@ -29,7 +42,15 @@ interface BlockEditorProps {
  *   · Esc closes the slash menu (handled inside <SlashMenu />).
  *   · Mounts the role/metadata inspector wired to the same editor.
  */
-export function BlockEditor({ initialBlocks, onChange, onSaveShortcut }: BlockEditorProps) {
+export function BlockEditor({
+  initialBlocks,
+  onChange,
+  onSaveShortcut,
+  editable = true,
+  activeVariant = 'OTHER',
+  variants,
+  onSetBlockOverride,
+}: BlockEditorProps) {
   const initialContent = useMemo(() => initialContentJson(initialBlocks), [initialBlocks])
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
@@ -47,8 +68,10 @@ export function BlockEditor({ initialBlocks, onChange, onSaveShortcut }: BlockEd
         horizontalRule: false,
       }),
       ...MB_NODES,
+      UniqueIds,
     ],
     content: initialContent,
+    editable,
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -61,6 +84,14 @@ export function BlockEditor({ initialBlocks, onChange, onSaveShortcut }: BlockEd
       onChangeRef.current(blocks)
     },
   })
+
+  // Toggling between variant tabs flips read-only without remounting the
+  // editor (preserves cursor + history). Tiptap exposes setEditable on the
+  // editor instance.
+  useEffect(() => {
+    if (!editor) return
+    if (editor.isEditable !== editable) editor.setEditable(editable)
+  }, [editor, editable])
 
   // Cmd/Ctrl+S binds to "save now". Listens at the editor's container so
   // it's only active while the editor has focus.
@@ -108,7 +139,14 @@ export function BlockEditor({ initialBlocks, onChange, onSaveShortcut }: BlockEd
         )}
       </div>
       <div className="hidden w-[280px] flex-shrink-0 lg:block">
-        <Inspector editor={editor} tldrCount={warnings.tldrCount} hasHeadingSkip={warnings.hasHeadingSkip} />
+        <Inspector
+          editor={editor}
+          tldrCount={warnings.tldrCount}
+          hasHeadingSkip={warnings.hasHeadingSkip}
+          activeVariant={activeVariant}
+          variants={variants}
+          onSetBlockOverride={onSetBlockOverride}
+        />
       </div>
     </div>
   )
