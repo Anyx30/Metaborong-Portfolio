@@ -486,6 +486,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
     setDeleteError(null)
     try {
       await api.delete<{ ok: true }>(`/api/admin/posts/${post.id}`)
+      try { window.localStorage.removeItem(`mb.editor.variant.${post.id}`) } catch { /* private mode */ }
       startTransition(() => {
         router.push('/admin')
         router.refresh()

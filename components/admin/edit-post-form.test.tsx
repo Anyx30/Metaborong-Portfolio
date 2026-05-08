@@ -87,8 +87,9 @@ vi.mock('@/components/admin/editor/ai-readiness-drawer', () => ({
     ) : null,
 }))
 
-const apiPatch = api.patch as unknown as ReturnType<typeof vi.fn>
-const apiPost  = api.post  as unknown as ReturnType<typeof vi.fn>
+const apiPatch  = api.patch  as unknown as ReturnType<typeof vi.fn>
+const apiPost   = api.post   as unknown as ReturnType<typeof vi.fn>
+const apiDelete = api.delete as unknown as ReturnType<typeof vi.fn>
 
 function makePost(overrides: Partial<Post> = {}): Post {
   return {
@@ -128,6 +129,7 @@ describe('<EditPostForm />', () => {
     routerRefresh.mockReset()
     apiPatch.mockReset()
     apiPost.mockReset()
+    apiDelete.mockReset()
   })
   afterEach(() => cleanup())
 
@@ -547,6 +549,28 @@ describe('<EditPostForm />', () => {
     expect(drawer).toBeInTheDocument()
     expect(drawer).toHaveAttribute('data-initial-report', 'null')
     expect(screen.queryByTestId('ai-readiness-soft-prompt')).toBeNull()
+  })
+
+  it('Delete: removes mb.editor.variant.<id> from localStorage on successful DELETE', async () => {
+    const post = makePost({ slug: 'going-away' })
+    const key = `mb.editor.variant.${post.id}`
+    window.localStorage.setItem(key, 'US')
+    apiDelete.mockResolvedValueOnce({ ok: true })
+
+    render(<EditPostForm initialPost={post} />)
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.change(within(dialog).getByLabelText(/type the slug/i), { target: { value: 'going-away' } })
+
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: /^delete$/i }))
+    })
+
+    expect(apiDelete).toHaveBeenCalledWith(`/api/admin/posts/${post.id}`)
+    // Key is wiped after the DELETE resolves so the next post that lands on
+    // this id (extremely unlikely uuid collision but still) doesn't inherit
+    // the prior author's tab choice — and the storage line item is freed.
+    expect(window.localStorage.getItem(key)).toBeNull()
   })
 
   it('Delete modal: typing the slug enables the destructive action; Esc cancels', () => {
