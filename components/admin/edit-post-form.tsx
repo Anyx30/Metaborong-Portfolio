@@ -15,6 +15,9 @@ import {
   type Post,
 } from '@/lib/blog-schema'
 import { EditorShell } from '@/components/admin/editor/editor-shell'
+import { AiReadinessButton } from '@/components/admin/editor/ai-readiness-button'
+import { AiReadinessDrawer } from '@/components/admin/editor/ai-readiness-drawer'
+import type { AiReadinessApiResponse } from '@/lib/ai-readiness/ui-types'
 import { ImagePicker, type PickerMode } from '@/components/admin/images/image-picker'
 
 type SaveState =
@@ -197,6 +200,16 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
   // without a server round-trip per keystroke.
   const [coverThumb, setCoverThumb] = useState<ImageRow | null>(initialCover)
   const [ogThumb, setOgThumb] = useState<ImageRow | null>(initialOg)
+  // AI readiness drawer + soft-prompt-on-publish state.
+  // `aiDrawerOpen` is the controlled open prop for the drawer.
+  // `aiDrawerSeedNull` forces a fresh scan even when post.ai_readiness_report
+  // is non-null — used by the post-publish soft-prompt's "Score" CTA so
+  // re-checking after a content change always hits the MCP.
+  // `softPrompt` flips on after publish lands when the post's last scan
+  // is missing or > 24h old. Dismissible; not persisted.
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false)
+  const [aiDrawerSeedNull, setAiDrawerSeedNull] = useState(false)
+  const [softPrompt, setSoftPrompt] = useState<{ visible: true } | null>(null)
 
   // Hydrate active variant tab from localStorage on mount. Persist on every
   // change. Per-post key so opening two posts side-by-side doesn't share a
@@ -410,6 +423,15 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
       setState(postToFormState(res.post))
       setBlocks(res.post.content_json)
       setVariants(res.post.geo_variants ?? {})
+      // Soft-prompt: nudge the admin to score AI readiness when the latest
+      // scan is missing or older than 24h. Non-blocking — admin can dismiss
+      // and ignore. Re-evaluates on every successful publish (no persisted
+      // dismissal) so each publish that lacks a fresh score gets a prompt.
+      const checkedAt = res.post.ai_readiness_checked_at
+        ? new Date(res.post.ai_readiness_checked_at).getTime()
+        : null
+      const stale = checkedAt === null || (Date.now() - checkedAt) > 24 * 60 * 60 * 1000
+      if (stale) setSoftPrompt({ visible: true })
       router.refresh()
     } catch (err) {
       setPost((p) => ({ ...p, status: prevStatus }))
@@ -529,6 +551,29 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
   // overrides against the in-memory edits, not the last-saved state.
   const livePost = useMemo<Post>(() => ({ ...post, geo_variants: variants }), [post, variants])
 
+  // Reconstruct the wire response from the post's flat fields so the drawer
+  // can open instantly without an extra POST. The route handler returns
+  // `{ score, band, report, cached, scannedAt }`; everything we need is
+  // already on the persisted Post columns (M7-BE writes `ai_readiness_report`
+  // as the full VerseOdin payload).
+  const initialAiReport: AiReadinessApiResponse | null = useMemo(() => {
+    if (
+      post.ai_readiness_score === null ||
+      post.ai_readiness_band === null ||
+      post.ai_readiness_checked_at === null ||
+      post.ai_readiness_report === null
+    ) {
+      return null
+    }
+    return {
+      score:     post.ai_readiness_score,
+      band:      post.ai_readiness_band,
+      report:    post.ai_readiness_report,
+      cached:    true,
+      scannedAt: post.ai_readiness_checked_at,
+    }
+  }, [post.ai_readiness_score, post.ai_readiness_band, post.ai_readiness_checked_at, post.ai_readiness_report])
+
   return (
     <>
       {/* Top action bar */}
@@ -547,6 +592,13 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
           >
             {post.status}
           </span>
+          <AiReadinessButton
+            post={post}
+            onOpen={() => {
+              setAiDrawerSeedNull(false)
+              setAiDrawerOpen(true)
+            }}
+          />
           {post.status === 'published' ? (
             <button
               type="button"
@@ -837,6 +889,33 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
           setPickerOpen(null)
         }}
       />
+
+      <AiReadinessDrawer
+        open={aiDrawerOpen}
+        onClose={() => {
+          setAiDrawerOpen(false)
+          setAiDrawerSeedNull(false)
+        }}
+        post={post}
+        initialReport={aiDrawerSeedNull ? null : initialAiReport}
+        onPublishRequest={() => {
+          // POST_NOT_PUBLISHED → close drawer and re-run publish.
+          setAiDrawerOpen(false)
+          setAiDrawerSeedNull(false)
+          void handlePublish()
+        }}
+      />
+
+      {softPrompt ? (
+        <PublishSoftPrompt
+          onScore={() => {
+            setSoftPrompt(null)
+            setAiDrawerSeedNull(true)
+            setAiDrawerOpen(true)
+          }}
+          onDismiss={() => setSoftPrompt(null)}
+        />
+      ) : null}
     </>
   )
 }
@@ -1087,6 +1166,55 @@ function SaveIndicator({
     <div role="status" aria-live="polite" className="flex items-center gap-2 text-[12px] text-gray-light tracking-[-0.005em]">
       <span className="inline-block h-2 w-2 rounded-full bg-gray-subtle" aria-hidden="true" />
       {dirty ? 'Unsaved changes' : validationOk ? 'Up to date' : 'Fix validation errors to save'}
+    </div>
+  )
+}
+
+function PublishSoftPrompt({
+  onScore, onDismiss,
+}: {
+  onScore: () => void
+  onDismiss: () => void
+}) {
+  // Auto-dismiss after 12s so the toast doesn't linger if the admin
+  // ignores it. Stays non-blocking — esc / close button always work.
+  useEffect(() => {
+    const id = setTimeout(onDismiss, 12_000)
+    return () => clearTimeout(id)
+  }, [onDismiss])
+
+  return (
+    <div
+      data-testid="ai-readiness-soft-prompt"
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-[20px] right-[20px] z-30 flex max-w-[360px] items-start gap-3 rounded-xl border border-border bg-white p-[16px] shadow-[0_12px_32px_rgba(0,0,0,0.10)]"
+    >
+      <div className="flex-1">
+        <p className="text-[13px] font-semibold tracking-[-0.01em] text-dark">Just published.</p>
+        <p className="mt-[2px] text-[12px] leading-[1.5] text-gray tracking-[-0.005em]">
+          Score AI readiness now?
+        </p>
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={onScore}
+          data-testid="ai-readiness-soft-prompt-score"
+          className="inline-flex h-[28px] items-center rounded-md bg-brand px-3 text-[12px] font-semibold text-white transition-opacity duration-150 hover:opacity-95 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        >
+          Score
+        </button>
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          data-testid="ai-readiness-soft-prompt-dismiss"
+          className="inline-flex h-[28px] w-[28px] items-center justify-center rounded-md border border-transparent text-gray transition-colors duration-150 hover:border-border hover:text-dark focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        >
+          <span aria-hidden="true" className="text-[16px] leading-none">×</span>
+        </button>
+      </div>
     </div>
   )
 }

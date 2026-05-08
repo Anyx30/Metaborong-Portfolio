@@ -86,6 +86,21 @@ describe('<AdminPostsList />', () => {
     expect(labels).toEqual(['US', 'EU'])
   })
 
+  it('renders the AI readiness score pill when a score exists, "—" otherwise', () => {
+    const posts = [
+      makeSummary({ id: 'p1', title: 'No score yet', ai_readiness_score: null, ai_readiness_band: null }),
+      makeSummary({ id: 'p2', title: 'Scored',       ai_readiness_score: 41,   ai_readiness_band: 'weak' }),
+    ]
+    render(<AdminPostsList initialPosts={posts} status="all" fetchError={null} />)
+
+    const rows = screen.getAllByRole('listitem')
+    expect(within(rows[0]).getByTestId('ai-readiness-score-empty')).toHaveTextContent('—')
+    expect(within(rows[0]).queryByTestId('ai-readiness-score-cell')).toBeNull()
+
+    const cell = within(rows[1]).getByTestId('ai-readiness-score-cell')
+    expect(cell).toHaveTextContent(/41\s*·\s*WEAK/i)
+  })
+
   it('renders one row per post with title, slug, and status pill', () => {
     const posts = [
       makeSummary({ id: 'p1', title: 'First',  slug: 'first',  status: 'draft' }),

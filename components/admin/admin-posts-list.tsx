@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ApiError, NetworkError, api } from '@/lib/api-client'
 import type { PostSummary } from '@/lib/blog-schema'
+import { AiReadinessScorePill } from '@/components/admin/editor/ai-readiness-score-pill'
 
 type StatusFilter = 'all' | 'draft' | 'published'
 const TABS: Array<{ key: StatusFilter; label: string }> = [
@@ -47,6 +48,31 @@ function StatusPill({ status }: { status: 'draft' | 'published' }) {
       style={{ fontFamily: 'var(--font-mono)' }}
     >
       {status}
+    </span>
+  )
+}
+
+function ScoreColumn({
+  score, band,
+}: {
+  score: PostSummary['ai_readiness_score']
+  band: PostSummary['ai_readiness_band']
+}) {
+  if (score === null || score === undefined) {
+    return (
+      <span
+        data-testid="ai-readiness-score-empty"
+        aria-label="No AI readiness score yet"
+        className="hidden text-[12px] text-gray-light tracking-[-0.005em] sm:inline"
+        style={{ fontFamily: 'var(--font-mono)' }}
+      >
+        —
+      </span>
+    )
+  }
+  return (
+    <span className="hidden sm:inline-flex" data-testid="ai-readiness-score-cell">
+      <AiReadinessScorePill score={score} band={band} size="xs" />
     </span>
   )
 }
@@ -135,7 +161,7 @@ export function AdminPostsList({ initialPosts, status, fetchError }: Props) {
         {posts.map((p) => (
           <li
             key={p.id}
-            className="grid grid-cols-[1fr_auto] items-center gap-[16px] px-[20px] py-[16px] sm:grid-cols-[1fr_auto_auto_auto_auto]"
+            className="grid grid-cols-[1fr_auto] items-center gap-[16px] px-[20px] py-[16px] sm:grid-cols-[1fr_auto_auto_auto_auto_auto]"
           >
             <div className="min-w-0">
               <Link
@@ -153,6 +179,7 @@ export function AdminPostsList({ initialPosts, status, fetchError }: Props) {
             </div>
             <StatusPill status={p.status} />
             <VariantChips regions={p.geo_variant_regions ?? []} />
+            <ScoreColumn score={p.ai_readiness_score} band={p.ai_readiness_band} />
             <span className="hidden text-[12px] tracking-[-0.005em] text-gray sm:inline">
               {formatRelative(p.updated_at)}
             </span>

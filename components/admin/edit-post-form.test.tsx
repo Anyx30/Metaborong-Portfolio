@@ -60,6 +60,33 @@ vi.mock('@/components/admin/editor/editor-shell', () => ({
   ),
 }))
 
+// The AI readiness button + drawer are exercised in their own colocated
+// component tests. The form-level tests only care that the button renders
+// (so its onOpen wiring is in scope) and that the drawer's open prop
+// flips on the soft-prompt's "Score" CTA — both surfaceable through a
+// minimal render mock.
+vi.mock('@/components/admin/editor/ai-readiness-button', () => ({
+  AiReadinessButton: ({ onOpen }: { onOpen: () => void }) => (
+    <button type="button" data-testid="mock-ai-readiness-button" onClick={onOpen}>
+      AI readiness
+    </button>
+  ),
+}))
+vi.mock('@/components/admin/editor/ai-readiness-drawer', () => ({
+  AiReadinessDrawer: ({
+    open, initialReport,
+  }: {
+    open: boolean
+    initialReport: unknown
+  }) =>
+    open ? (
+      <div
+        data-testid="mock-ai-readiness-drawer"
+        data-initial-report={initialReport === null ? 'null' : 'present'}
+      />
+    ) : null,
+}))
+
 const apiPatch = api.patch as unknown as ReturnType<typeof vi.fn>
 const apiPost  = api.post  as unknown as ReturnType<typeof vi.fn>
 
@@ -415,6 +442,78 @@ describe('<EditPostForm />', () => {
       fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
     })
     expect(apiPatch.mock.calls[1][1].geo_variants).toEqual({})
+  })
+
+  // ── M7 AI readiness soft-prompt on publish ────────────────────────────────
+
+  it('soft-prompt appears after publish when ai_readiness_checked_at is null', async () => {
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_checked_at: null,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    expect(screen.getByTestId('ai-readiness-soft-prompt')).toBeInTheDocument()
+  })
+
+  it('soft-prompt appears after publish when ai_readiness_checked_at is older than 24h', async () => {
+    const oneDayAgo = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString()
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_score: 50,
+        ai_readiness_band: 'weak',
+        ai_readiness_checked_at: oneDayAgo,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    expect(screen.getByTestId('ai-readiness-soft-prompt')).toBeInTheDocument()
+  })
+
+  it('soft-prompt does NOT appear after publish when ai_readiness_checked_at is fresh (< 24h)', async () => {
+    const recently = new Date(Date.now() - 60 * 60 * 1000).toISOString() // 1h ago
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_score: 80,
+        ai_readiness_band: 'strong',
+        ai_readiness_checked_at: recently,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    expect(screen.queryByTestId('ai-readiness-soft-prompt')).toBeNull()
+  })
+
+  it('soft-prompt "Score" CTA opens the drawer with initialReport=null (force fresh scan)', async () => {
+    apiPost.mockResolvedValueOnce({
+      post: makePost({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        ai_readiness_checked_at: null,
+      }),
+    })
+    render(<EditPostForm initialPost={makePost()} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^publish$/i }))
+    })
+    fireEvent.click(screen.getByTestId('ai-readiness-soft-prompt-score'))
+    const drawer = screen.getByTestId('mock-ai-readiness-drawer')
+    expect(drawer).toBeInTheDocument()
+    expect(drawer).toHaveAttribute('data-initial-report', 'null')
+    expect(screen.queryByTestId('ai-readiness-soft-prompt')).toBeNull()
   })
 
   it('Delete modal: typing the slug enables the destructive action; Esc cancels', () => {
