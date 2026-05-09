@@ -27,7 +27,7 @@ export const pillars: Pillar[] = [
     headline: 'Decentralised protocol engineering',
     body: 'DeFi protocols, NFT marketplaces, crypto wallets, token launches, liquid staking, and DAO systems — built multichain.',
     hubHref: '/services/web3/',
-    hubCta: 'Explore Web3 Services',
+    hubCta: 'Web3 services',
     children: [
       { name: 'DeFi Protocol Development', description: 'Lending, AMM, perp-DEX, and yield infrastructure built audit-ready.', slug: 'defi-protocol-development' },
       { name: 'Smart Contract Security', description: 'Specs, audits, and post-deploy monitoring for production contracts.', slug: 'smart-contract-security' },
@@ -46,7 +46,7 @@ export const pillars: Pillar[] = [
     headline: 'AI systems that work while you sleep',
     body: 'Agentic pipelines, RAG applications, voice agents, generative AI, and workflow automation — from prototype to production.',
     hubHref: '/services/ai-agents/',
-    hubCta: 'Explore AI Agent Services',
+    hubCta: 'AI services',
     children: [
       { name: 'Agentic AI Systems', description: 'Multi-step autonomous agents that plan, tool-use, and report.', slug: 'agentic-ai-systems' },
       { name: 'Generative AI Development', description: 'Custom GenAI products beyond ChatGPT wrappers.', slug: 'generative-ai-development' },
@@ -64,7 +64,7 @@ export const pillars: Pillar[] = [
     headline: 'SaaS products built to scale',
     body: 'End-to-end Web2 product builds — architecture, design, development, and deployment for startups that need a full technical team.',
     hubHref: '/services/product-studio/',
-    hubCta: 'Explore Product Studio',
+    hubCta: 'Product studio',
     children: [
       { name: 'SaaS Product Development', description: 'End-to-end Web2 product builds, architecture to deployment.', slug: 'saas-product-development' },
     ],

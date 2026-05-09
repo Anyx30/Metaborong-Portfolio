@@ -2,17 +2,7 @@
 
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-
-const faqs = [
-  { q: 'What is Metaborong?', a: 'Metaborong is a Web3 development company and AI agent studio based in the US and Europe. It builds DeFi protocols, autonomous AI systems, and custom SaaS products for founders, crypto-native teams, and enterprises. The studio is run by three technical co-founders.' },
-  { q: 'What Web3 services does Metaborong offer?', a: 'Metaborong offers DeFi protocol development, smart contract security audits, NFT marketplace development, crypto wallet development (custodial and non-custodial), token launchpad infrastructure, liquid staking vault architecture, and DAO governance systems — across multiple blockchain networks.' },
-  { q: 'What AI agent services does Metaborong provide?', a: 'Metaborong builds agentic AI systems, generative AI applications, RAG and knowledge retrieval systems, voice agent integrations, AI workflow automation, and AI integration into existing software stacks. The studio works with LLMs, multi-agent orchestration frameworks, and enterprise AI tooling.' },
-  { q: 'How long does a typical project take?', a: 'Most projects run four to twelve weeks depending on scope. DeFi protocol builds and full SaaS platforms take longer; smart contract audits, AI integrations, and scoped agent builds typically deliver within four to six weeks.' },
-  { q: 'Who does Metaborong work with?', a: 'Metaborong primarily works with early-stage founders and startup teams building Web3 or AI products. It also works with crypto-native projects needing specialist development capacity and with enterprises integrating blockchain or AI into existing systems.' },
-  { q: 'How is Metaborong different from larger Web3 agencies?', a: 'Metaborong is a small senior team, not a managed agency. Founders communicate directly with the people writing code. The studio ships faster than larger agencies, integrates AI natively into Web3 builds, and treats every project with co-builder accountability rather than contractor execution.' },
-  { q: 'Where is Metaborong based?', a: 'Metaborong operates across the US and European markets. The founding team is reachable at contact@metaborong.com for initial conversations about any project.' },
-  { q: 'Does Metaborong work on projects outside Web3?', a: "Yes. Metaborong's Product Studio pillar builds custom Web2 SaaS platforms independently of blockchain or AI components. Clients who need a full-stack technical team for a pure SaaS build can engage Metaborong through the Product Studio track." },
-]
+import { faqs } from '@/components/sections/faq-data'
 
 export function FaqSection() {
   const [open, setOpen] = useState<number | null>(null)

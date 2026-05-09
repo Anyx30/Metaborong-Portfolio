@@ -12,7 +12,7 @@ import { FoundersSection } from '@/components/sections/founders'
 import { ComparisonSection } from '@/components/sections/comparison'
 import { FaqSection } from '@/components/sections/faq'
 import { ContactCtaSection } from '@/components/sections/contact-cta'
-import { organizationSchema, websiteSchema } from '@/lib/schema'
+import { organizationSchema, websiteSchema, faqSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
   title: 'Web3 & AI Development Studio | Metaborong',
@@ -38,6 +38,10 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
 
       <Nav />
 
@@ -45,13 +49,18 @@ export default function HomePage() {
         <HeroSection />
         <TrustBar />
         <ProblemSection />
+        <span id="services" className="block scroll-mt-[64px]" aria-hidden="true" />
         <ServicesSection />
         <WhyUsSection />
+        <span id="work" className="block scroll-mt-[64px]" aria-hidden="true" />
         <WorkPreviewSection />
         <TestimonialsSection />
+        <span id="founders" className="block scroll-mt-[64px]" aria-hidden="true" />
         <FoundersSection />
         <ComparisonSection />
+        <span id="faq" className="block scroll-mt-[64px]" aria-hidden="true" />
         <FaqSection />
+        <span id="contact" className="block scroll-mt-[64px]" aria-hidden="true" />
         <ContactCtaSection />
       </main>
 

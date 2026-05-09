@@ -1,18 +1,13 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { useGeo } from '@/lib/use-geo'
 import { Reveal } from '@/components/ui/reveal'
-
-// Three.js: client-only, lazy-loaded after paint — no LCP impact
-const HeroOrb = dynamic(
-  () => import('@/components/hero-orb/hero-orb').then(m => ({ default: m.HeroOrb })),
-  { ssr: false, loading: () => null }
-)
+import { Typewriter } from '@/components/ui/typewriter'
 
 const STATIC_MICROCOPY = 'No pitch decks. No retainers. Direct from founders.'
 
@@ -74,9 +69,9 @@ export function HeroSection() {
 
   return (
     <section className="relative min-h-screen bg-bg-subtle">
-      <div className="max-w-[1600px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[60fr_40fr]">
+      <div className="max-w-[1600px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[57fr_43fr]">
         {/* Left: copy */}
-        <Reveal className="flex flex-col justify-center py-[64px] lg:py-[96px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+        <Reveal className="flex flex-col justify-center pt-[104px] pb-[48px] lg:pt-[120px] lg:pb-[64px] px-[24px] md:px-[48px] lg:px-[112px] xl:px-[144px]">
           {/* Eyebrow chip */}
           <div className="inline-flex items-center gap-2 mb-7 bg-bg border border-border rounded-sm px-3 py-[5px] w-fit">
             <span className="w-2 h-2 bg-brand rounded-sm shrink-0 inline-block" />
@@ -87,43 +82,78 @@ export function HeroSection() {
           </div>
 
           {/* H1 */}
-          <h1 className="text-[clamp(40px,5vw,72px)] font-bold tracking-[-0.04em] leading-[1.02] text-dark mb-6">
-            Web3 protocols.
-            <br />
-            AI agents.
-            <br />
-            <span className="text-brand">Shipped.</span>
+          <h1 className="text-[clamp(40px,4.8vw,72px)] font-black tracking-[-0.04em] leading-[1.02] text-dark mb-6 whitespace-nowrap">
+            <Typewriter
+              lines={[
+                { text: 'Web3 protocols.' },
+                { text: 'AI agents.' },
+                { text: 'Shipped.', className: 'text-brand' },
+              ]}
+              durationMs={650}
+              startDelayMs={150}
+            />
           </h1>
 
           {/* AEO extraction blockquote — promoted */}
-          <blockquote cite="/about" className="border-l-[3px] border-brand pl-5 py-1 mb-6">
+          <blockquote cite="/#founders" className="mb-6">
             <p className="text-base font-medium text-dark leading-[1.6] tracking-[-0.015em] max-w-[560px]">
-              Metaborong is a Web3 and AI agent development studio that ships DeFi protocols,
-              autonomous AI systems, and custom SaaS products for founders and crypto-native teams
-              across the US and Europe.
+              Metaborong is a Web3 and AI development studio shipping DeFi protocols, AI agent
+              systems, and SaaS products for founders across the US and Europe.
             </p>
           </blockquote>
 
           {/* Body lead — demoted */}
-          <p className="text-sm text-gray leading-[1.6] tracking-[-0.005em] max-w-[480px] mb-8">
+          <p className="text-base text-gray leading-[1.6] tracking-[-0.005em] max-w-[480px] mb-8">
             For founders who need a technical partner that ships — not an agency that pitches.
           </p>
 
           {/* CTAs */}
           <div className="flex items-center gap-3 mb-5">
-            <Button href="/contact/" size="lg">Start a Project &rarr;</Button>
-            <Button href="/work/" variant="ghost" size="lg">See Our Work</Button>
+            <Button href="/#contact" size="lg" arrow="→">Get a scope</Button>
+            <Button href="/#work" variant="ghost" size="lg">See the work</Button>
           </div>
 
           {/* Micro-copy — context-aware after hydration (timezone + local time) */}
-          <p className="text-xs text-gray tracking-[-0.01em]">
+          <p className="font-mono text-[11px] text-gray tracking-[0.02em]">
             {microCopy}
           </p>
         </Reveal>
 
-        {/* Right: Three.js orb */}
-        <div className="relative overflow-hidden flex items-center justify-center h-[60vh] lg:h-auto lg:min-h-screen">
-          <HeroOrb />
+        {/* Right: ASCII-art still — replaces the orb */}
+        <div className="relative overflow-hidden h-[60vh] lg:h-auto lg:min-h-screen flex items-center justify-center">
+          {/* Inner box constrains the ASCII-art to a sensible size on tall viewports. */}
+          <div className="relative w-[86%] h-[80%] max-w-[520px] max-h-[700px]">
+            <Image
+              src="/hero-ascii-art.png"
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 1024px) 520px, 86vw"
+              className="object-contain object-center select-none pointer-events-none"
+            />
+            {/* Inset vignette anchored to the image edges — matches Figma's
+               tight inset shadow (20px blur + 20px spread on a ~531px frame). */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                boxShadow: 'inset 0 0 28px 22px var(--color-bg-subtle)',
+              }}
+            />
+            {/* Glassmorphic overlay "windows" — three pillar proofs, anchored to the image frame */}
+            <HeroOverlayCard
+              label="w₁ 0.83, ∑ 0.44"
+              style={{ left: '8.7%', top: '25.3%' }}
+            />
+            <HeroOverlayCard
+              label="0x4a7f..."
+              style={{ left: '41.6%', top: '8.2%' }}
+            />
+            <HeroOverlayCard
+              label="/v1/deploy"
+              style={{ left: '66.9%', top: '34.5%' }}
+            />
+          </div>
         </div>
       </div>
 
@@ -138,5 +168,34 @@ export function HeroSection() {
         <span className="text-[10px] tracking-[0.15em] uppercase">Scroll</span>
       </div>
     </section>
+  )
+}
+
+/** Glassmorphic "browser-window" card overlay — used over the hero ASCII-art
+ *  to encode the three pillars (AI weights, web3 hash, product API path). */
+function HeroOverlayCard({
+  label,
+  style,
+}: {
+  label: string
+  style: React.CSSProperties
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute z-20 w-[92px] h-[108px] lg:w-[116px] lg:h-[137px] backdrop-blur-[15px] border border-white/80"
+      style={style}
+    >
+      {/* Title bar with three traffic-light squares */}
+      <div className="absolute inset-x-0 top-0 h-[22px] bg-white/95 border-b border-white flex items-center gap-[2px] px-[3px]">
+        <span className="w-[15px] h-[14px] bg-[#d90429]" />
+        <span className="w-[15px] h-[14px] bg-[#ffba08]" />
+        <span className="w-[15px] h-[14px] bg-[#38b000]" />
+      </div>
+      {/* Body label, bottom-left */}
+      <p className="absolute left-[9px] bottom-[10px] font-bold text-[11px] lg:text-[12px] tracking-[-0.01em] text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
+        {label}
+      </p>
+    </div>
   )
 }

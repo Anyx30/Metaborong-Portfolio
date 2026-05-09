@@ -4,6 +4,89 @@ All major decisions, milestones, and changes to this project.
 
 ---
 
+## 2026-05-06 — Session 10: Button primitive + visual signature + copy edge
+
+### Decision log
+- **Visual identity benchmarked against supermemory.ai live, not just their `DESIGN.md`.** Pulled computed CSS via agent-browser. Their edge is *Bauhaus restraint*, not premium-SaaS polish: zero border-radius, zero box-shadow, flat fills, transitions ≤150ms, single signature mark (split-arrow). My earlier proposal (inset highlights, colored shadows, translate-y hover) was the wrong direction.
+- **Adopted square corners (`radius: 0`) and split-arrow primary as our signature.** No insets, no gradients, no shadows on default state. The split-arrow is now Metaborong's distinctive button mark — it appears only on primary CTAs that opt in via the `arrow` prop. Ghost and secondary stay clean.
+- **Copy density rules locked in `DESIGN.md`.** Primary CTAs ≤3 words, verb-first, banned `Start | See | Explore | View` family. Sentence target 12–14 words. AEO blockquote 40–60 words with ≥2 verifiable facts. Telegraphic over flowery.
+- **Hero AEO blockquote rewritten via `seo-aeo-landing-page-writer` skill** (not freestyled this time). 56 words. 5 verifiable facts: three pillars, three co-founders, eight products, four-to-twelve-week timeline, US+Europe geo. Voice + facts blend.
+- **Button primitive fully rewritten** from inline-styled raw hex (Session 8 follow-up debt) to a token-driven Tailwind component with the seven-state matrix. Square corners. Split-arrow opt-in. Tabular numerals on all buttons. Loading state with spinner. Disabled state. Real `:hover` and `:active` (previously `transition: opacity 0.15s` only).
+- **Nav CTA hover changed from brand-glow effect to flat hover-darken.** The `0_8px_24px_rgba(32,74,248,0.35)` glow violated the new restraint posture.
+- **Nav label "About" → "Team"** for honesty (link goes to `#founders`, not a real /about/ page).
+
+### Build state changes
+- **REWROTE:** `components/ui/button.tsx` — token-driven, Tailwind classes, square corners, split-arrow signature (opt-in via `arrow` prop), seven-state matrix (default/hover/focus-visible/active/disabled/loading/error-via-disabled), tabular-nums, 150ms ease-in-out transitions on color properties only.
+- **UPDATED:** `DESIGN.md` — added Copy density rules under Writing Tone; added new "Visual signature" subsection under Components covering button finish (Bauhaus restraint, split-arrow signature, tabular numerals, micro-interaction discipline benchmarked against supermemory.ai).
+- **UPDATED:** `components/sections/hero.tsx` — AEO blockquote rewritten (56 words, 5 facts), `py-1` → `py-2`, CTAs `Start a Project` → `Get a scope` (+ split-arrow), `See Our Work` → `See the work`, micro-copy now `font-mono text-[11px] tracking-[0.02em]` (telemetry/blueprint aesthetic).
+- **UPDATED:** `components/layout/nav.tsx` — `About` → `Team`, Let's Talk CTA now uses split-arrow primary, removed brand-glow hover wrapper.
+- **UPDATED:** `components/sections/work-preview.tsx` — `View All Work` → `Talk to us`, `View Case Study` → `Read more`.
+- **UPDATED:** `components/sections/contact-cta.tsx` — `Start a Conversation` → `Email us`, restructured as split-arrow inline-styled (this section still uses raw hex inline-styles; full token migration deferred to its eventual signature pass).
+- **UPDATED:** `components/sections/services-data.ts` — `Explore Web3 Services` → `Web3 services`, `Explore AI Agent Services` → `AI services`, `Explore Product Studio` → `Product studio`.
+
+### Known follow-ups
+- **Inline-styled section components** (`work-preview.tsx`, `contact-cta.tsx`, `founders.tsx`, `faq.tsx`, etc.) still use raw hex. Migration to token-driven classes happens during each section's signature pass.
+- **OG image, logo asset, founder LinkedIn URLs** — still pending from Session 9.
+- **`Button` component supports `arrow` prop on primary only.** If consumers misuse on ghost/secondary, the prop is silently ignored. Could add a dev-time warning, but YAGNI for now.
+
+---
+
+## 2026-05-06 — Session 9: SEO + GEO baseline (Context C1)
+
+### Decision log
+- **First Context-C1 site-wide pass.** Per `SESSIONS.md` ordering, ran the SEO + GEO baseline before any further section work. Findings fixed inline; no spec/plan ceremony per C1 rules.
+- **Routing strategy: single-page anchors, no sub-pages yet.** Nav, hero CTAs, footer, and contact CTA all routed to homepage anchors (`#services`, `#work`, `#founders`, `#faq`, `#contact`) instead of broken `/work/`, `/about/`, `/blog/`, `/contact/`. `/blog/` removed from nav until content exists. `Start a Conversation` CTA now opens `mailto:contact@metaborong.com` directly — no managed contact form, consistent with "no pitch decks" positioning.
+- **AI crawler stance: opt-in to citation, allow training selectively.** Robots.txt explicitly allows GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, anthropic-ai, PerplexityBot, Google-Extended, and CCBot. No training crawlers blocked — early-stage marketing site, citation visibility outweighs training-data hygiene.
+- **`/llms.txt` is dynamically generated from the same data as the homepage.** `pillars` (services-data.ts) and `faqs` (faq-data.ts) drive both rendered components and the `/llms.txt` route handler. Single source of truth — content edits flow to AI crawlers without a manual sync step.
+- **FAQ data extracted to shared module (`faq-data.ts`)** so `faq.tsx` (renderer) and `lib/schema.ts` (FAQPage JSON-LD) consume the same source. Same pattern as `services-data.ts`.
+
+### Build state changes
+- **NEW:** `app/robots.ts` — site allow + AI crawler explicit allows + sitemap reference.
+- **NEW:** `app/sitemap.ts` — homepage only; hub/service stubs are noindex and excluded.
+- **NEW:** `app/llms.txt/route.ts` — dynamic, force-static; pulls from `pillars` + `faqs`.
+- **NEW:** `components/sections/faq-data.ts` — shared FAQ source.
+- **UPDATED:** `components/sections/faq.tsx` — imports from shared data module.
+- **UPDATED:** `lib/schema.ts` — added `FAQPage` schema; enriched `Organization` with `contactPoint`; replaced `founders` array (deprecated singular form) with proper `founder` Person[] including `worksFor`. Removed `logo` field until asset exists (follow-up).
+- **UPDATED:** `app/page.tsx` — added `<span id>` anchors before `#services`, `#work`, `#founders`, `#faq`, `#contact`; added `<script type="application/ld+json">` for FAQPage schema.
+- **UPDATED:** `components/layout/nav.tsx` — nav links and Let's Talk CTA point to homepage anchors; FAQ added to nav; Blog removed.
+- **UPDATED:** `components/layout/footer.tsx` — footer links route to homepage anchors; Blog removed.
+- **UPDATED:** `components/sections/hero.tsx` — CTAs route to anchors; AEO blockquote `cite="/about"` → `cite="/#founders"`.
+- **UPDATED:** `components/sections/work-preview.tsx` — "View All Work" + "View Case Study" → `/#contact` (real action) until case-study pages exist.
+- **UPDATED:** `components/sections/contact-cta.tsx` — primary CTA opens `mailto:contact@metaborong.com?subject=New%20project%20inquiry`.
+
+### Known follow-ups
+- **OG image missing.** Layout has no `openGraph.images` — Twitter/LinkedIn/Slack share previews fall back to platform defaults. Needs design (1200×630 PNG/WebP) at `/opengraph-image.tsx` (Next.js native) or a static asset.
+- **Logo asset missing.** Removed from Organization schema. Add `/public/logo.png` (or .svg) when available, then restore the `logo` field.
+- **Founder LinkedIn URLs missing.** Person schema has no `sameAs` — add real URLs when supplied.
+- **Section answer-block lengths.** Services intro is at 134 words ✓ (Session 7). Problem and Why Us section intros are shorter than the AEO-recommended 134–167 word range. Tighten during Why Us redesign in Session 10.
+- **Question-based H2s.** Why Us ("Why founders choose Metaborong") and Work Preview ("What we've built") are statement-form. Could be tightened to question form for AI citation. Defer to per-section content lock (Context A step 2).
+- **FAQ uses `<button>+<div>` instead of native `<details>/<summary>`.** Out of scope for this pass; flagged.
+
+---
+
+## 2026-05-06 — Session 8: Cleanup, design-system polish, Nav + Hero token compliance
+
+### Decision log
+- **Codebase cleanup.** Archived 16 specs/plans → `docs/superpowers/archive/`. Deleted local artifacts (`screenshots/`, `.next/`, `.worktrees/`, `tsconfig.tsbuildinfo`, `.superpowers/`). `DESIGN.md` is now the only authoritative UI doc; `CHANGELOG.md` is the only authoritative decision log. Specs/plans are inputs, not parallel sources of truth.
+- **Authoring discipline locked.** Added `docs/superpowers/SESSIONS.md` with three context templates (A: existing section pass / B: net-new page / C: site-wide one-off) and a skill-by-skill cheat sheet. Replaces ad-hoc per-session approach.
+- **DESIGN.md polish pass benchmarked against supermemory.ai.** Added Mission, Brand context, Writing Tone, Accessibility (WCAG 2.2 AA + focus-visible token), Required Component States (seven-state matrix), Edge cases (long-content / empty / keyboard / pointer / touch), Rules: Do/Don't with `must`/`should` discipline, Authoring workflow, QA checklist. Added semantic alias layer (`color.text.primary` → `--color-dark`). Added duration tokens, shadow scale, surface-raised, Card radius rule. Zero visual identity drift.
+- **Token additions to `globals.css`:** `--color-bg-raised`, `--shadow-{sm,md,lg}`, `--duration-{instant,fast,base,slow,deliberate}`. Global `:focus-visible` rule applies the brand-blue ring to every interactive element.
+- **Third infinite animation approved:** hero scroll-cue bounce. Auto-fades past `scrollY > 100`, so effectively at-top-only. Documented in DESIGN.md core motion rules.
+
+### Build state changes
+- **NEW:** `docs/superpowers/SESSIONS.md`, `docs/superpowers/README.md`.
+- **MOVED:** `docs/superpowers/specs/` and `plans/` → `docs/superpowers/archive/`.
+- **REWROTE:** `DESIGN.md` (semantic aliases, A11y, motion durations, shadow scale, state matrix, Do/Don't, QA checklist).
+- **UPDATED:** `app/globals.css` — new tokens + global focus-visible rule.
+- **UPDATED:** `components/layout/nav.tsx` — focus-visible on all interactive elements (via global rule), shadow tokens replace hardcoded values, duration tokens replace hardcoded ms, mobile menu pillars now render in their actual pillar colors (Web3=brand, AI=`#10b981`, Product Studio=`#F6851B`), Esc-to-close on dropdown + mobile menu, hamburger hover state, mobile menu now includes "Explore all services" link parity with desktop.
+- **UPDATED:** `components/sections/hero.tsx` — H1 weight `font-bold` (700) → `font-black` (900) per DESIGN.md spec, H1 max size in clamp 72px → 96px, body lede `text-sm` → `text-base` for readability.
+
+### Known follow-ups
+- **Button primitive (`components/ui/button.tsx`)** uses inline-style raw hex values (`#204AF8`, `#303030`). Direct DESIGN.md violation but out of scope for this token-compliance pass — every section consumes it. Should be refactored to token-driven Tailwind classes with the seven-state matrix in a dedicated session.
+- Add `--color-bg-raised`-consuming surface (likely featured-card hover on subtle backgrounds) when next visual pattern needs it.
+
+---
+
 ## [Unreleased] — Active development
 
 ### In progress

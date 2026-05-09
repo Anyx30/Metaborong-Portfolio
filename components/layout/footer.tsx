@@ -1,14 +1,20 @@
 import { Logo } from '@/components/ui/logo'
 
-const footerLinks = ['Services','Work','About','Blog','Contact']
+const footerLinks: { label: string; href: string }[] = [
+  { label: 'Services', href: '/#services' },
+  { label: 'Work',     href: '/#work' },
+  { label: 'About',    href: '/#founders' },
+  { label: 'FAQ',      href: '/#faq' },
+  { label: 'Contact',  href: '/#contact' },
+]
 
 export function Footer() {
   return (
     <footer style={{ background: '#0a0a0a', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '36px 80px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
       <Logo showWordmark wordmarkColor="rgba(255,255,255,0.85)" />
       <nav style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-        {footerLinks.map(label => (
-          <a key={label} href={`/${label.toLowerCase()}/`} style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'none', letterSpacing: '-0.01em' }}>{label}</a>
+        {footerLinks.map(({ label, href }) => (
+          <a key={label} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'none', letterSpacing: '-0.01em' }}>{label}</a>
         ))}
       </nav>
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>

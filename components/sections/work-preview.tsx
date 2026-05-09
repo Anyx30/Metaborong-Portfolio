@@ -14,7 +14,7 @@ export function WorkPreviewSection() {
             <p style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#999999', fontWeight: 600, marginBottom: 12 }}>Our work</p>
             <h2 style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.035em', color: '#303030' }}>What we&apos;ve built</h2>
           </div>
-          <a href="/work/" style={{ fontSize: 14, fontWeight: 600, color: '#204AF8', textDecoration: 'none' }}>View All Work →</a>
+          <a href="/#contact" style={{ fontSize: 14, fontWeight: 600, color: '#204AF8', textDecoration: 'none' }}>Talk to us →</a>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           {projects.map(p => (
@@ -22,7 +22,7 @@ export function WorkPreviewSection() {
               <div style={{ height: 80, background: '#f5f7ff', borderRadius: 8, marginBottom: 8 }} />
               <div style={{ fontSize: 11, fontWeight: 600, color: p.color, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{p.category}</div>
               <h3 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.025em', color: '#303030' }}>{p.name}</h3>
-              <a href="/work/" style={{ fontSize: 13, color: '#204AF8', fontWeight: 500, textDecoration: 'none', marginTop: 'auto' }}>View Case Study →</a>
+              <a href="/#contact" style={{ fontSize: 13, color: '#204AF8', fontWeight: 500, textDecoration: 'none', marginTop: 'auto' }}>Read more →</a>
             </div>
           ))}
         </div>
