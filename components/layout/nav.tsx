@@ -16,6 +16,19 @@ export function Nav() {
   const [megaOpen, setMegaOpen]     = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }
+  const scheduleClose = () => {
+    cancelClose()
+    closeTimer.current = setTimeout(() => setMegaOpen(false), 120)
+  }
+  const openMega = () => { cancelClose(); setMegaOpen(true) }
 
   // Esc closes mega-menu + mobile menu
   useEffect(() => {
@@ -47,6 +60,8 @@ export function Nav() {
   return (
     <header
       ref={headerRef}
+      onMouseEnter={cancelClose}
+      onMouseLeave={scheduleClose}
       className="fixed inset-x-0 top-0 z-50 bg-bg-subtle border-b border-dashed border-border"
     >
       {/* Nav bar row */}
@@ -61,6 +76,7 @@ export function Nav() {
             aria-haspopup="menu"
             aria-controls="mega-services"
             data-active={megaOpen}
+            onMouseEnter={openMega}
             onClick={() => setMegaOpen(v => !v)}
             className="relative flex cursor-pointer items-center gap-[4px] border-0 bg-transparent p-0 text-sm tracking-[-0.01em] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark data-[active=true]:text-dark after:absolute after:-bottom-[6px] after:left-0 after:h-[2px] after:w-0 after:bg-brand after:transition-[width] after:duration-[var(--duration-fast)] hover:after:w-full data-[active=true]:after:w-full"
           >
@@ -113,8 +129,8 @@ export function Nav() {
                   <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
                   <span
                     aria-hidden="true"
-                    className="w-[8px] h-[8px] rounded-full animate-[nav-dot-pulse_1800ms_ease-in-out_infinite] motion-reduce:animate-none"
-                    style={{ background: p.color }}
+                    className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
+                    style={{ background: p.color, outlineColor: p.color }}
                   />
                 </div>
                 <h3
