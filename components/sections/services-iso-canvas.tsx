@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrthographicCamera, Grid, Edges, Text } from '@react-three/drei'
+import { OrthographicCamera, Grid, Edges, Text, Billboard } from '@react-three/drei'
 import { useRef, useEffect, useState, Suspense } from 'react'
 import { Group, MathUtils } from 'three'
 import { type PillarId } from '@/components/sections/services-data'
@@ -18,7 +18,6 @@ const PILLAR_LABEL: Record<PillarId, string> = {
   'product-studio': 'PRODUCT',
 }
 
-const INACTIVE_COLOR = '#cbd5e1'
 const INACTIVE_LABEL_COLOR = '#94a3b8'
 
 // Three cubes spaced along x-axis, base sitting at y=0 (the floor plane).
@@ -29,7 +28,8 @@ const POSITIONS: Record<PillarId, [number, number, number]> = {
 }
 
 const CUBE_SIZE = 1.6 // edge length
-const LABEL_HOVER_Y = 2.05 // height above floor — clears active cube top (y=1.6) without clipping the canvas viewport
+const LABEL_ACTIVE_Y = 2.05 // floats above active cube top (1.6) without clipping the canvas
+const LABEL_INACTIVE_Y = 0.12 // sits just above the empty footprint plate
 
 export function ServicesIsoCanvas({ activeId }: { activeId: PillarId }) {
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -91,7 +91,7 @@ export function ServicesIsoCanvas({ activeId }: { activeId: PillarId }) {
 
 function IsoCameraTarget() {
   useFrame(({ camera }) => {
-    camera.lookAt(0, 0.4, 0)
+    camera.lookAt(0, 0.7, 0)
   })
   return null
 }
@@ -135,7 +135,7 @@ function PillarCube({
   reducedMotion: boolean
 }) {
   const extrudeRef = useRef<Group>(null)
-  const targetScale = isActive ? 1 : 0.001
+  const targetScale = isActive ? 1 : 0
 
   useFrame((_, delta) => {
     const eg = extrudeRef.current
@@ -153,48 +153,43 @@ function PillarCube({
 
   return (
     <group position={position}>
-      {/* Cube — base pinned at y=0, scales upward */}
-      <group ref={extrudeRef} scale={[1, isActive ? 1 : 0.001, 1]}>
+      {/* Cube — base pinned at y=0, scales upward. Inactive cubes collapse to zero
+          so only the floor outline marks their slot. */}
+      <group ref={extrudeRef} scale={[1, isActive ? 1 : 0, 1]}>
         <mesh castShadow receiveShadow position={[0, CUBE_SIZE / 2, 0]}>
           <boxGeometry args={[CUBE_SIZE, CUBE_SIZE, CUBE_SIZE]} />
-          <meshStandardMaterial
-            color={isActive ? color : INACTIVE_COLOR}
-            metalness={0.02}
-            roughness={0.7}
-          />
-          <Edges
-            threshold={15}
-            color={isActive ? color : '#94a3b8'}
-            lineWidth={1.2}
-          />
+          <meshStandardMaterial color={color} metalness={0.02} roughness={0.7} />
+          <Edges threshold={15} color={color} lineWidth={1.2} />
         </mesh>
       </group>
 
       {/* Footprint — always visible, pillar-tinted when active */}
       <FootprintOutline color={isActive ? color : '#cbd5e1'} />
 
-      {/* Label — 3D SDF text via Drei. Rendered on top (depthTest=false) so it
-          always reads above the cube regardless of camera angle. White outline
-          keeps it readable when label color overlaps a same-color cube face. */}
-      <Text
-        position={[0, LABEL_HOVER_Y, 0]}
-        rotation={[0, 0, 0]}
-        fontSize={0.32}
-        color={labelColor}
-        anchorX="center"
-        anchorY="bottom"
-        letterSpacing={0.18}
-        characters="WEB3AIPRODUCT"
-        outlineWidth={0.012}
-        outlineColor="#fafbff"
-        outlineBlur={0}
-        renderOrder={10}
-        material-toneMapped={false}
-        material-depthTest={false}
-        material-transparent={true}
+      {/* Label — billboarded so it always faces the camera (no diagonal drift in iso).
+          Active labels sit above the cube top; inactive labels hover just above the plate. */}
+      <Billboard
+        position={[0, isActive ? LABEL_ACTIVE_Y : LABEL_INACTIVE_Y, 0]}
+        follow={true}
       >
-        {PILLAR_LABEL[id]}
-      </Text>
+        <Text
+          fontSize={isActive ? 0.32 : 0.26}
+          color={labelColor}
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={0.08}
+          characters="WEB3AIPRODUCT"
+          outlineWidth={0.012}
+          outlineColor="#fafbff"
+          outlineBlur={0}
+          renderOrder={10}
+          material-toneMapped={false}
+          material-depthTest={false}
+          material-transparent={true}
+        >
+          {PILLAR_LABEL[id]}
+        </Text>
+      </Billboard>
     </group>
   )
 }
