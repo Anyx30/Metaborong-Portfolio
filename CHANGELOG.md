@@ -4,6 +4,46 @@ All major decisions, milestones, and changes to this project.
 
 ---
 
+## 2026-05-11 — Session 12: Nav full polish pass (correctness → layout → sharpness)
+
+### Decision log
+- **First multi-skill stacking experiment: `/impeccable critique` → `/impeccable layout` → `/impeccable polish` → `/frontend-design` for execution at each step.** Workflow proved out — each impeccable subcommand produced a distinct lens (correctness / spacing / visual sharpness) with concrete proposals, and frontend-design executed against a locked spec without exploration overhead. Faster than a single open-ended review.
+- **Three nav passes shipped on a single branch:**
+  - **Pass 1 — Correctness.** Removed dead `nav-dot-pulse` animation reference, removed `role="presentation"` from mega-menu H3, full mobile tap targets, full mega keyboard semantics (roving tabindex, Up/Down/Left/Right/Home/End, no type-ahead), mobile pillars wrapped in `<details>/<summary>` collapsed by default with custom rotating chevron, unified pillar markers (9×9 outlined squares everywhere — no more rounded-full mobile divergence), underline easing synced to 150ms, scroll-feedback border (dashed→solid at scrollY>0), non-Services nav-link underline switched from brand-blue to dark to kill pillar-color bleed.
+  - **Pass 2 — Layout.** Mega-menu pillar rhythm rescaled to 4-value system (12/6/20/10/32), ul→hub-CTA gap promoted to 32px so hub CTA reads as a separate group, mobile pillar headline moved out of `<summary>` into expanded panel (collapsed state now 2 lines per pillar instead of 4), asymmetric mega padding (`pt-32 pb-40`), `touch-action: manipulation` on hamburger and `<summary>` to kill iOS Safari 300ms delay, underline animation rewritten from `width` to `transform: scaleX` (compositor-friendly).
+  - **Pass 3 — Sharpness.** Solid 1px top hairline added to header (structural frame; bottom border keeps dashed→solid scroll-feedback). Cell-grid hairlines distributed between every desktop nav item (`Logo │ Services │ Work │ Team │ FAQ │ CTA` — 5 dividers, 6 cells). Mega-menu column hairlines via `border-r` on first two pillars with `pr-[24px]` content padding (Web3 / AI / Studio now read as measured cells).
+- **Eyebrow strip on mega-menu proposed and shipped, then removed same session.** The "Three pillars · 14 services · 01/03" sheet header read as paginator-style chrome that made no sense when all 3 pillars were simultaneously visible. Faux-instrumentation pattern flagged. Direction A (column hairlines) shipped without B (eyebrow strip).
+- **Focus-management bug fixed.** Initial keyboard nav implementation called `.focus()` programmatically on mega open + close, which triggers `:focus-visible` indiscriminately — mouse users saw a persistent brand-blue ring on the first menu item (and on the trigger after close). Fixed with `keyboardOpenRef` that gates the auto-focus / focus-restore to keyboard interactions only (`onKeyDown` ArrowDown/Enter/Space sets true; `onMouseDown` and `onMouseEnter` set false). Mouse users never see the focus ring; keyboard users still get the full a11y contract.
+- **Per-item cell-grid (5 dividers) chosen over category-boundary cell-grid (2 dividers).** Original logic was "hairlines mark category boundaries" — Services has dropdown depth, the trio is flat, CTA is anchored by `flex-1` push. User feedback: reads as inconsistent (why does Services get bracketed but the others don't?). Locked: every nav item is its own cell, ledger-grid posture.
+- **Skipped: numbering Services in the top bar, asymmetric mega-menu column ratios, DESIGN.md off-scale token cleanup.** All flagged as out-of-scope for this pass.
+
+### Build state changes
+- **REWROTE:** `components/layout/nav.tsx` — every nav slot now an explicit cell with 1px vertical hairline divider. Local `<Divider />` component (1px × 34px, 60% nav height, vertically centered, `bg-border`, `aria-hidden`). Desktop cluster is a single `hidden lg:flex items-center gap-[24px] ml-auto` container; structure is Logo → Divider → Services → Divider → Work → Divider → Team → Divider → FAQ → Divider → CTA. Header has solid `border-t-gray-subtle` always, plus `border-b-border` with `[border-bottom-style:dashed]` toggling to solid via scroll listener. Mobile menu uses `<details>` collapsed by default; pillar headline lives inside expanded panel.
+- **UPDATED:** `app/globals.css` — added `.nav-summary { list-style: none }` + `::-webkit-details-marker { display: none }` to hide the native `<details>` triangle so the custom rotating `ChevronDown` carries open-state signal.
+- **No new deviations.** All nav work fits inside `DESIGN.md` grammar. The 2026-05-10 hero deviation spec is unchanged.
+- **No tokens added.** Existing `--color-border`, `--color-gray-subtle`, `--duration-instant`, etc. cover the whole pass.
+
+### Known follow-ups
+- Off-scale spacing values (6, 10, 14, 20 px) still leak in `nav.tsx`. Flagged not fixed — repo-wide drift, not nav-specific.
+- `role="menu"` on the mega panel is now an honest contract (full roving-tabindex keyboard semantics implemented). Type-ahead intentionally skipped per user.
+- Cell-every-item ledger-grid is now the nav posture. If this gets graduated to `DESIGN.md` as a project-wide pattern, the Card / Section primitives may want hairline-cell variants too.
+
+---
+
+## 2026-05-10 — Session 11: Hero deviation log + reduced-motion + H1 overflow
+
+### Decision log
+- **Two new infinite animations approved with deviation log.** The SVG turbulence shimmer on the ASCII image and the overlay-card loading/result cycle violate `DESIGN.md` motion rule #1 (three approved infinites only). Logged as section-level deviations in `docs/superpowers/specs/2026-05-10-section-hero.md` rather than cut — both carry the "alive system" signal the Three.js orb used to, both are IO-gated (pause out of view), both honor `prefers-reduced-motion`.
+- **AEO blockquote: 44-word version accepted as new lock.** Session 10 had locked a 56-word version with 5 verifiable facts. Current copy is 44 words and drops co-founders / eight products / 4–12 week timeline / US+Europe geo. Trade-off accepted: tighter voice over fact density.
+- **H1 clamp min 40px → 32px.** Prevents overflow at 320px viewport with `whitespace-nowrap` on "Web3 protocols.".
+
+### Build state changes
+- **NEW:** `docs/superpowers/specs/2026-05-10-section-hero.md` — section-level deviation log.
+- **UPDATED:** `app/globals.css` — `prefers-reduced-motion: reduce` block now sets `filter: none` on `.hero-ascii-image`, killing the SVG shimmer (the inner `<animate>` tags have no visual effect once the filter chain is removed).
+- **UPDATED:** `components/sections/hero.tsx` — H1 `clamp(40px,4.8vw,72px)` → `clamp(32px,4.8vw,72px)`.
+
+---
+
 ## 2026-05-06 — Session 10: Button primitive + visual signature + copy edge
 
 ### Decision log

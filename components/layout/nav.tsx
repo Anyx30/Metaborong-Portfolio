@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { Fragment, useState, useEffect, useRef, type KeyboardEvent } from 'react'
 import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
 import { Button } from '@/components/ui/button'
@@ -12,11 +12,25 @@ const navLinks = [
   { label: 'FAQ',  href: '/#faq' },
 ]
 
+/** 1px vertical hairline that cells the nav bar into discrete items.
+ *  60% of nav height (34/56), vertically centered. */
+function Divider() {
+  return <span aria-hidden="true" className="w-px h-[34px] bg-border self-center" />
+}
+
 export function Nav() {
   const [megaOpen, setMegaOpen]     = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled]     = useState(false)
+  const [activeIdx, setActiveIdx]   = useState<[number, number]>([0, 0])
   const headerRef = useRef<HTMLElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const itemRefs = useRef<HTMLAnchorElement[][]>([[], [], []])
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wasOpenRef = useRef(false)
+  // Tracks whether the mega was opened via keyboard so we only manage focus
+  // for keyboard users. Mouse users never see the brand-blue focus ring.
+  const keyboardOpenRef = useRef(false)
 
   const cancelClose = () => {
     if (closeTimer.current) {
@@ -28,12 +42,12 @@ export function Nav() {
     cancelClose()
     closeTimer.current = setTimeout(() => setMegaOpen(false), 120)
   }
-  const openMega = () => { cancelClose(); setMegaOpen(true) }
+  const openMega = () => { cancelClose(); keyboardOpenRef.current = false; setMegaOpen(true) }
 
   // Esc closes mega-menu + mobile menu
   useEffect(() => {
     if (!megaOpen && !mobileOpen) return
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMegaOpen(false)
         setMobileOpen(false)
@@ -55,51 +69,153 @@ export function Nav() {
     return () => window.removeEventListener('mousedown', onClick)
   }, [megaOpen])
 
+  // Scroll feedback: dashed border becomes solid past scrollY 0
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 0)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Focus management: only intervene for keyboard users.
+  // Mouse open (hover or click) does not move focus into the panel, so the
+  // brand-blue focus ring never appears on a menu item or the trigger.
+  // wasOpenRef avoids stealing focus on initial mount.
+  useEffect(() => {
+    if (megaOpen) {
+      wasOpenRef.current = true
+      setActiveIdx([0, 0])
+      if (keyboardOpenRef.current) {
+        requestAnimationFrame(() => {
+          itemRefs.current[0]?.[0]?.focus()
+        })
+      }
+    } else if (wasOpenRef.current) {
+      wasOpenRef.current = false
+      if (keyboardOpenRef.current) {
+        triggerRef.current?.focus()
+      }
+      keyboardOpenRef.current = false
+    }
+  }, [megaOpen])
+
   const closeMobile = () => setMobileOpen(false)
+
+  // ── Mega-menu keyboard nav ────────────────────────────────────────────────
+  const setItemRef = (col: number, row: number) => (el: HTMLAnchorElement | null) => {
+    if (!itemRefs.current[col]) itemRefs.current[col] = []
+    if (el) itemRefs.current[col][row] = el
+  }
+
+  const moveFocus = (nextCol: number, nextRow: number) => {
+    const colLen = itemRefs.current[nextCol]?.length ?? 0
+    if (colLen === 0) return
+    const row = Math.min(Math.max(nextRow, 0), colLen - 1)
+    const col = Math.min(Math.max(nextCol, 0), 2)
+    setActiveIdx([col, row])
+    itemRefs.current[col][row]?.focus()
+  }
+
+  const onMegaKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const [col, row] = activeIdx
+    const colLen = itemRefs.current[col]?.length ?? 0
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        moveFocus(col, Math.min(row + 1, colLen - 1))
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        moveFocus(col, Math.max(row - 1, 0))
+        break
+      case 'ArrowRight':
+        e.preventDefault()
+        moveFocus(Math.min(col + 1, 2), row)
+        break
+      case 'ArrowLeft':
+        e.preventDefault()
+        moveFocus(Math.max(col - 1, 0), row)
+        break
+      case 'Home':
+        e.preventDefault()
+        moveFocus(col, 0)
+        break
+      case 'End':
+        e.preventDefault()
+        moveFocus(col, colLen - 1)
+        break
+    }
+  }
+
+  const onTriggerKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      keyboardOpenRef.current = true
+      if (megaOpen) {
+        moveFocus(0, 0)
+      } else {
+        setMegaOpen(true)
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      keyboardOpenRef.current = true
+    }
+  }
 
   return (
     <header
       ref={headerRef}
       onMouseEnter={cancelClose}
       onMouseLeave={scheduleClose}
-      className="fixed inset-x-0 top-0 z-50 bg-bg-subtle border-b border-dashed border-border"
+      className={`fixed inset-x-0 top-0 z-50 bg-bg-subtle border-t border-t-gray-subtle border-b border-b-border ${scrolled ? '' : '[border-bottom-style:dashed]'}`}
     >
-      {/* Nav bar row */}
-      <nav className="flex h-14 w-full items-center gap-[32px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+      {/* Nav bar row.
+          Polish pass: cell-grid hairlines (desktop) slice the bar into measured
+          regions. Top frame is solid + 1px (structural); bottom toggles dashed→solid
+          on scroll (feedback). Two different strokes = blueprint-y. */}
+      <nav className="flex h-14 w-full items-center px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
         <Logo size="sm" />
 
-        {/* Desktop: links + dropdown trigger (lg+) */}
-        <div className="hidden lg:flex flex-1 items-center gap-[24px]">
+        {/* Desktop cluster (lg+): every item is its own cell, separated by a 1px hairline.
+            Reads left-to-right as Logo │ Services │ Work │ Team │ FAQ │ Let's Talk.
+            ml-auto right-anchors the cluster; logo holds the left edge. */}
+        <div className="hidden lg:flex items-center gap-[24px] ml-auto">
+          <Divider />
+
           <button
+            ref={triggerRef}
             type="button"
             aria-expanded={megaOpen}
             aria-haspopup="menu"
             aria-controls="mega-services"
             data-active={megaOpen}
             onMouseEnter={openMega}
+            onMouseDown={() => { keyboardOpenRef.current = false }}
             onClick={() => setMegaOpen(v => !v)}
-            className="relative flex cursor-pointer items-center gap-[4px] border-0 bg-transparent p-0 text-sm tracking-[-0.01em] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark data-[active=true]:text-dark after:absolute after:-bottom-[6px] after:left-0 after:h-[2px] after:w-0 after:bg-brand after:transition-[width] after:duration-[var(--duration-fast)] hover:after:w-full data-[active=true]:after:w-full"
+            onKeyDown={onTriggerKeyDown}
+            className="relative flex cursor-pointer items-center gap-[4px] border-0 bg-transparent p-0 text-sm tracking-[-0.01em] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark data-[active=true]:text-dark after:absolute after:-bottom-[6px] after:left-0 after:right-0 after:h-[2px] after:bg-brand after:origin-left after:scale-x-0 after:transition-transform after:duration-[var(--duration-instant)] hover:after:scale-x-100 data-[active=true]:after:scale-x-100 [touch-action:manipulation]"
           >
             Services
             <ChevronDown
               size={14}
+              aria-hidden="true"
               className={`transition-transform duration-[var(--duration-instant)] ${megaOpen ? 'rotate-180' : ''}`}
             />
           </button>
 
           {navLinks.map(link => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="relative text-sm tracking-[-0.01em] text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark after:absolute after:-bottom-[6px] after:left-0 after:h-[2px] after:w-0 after:bg-brand after:transition-[width] after:duration-[var(--duration-fast)] hover:after:w-full"
-            >
-              {link.label}
-            </a>
+            <Fragment key={link.label}>
+              <Divider />
+              <a
+                href={link.href}
+                className="relative text-sm tracking-[-0.01em] text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark after:absolute after:-bottom-[6px] after:left-0 after:right-0 after:h-[2px] after:bg-dark after:origin-left after:scale-x-0 after:transition-transform after:duration-[var(--duration-instant)] hover:after:scale-x-100 [touch-action:manipulation]"
+              >
+                {link.label}
+              </a>
+            </Fragment>
           ))}
-        </div>
 
-        {/* Desktop CTA (lg+) */}
-        <div className="hidden lg:inline-flex">
+          <Divider />
+
           <Button href="/#contact" size="sm" arrow="→">Let&apos;s Talk</Button>
         </div>
 
@@ -109,7 +225,7 @@ export function Nav() {
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen(v => !v)}
-          className="ml-auto cursor-pointer border-0 bg-transparent p-[4px] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark lg:hidden"
+          className="ml-auto cursor-pointer border-0 bg-transparent p-[4px] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark lg:hidden [touch-action:manipulation]"
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -120,54 +236,74 @@ export function Nav() {
         <div
           id="mega-services"
           role="menu"
+          aria-label="Services"
+          onKeyDown={onMegaKeyDown}
           className="hidden lg:block absolute inset-x-0 top-full bg-white border-b border-dashed border-border animate-[mega-in_var(--duration-fast)_ease-out_forwards] motion-reduce:animate-none"
         >
-          <div className="grid grid-cols-3 gap-[48px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px] py-[32px]">
-            {pillars.map((p) => (
-              <div key={p.id}>
-                <div className="flex items-center gap-[10px]">
-                  <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
-                  <span
-                    aria-hidden="true"
-                    className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
-                    style={{ background: p.color, outlineColor: p.color }}
-                  />
-                </div>
-                <h3
-                  role="presentation"
-                  className="mt-[12px] text-[20px] font-bold tracking-[-0.025em] leading-[1.2] text-dark"
-                >
-                  {p.label}
-                </h3>
-                <p className="mt-[6px] text-sm leading-[1.5] text-gray">{p.headline}</p>
+          {/* L4: asymmetric padding. Top edge is contained by the nav bar above;
+              bottom edge needs more breath before the dashed border. */}
+          <div className="grid grid-cols-3 gap-[48px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px] pt-[32px] pb-[40px]">
+            {pillars.map((p, colIdx) => {
+              const childCount = p.children.slice(0, 5).length
+              return (
+                <div key={p.id} className={colIdx < 2 ? 'pr-[24px] border-r border-border' : ''}>
+                  <div className="flex items-center gap-[10px]">
+                    <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
+                    <span
+                      aria-hidden="true"
+                      className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
+                      style={{ background: p.color, outlineColor: p.color }}
+                    />
+                  </div>
+                  <h3 className="mt-[12px] text-[20px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
+                    {p.label}
+                  </h3>
+                  <p className="mt-[6px] text-sm leading-[1.5] text-gray">{p.headline}</p>
 
-                <ul className="mt-[16px] flex flex-col gap-[8px]">
-                  {p.children.slice(0, 5).map(c => (
-                    <li key={c.slug}>
+                  {/* L2: ul-to-hub gap promoted from 20→32 so hub CTA reads as a separate group, not the next list item. */}
+                  <ul className="mt-[20px] flex flex-col gap-[10px]">
+                    {p.children.slice(0, 5).map((c, rowIdx) => {
+                      const isActive = activeIdx[0] === colIdx && activeIdx[1] === rowIdx
+                      return (
+                        <li key={c.slug}>
+                          <a
+                            ref={setItemRef(colIdx, rowIdx)}
+                            href={`/services/${p.id}/${c.slug}/`}
+                            role="menuitem"
+                            tabIndex={isActive ? 0 : -1}
+                            onClick={() => setMegaOpen(false)}
+                            onFocus={() => setActiveIdx([colIdx, rowIdx])}
+                            className="text-sm text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark focus:text-dark"
+                          >
+                            {c.name}
+                          </a>
+                        </li>
+                      )
+                    })}
+                  </ul>
+
+                  {(() => {
+                    const hubRow = childCount
+                    const isActive = activeIdx[0] === colIdx && activeIdx[1] === hubRow
+                    return (
                       <a
-                        href={`/services/${p.id}/${c.slug}/`}
+                        ref={setItemRef(colIdx, hubRow)}
+                        href={p.hubHref}
                         role="menuitem"
+                        tabIndex={isActive ? 0 : -1}
                         onClick={() => setMegaOpen(false)}
-                        className="text-sm text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark"
+                        onFocus={() => setActiveIdx([colIdx, hubRow])}
+                        style={{ color: p.color }}
+                        className="mt-[32px] inline-flex items-center gap-[4px] font-mono text-[11px] uppercase tracking-[0.1em] no-underline group"
                       >
-                        {c.name}
+                        All {p.hubCta}
+                        <ArrowRight size={12} className="transition-transform duration-[var(--duration-fast)] group-hover:translate-x-[2px]" />
                       </a>
-                    </li>
-                  ))}
-                </ul>
-
-                <a
-                  href={p.hubHref}
-                  role="menuitem"
-                  onClick={() => setMegaOpen(false)}
-                  style={{ color: p.color }}
-                  className="mt-[20px] inline-flex items-center gap-[4px] font-mono text-[11px] uppercase tracking-[0.1em] no-underline group"
-                >
-                  All {p.hubCta}
-                  <ArrowRight size={12} className="transition-transform duration-[var(--duration-fast)] group-hover:translate-x-[2px]" />
-                </a>
-              </div>
-            ))}
+                    )
+                  })()}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -176,34 +312,46 @@ export function Nav() {
       {mobileOpen && (
         <div
           id="mobile-menu"
-          className="lg:hidden bg-bg-subtle border-t border-border px-[24px] md:px-[48px] py-[24px] flex flex-col gap-[24px]"
+          className="lg:hidden bg-bg-subtle border-t border-border px-[24px] md:px-[48px] py-[24px] flex flex-col gap-[8px]"
         >
-          {/* Pillar blocks */}
+          {/* Pillar blocks — collapsed by default. Children stay in DOM for SEO. */}
           {pillars.map((p, i) => (
-            <div
+            <details
               key={p.id}
-              className={i > 0 ? 'pt-[24px] border-t border-dashed border-border' : ''}
+              className={i > 0 ? 'pt-[16px] border-t border-dashed border-border group' : 'group'}
             >
-              <div className="flex items-center gap-[10px]">
-                <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
-                <span
+              {/* L3: collapsed summary stays compact (numeral row + H3 only).
+                  Headline moves into the expanded panel where it earns its place. */}
+              <summary className="nav-summary flex items-center justify-between cursor-pointer py-[8px] -my-[8px] [touch-action:manipulation]">
+                <div>
+                  <div className="flex items-center gap-[10px]">
+                    <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
+                    <span
+                      aria-hidden="true"
+                      className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
+                      style={{ background: p.color, outlineColor: p.color }}
+                    />
+                  </div>
+                  <h3 className="mt-[10px] text-[18px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
+                    {p.label}
+                  </h3>
+                </div>
+                <ChevronDown
+                  size={18}
                   aria-hidden="true"
-                  className="w-[8px] h-[8px] rounded-full animate-[nav-dot-pulse_1800ms_ease-in-out_infinite] motion-reduce:animate-none"
-                  style={{ background: p.color }}
+                  className="shrink-0 text-gray transition-transform duration-[var(--duration-instant)] group-open:rotate-180"
                 />
-              </div>
-              <h3 className="mt-[10px] text-[18px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
-                {p.label}
-              </h3>
-              <p className="mt-[4px] text-sm leading-[1.5] text-gray">{p.headline}</p>
+              </summary>
 
-              <ul className="mt-[12px] flex flex-col gap-[8px]">
+              <p className="mt-[12px] text-sm leading-[1.5] text-gray">{p.headline}</p>
+
+              <ul className="mt-[8px] flex flex-col">
                 {p.children.slice(0, 5).map(c => (
                   <li key={c.slug}>
                     <a
                       href={`/services/${p.id}/${c.slug}/`}
                       onClick={closeMobile}
-                      className="text-sm text-gray no-underline"
+                      className="block py-[14px] text-sm text-gray no-underline"
                     >
                       {c.name}
                     </a>
@@ -215,21 +363,21 @@ export function Nav() {
                 href={p.hubHref}
                 onClick={closeMobile}
                 style={{ color: p.color }}
-                className="mt-[12px] inline-flex items-center gap-[4px] font-mono text-[11px] uppercase tracking-[0.1em] no-underline"
+                className="mt-[8px] inline-flex items-center gap-[4px] py-[14px] font-mono text-[11px] uppercase tracking-[0.1em] no-underline"
               >
                 All {p.hubCta} <ArrowRight size={12} />
               </a>
-            </div>
+            </details>
           ))}
 
           {/* Nav links group */}
-          <div className="pt-[24px] border-t border-dashed border-border flex flex-col gap-[12px]">
+          <div className="pt-[16px] border-t border-dashed border-border flex flex-col">
             {navLinks.map(link => (
               <a
                 key={link.label}
                 href={link.href}
                 onClick={closeMobile}
-                className="text-sm text-gray no-underline"
+                className="block py-[14px] text-sm text-gray no-underline"
               >
                 {link.label}
               </a>
@@ -237,7 +385,7 @@ export function Nav() {
           </div>
 
           {/* CTA */}
-          <div>
+          <div className="pt-[8px]">
             <Button href="/#contact" size="sm" arrow="→">Let&apos;s Talk</Button>
           </div>
         </div>

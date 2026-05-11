@@ -63,7 +63,7 @@ export function HeroSection() {
           </div>
 
           {/* H1 */}
-          <h1 className="text-[clamp(40px,4.8vw,72px)] font-black tracking-[-0.04em] leading-[1.02] text-dark mb-6 whitespace-nowrap">
+          <h1 className="text-[clamp(32px,4.8vw,72px)] font-black tracking-[-0.04em] leading-[1.02] text-dark mb-6 whitespace-nowrap">
             <Typewriter
               lines={[
                 { text: 'Web3 protocols.' },

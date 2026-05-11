@@ -91,6 +91,15 @@
   to   { opacity: 1; }
 }
 
+/* Mobile nav <details>/<summary> — hide native disclosure marker so the
+   custom rotating chevron carries the open/closed signal. */
+.nav-summary {
+  list-style: none;
+}
+.nav-summary::-webkit-details-marker {
+  display: none;
+}
+
 /* ── Base styles ─────────────────────────────────────────── */
 @layer base {
 
@@ -211,6 +220,11 @@
   .hero-card-pop {
     animation: none;
     opacity: 1;
+  }
+  /* Kills the SVG turbulence shimmer: filter chain + its inner <animate> tags
+     stop having any visual effect when the source isn't filtered. */
+  .hero-ascii-image {
+    filter: none;
   }
 }
 
