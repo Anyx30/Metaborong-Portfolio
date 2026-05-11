@@ -1,4 +1,9 @@
 import { faqs } from '@/components/sections/faq-data'
+import { pillars } from '@/components/sections/services-data'
+
+const BASE = 'https://www.metaborong.com'
+const ORG_ID = `${BASE}/#organization`
+const SITE_ID = `${BASE}/#website`
 
 const foundersData = [
   { name: 'Arnab Ray',    jobTitle: 'CEO & Co-Founder' },
@@ -9,13 +14,23 @@ const foundersData = [
 export const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
+  '@id': ORG_ID,
   name: 'Metaborong',
   alternateName: 'Metaborong Technologies',
-  url: 'https://www.metaborong.com',
+  url: BASE,
+  logo: `${BASE}/logo.png`,
   description:
     'Metaborong is a Web3 development company and AI agent studio that builds DeFi protocols, autonomous AI systems, and custom SaaS products for founders and crypto-native teams.',
   email: 'contact@metaborong.com',
   areaServed: ['US', 'EU'],
+  knowsAbout: [
+    'DeFi Protocol Development',
+    'Smart Contract Security',
+    'NFT Marketplaces',
+    'AI Agents',
+    'Retrieval-Augmented Generation',
+    'SaaS Product Development',
+  ],
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer support',
@@ -31,20 +46,24 @@ export const organizationSchema = {
     '@type': 'Person',
     name: f.name,
     jobTitle: f.jobTitle,
-    worksFor: { '@type': 'Organization', name: 'Metaborong' },
+    worksFor: { '@id': ORG_ID },
   })),
 }
 
 export const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
+  '@id': SITE_ID,
   name: 'Metaborong',
-  url: 'https://www.metaborong.com',
+  url: BASE,
+  publisher: { '@id': ORG_ID },
+  inLanguage: 'en-US',
 }
 
 export const faqSchema = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
+  '@id': `${BASE}/#faq`,
   mainEntity: faqs.map((f) => ({
     '@type': 'Question',
     name: f.q,
@@ -54,3 +73,31 @@ export const faqSchema = {
     },
   })),
 }
+
+// One Service node per homepage pillar — anchors the studio's three offerings
+// as discrete entities for AI search engines and rich-result eligibility.
+export const serviceSchemas = pillars.map((p) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  '@id': `${BASE}/#service-${p.id}`,
+  name: p.label,
+  serviceType: p.headline,
+  description: p.body,
+  provider: { '@id': ORG_ID },
+  areaServed: ['US', 'EU'],
+  url: `${BASE}${p.hubHref}`,
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: `${p.label} services`,
+    itemListElement: p.children.map((c, i) => ({
+      '@type': 'Offer',
+      position: i + 1,
+      itemOffered: {
+        '@type': 'Service',
+        name: c.name,
+        description: c.description,
+        url: `${BASE}/services/${p.id}/${c.slug}/`,
+      },
+    })),
+  },
+}))

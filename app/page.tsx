@@ -12,7 +12,7 @@ import { FoundersSection } from '@/components/sections/founders'
 import { ComparisonSection } from '@/components/sections/comparison'
 import { FaqSection } from '@/components/sections/faq'
 import { ContactCtaSection } from '@/components/sections/contact-cta'
-import { organizationSchema, websiteSchema, faqSchema } from '@/lib/schema'
+import { organizationSchema, websiteSchema, faqSchema, serviceSchemas } from '@/lib/schema'
 
 export const metadata: Metadata = {
   title: 'Web3 & AI Development Studio | Metaborong',
@@ -42,6 +42,13 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      {serviceSchemas.map((schema) => (
+        <script
+          key={schema['@id']}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
 
       <Nav />
 

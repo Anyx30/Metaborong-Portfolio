@@ -14,9 +14,13 @@ export const metadata: Metadata = {
     siteName: 'Metaborong',
     locale: 'en_US',
     type: 'website',
+    // OG image is generated dynamically at the edge via app/opengraph-image.tsx —
+    // Next.js auto-wires the metadata, no explicit `images` array needed.
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@Metaborong',
+    creator: '@Metaborong',
   },
 }
 
