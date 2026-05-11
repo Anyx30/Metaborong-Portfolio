@@ -24,7 +24,6 @@ interface Lane {
   shipWeek: number
   shipWeekLabel?: string
   fill: string
-  trackFill: string
   status: string
   statusGlyph: '⚠' | '✓' | '✗'
   emphasis?: boolean
@@ -36,7 +35,6 @@ const LANES: Lane[] = [
     label: 'FREELANCER',
     shipWeek: 3,
     fill: '#ffba08',
-    trackFill: 'rgba(255,186,8,0.18)',
     status: 'BRITTLE AT SCALE',
     statusGlyph: '⚠',
   },
@@ -45,7 +43,6 @@ const LANES: Lane[] = [
     label: 'METABORONG',
     shipWeek: 5,
     fill: '#38b000',
-    trackFill: 'rgba(56,176,0,0.22)',
     status: 'BUILT TO LAST',
     statusGlyph: '✓',
     emphasis: true,
@@ -55,7 +52,6 @@ const LANES: Lane[] = [
     label: 'AGENCIES',
     shipWeek: 10.5,
     fill: '#fffffc',
-    trackFill: 'rgba(255,255,252,0.16)',
     status: 'WINDOW CLOSED',
     statusGlyph: '✗',
     shipWeekLabel: '11+',

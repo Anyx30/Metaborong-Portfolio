@@ -572,13 +572,6 @@
 .problem-chart-lane-label.is-emphasis {
   font-size: 14px;
 }
-.problem-chart-zone-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
 .problem-chart-window-label {
   font-family: var(--font-mono);
   font-size: 11px;
