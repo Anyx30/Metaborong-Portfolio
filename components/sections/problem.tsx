@@ -8,7 +8,7 @@ const definedTermJsonLd = {
   '@type': 'DefinedTerm',
   name: 'Trend window in Web3 and AI',
   description:
-    'A trend window is the period between a market shift opening and the same shift dissolving — a new chain launch, a new agent paradigm, or a regulatory change. In Web3 and AI, these windows typically last four to eight weeks.',
+    'A trend window is the period between a market shift opening and the same shift dissolving: a new chain launch, a new agent paradigm, or a regulatory change. In Web3 and AI, these windows typically last four to eight weeks.',
   inDefinedTermSet: 'https://metaborong.com/#defined-terms',
 }
 

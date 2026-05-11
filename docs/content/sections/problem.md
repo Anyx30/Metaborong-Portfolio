@@ -1,7 +1,7 @@
 ---
 section: problem
 slug: the-problem
-status: draft
+status: locked
 date: 2026-05-11
 authority: copy
 notes: |
