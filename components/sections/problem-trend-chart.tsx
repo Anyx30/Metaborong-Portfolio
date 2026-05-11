@@ -2,17 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-const VIEW_W = 800
-const VIEW_H = 380
+const VIEW_W = 680
+const VIEW_H = 360
 
-const AXIS_X0 = 132
-const AXIS_X12 = 560
+const AXIS_X0 = 118
+const AXIS_X12 = 470
 const WEEKS_TOTAL = 12
 const PX_PER_WEEK = (AXIS_X12 - AXIS_X0) / WEEKS_TOTAL
 const xAt = (week: number) => AXIS_X0 + week * PX_PER_WEEK
 
 const WEEK6_X = xAt(6)
-const AXIS_BASELINE_Y = 310
+const AXIS_BASELINE_Y = 295
 
 const LANE_HEIGHT = 56
 const LANE_TOP = 80
