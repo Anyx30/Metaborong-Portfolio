@@ -1,4 +1,3 @@
-import Script from 'next/script'
 import { Section } from '@/components/ui/section'
 import { ProblemTrendChart } from './problem-trend-chart'
 import { ProblemAEOAccordion } from './problem-aeo-accordion'
@@ -15,10 +14,8 @@ const definedTermJsonLd = {
 export function ProblemSection() {
   return (
     <Section bg="default" maxWidth="wide" id="problem">
-      <Script
-        id="problem-defined-term"
+      <script
         type="application/ld+json"
-        strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(definedTermJsonLd) }}
       />
       <div className="problem-card">

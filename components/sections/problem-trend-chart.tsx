@@ -167,6 +167,11 @@ export function ProblemTrendChart() {
             <stop offset="40%" stopColor="#fffffc" stopOpacity="0.06" />
             <stop offset="100%" stopColor="#fffffc" stopOpacity="0.12" />
           </linearGradient>
+          <linearGradient id="problem-sweep-gradient" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="#fffffc" stopOpacity="0" />
+            <stop offset="50%" stopColor="#fffffc" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#fffffc" stopOpacity="0" />
+          </linearGradient>
         </defs>
 
         <rect x="0" y="0" width={VIEW_W} height={VIEW_H} fill="transparent" filter="url(#problem-noise)" />
@@ -229,13 +234,6 @@ export function ProblemTrendChart() {
           height={VIEW_H}
           fill="url(#problem-sweep-gradient)"
         />
-        <defs>
-          <linearGradient id="problem-sweep-gradient" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#fffffc" stopOpacity="0" />
-            <stop offset="50%" stopColor="#fffffc" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#fffffc" stopOpacity="0" />
-          </linearGradient>
-        </defs>
       </svg>
 
       <svg
