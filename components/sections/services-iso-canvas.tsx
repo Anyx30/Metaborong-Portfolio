@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrthographicCamera, Grid, Edges, Text, Billboard } from '@react-three/drei'
+import { OrthographicCamera, Grid, Edges, Text } from '@react-three/drei'
 import { useRef, useEffect, useState, Suspense } from 'react'
 import { Group, MathUtils } from 'three'
 import { type PillarId } from '@/components/sections/services-data'
@@ -18,7 +18,9 @@ const PILLAR_LABEL: Record<PillarId, string> = {
   'product-studio': 'PRODUCT',
 }
 
-const INACTIVE_LABEL_COLOR = '#94a3b8'
+const INACTIVE_COLOR = '#cbd5e1'
+const INACTIVE_LABEL_COLOR = '#1f2937'
+const PLATE_HEIGHT = 0.04 // thin grey slab shown under inactive (and beneath active too)
 
 // Three cubes spaced along x-axis, base sitting at y=0 (the floor plane).
 const POSITIONS: Record<PillarId, [number, number, number]> = {
@@ -28,8 +30,6 @@ const POSITIONS: Record<PillarId, [number, number, number]> = {
 }
 
 const CUBE_SIZE = 1.6 // edge length
-const LABEL_ACTIVE_Y = 2.05 // floats above active cube top (1.6) without clipping the canvas
-const LABEL_INACTIVE_Y = 0.12 // sits just above the empty footprint plate
 
 export function ServicesIsoCanvas({ activeId }: { activeId: PillarId }) {
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -135,7 +135,8 @@ function PillarCube({
   reducedMotion: boolean
 }) {
   const extrudeRef = useRef<Group>(null)
-  const targetScale = isActive ? 1 : 0
+  // scale.y interpolates between thin grey slab (inactive) and full pillar cube (active).
+  const targetScale = isActive ? 1 : PLATE_HEIGHT
 
   useFrame((_, delta) => {
     const eg = extrudeRef.current
@@ -148,71 +149,45 @@ function PillarCube({
     }
   })
 
-  const color = PILLAR_COLOR[id]
-  const labelColor = isActive ? color : INACTIVE_LABEL_COLOR
+  const color = isActive ? PILLAR_COLOR[id] : INACTIVE_COLOR
+  // Label sits on the top face of the cube/plate. With scale.y applied to the parent
+  // group, the local-space top of the box is at y = CUBE_SIZE (which gets scaled).
+  // Position the label at scaled top via the parent group's scale by anchoring to the
+  // cube body and using local y = CUBE_SIZE + small epsilon.
+  const labelY = isActive ? CUBE_SIZE + 0.002 : PLATE_HEIGHT * CUBE_SIZE + 0.002
 
   return (
     <group position={position}>
-      {/* Cube — base pinned at y=0, scales upward. Inactive cubes collapse to zero
-          so only the floor outline marks their slot. */}
-      <group ref={extrudeRef} scale={[1, isActive ? 1 : 0, 1]}>
+      {/* Cube — base pinned at y=0, scales upward. Inactive cubes shrink to a thin
+          grey slab (plate). The parent group's scale.y is animated for the rise. */}
+      <group ref={extrudeRef} scale={[1, isActive ? 1 : PLATE_HEIGHT, 1]}>
         <mesh castShadow receiveShadow position={[0, CUBE_SIZE / 2, 0]}>
           <boxGeometry args={[CUBE_SIZE, CUBE_SIZE, CUBE_SIZE]} />
           <meshStandardMaterial color={color} metalness={0.02} roughness={0.7} />
-          <Edges threshold={15} color={color} lineWidth={1.2} />
+          <Edges threshold={15} color={isActive ? color : '#94a3b8'} lineWidth={1.0} />
         </mesh>
       </group>
 
-      {/* Footprint — always visible, pillar-tinted when active */}
-      <FootprintOutline color={isActive ? color : '#cbd5e1'} />
-
-      {/* Label — billboarded so it always faces the camera (no diagonal drift in iso).
-          Active labels sit above the cube top; inactive labels hover just above the plate. */}
-      <Billboard
-        position={[0, isActive ? LABEL_ACTIVE_Y : LABEL_INACTIVE_Y, 0]}
-        follow={true}
+      {/* Label — flat on the top surface (cube top for active, plate top for inactive),
+          oriented along the iso "depth" axis so the word slants up-right on screen,
+          matching the Figma reference. */}
+      <Text
+        position={[0, labelY, 0]}
+        rotation={[-Math.PI / 2, 0, Math.PI / 2]}
+        fontSize={isActive ? 0.34 : 0.28}
+        color={isActive ? '#ffffff' : INACTIVE_LABEL_COLOR}
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.06}
+        characters="WEB3AIPRODUCT"
+        renderOrder={10}
+        material-toneMapped={false}
+        material-depthTest={false}
+        material-transparent={true}
       >
-        <Text
-          fontSize={isActive ? 0.32 : 0.26}
-          color={labelColor}
-          anchorX="center"
-          anchorY="middle"
-          letterSpacing={0.08}
-          characters="WEB3AIPRODUCT"
-          outlineWidth={0.012}
-          outlineColor="#fafbff"
-          outlineBlur={0}
-          renderOrder={10}
-          material-toneMapped={false}
-          material-depthTest={false}
-          material-transparent={true}
-        >
-          {PILLAR_LABEL[id]}
-        </Text>
-      </Billboard>
+        {PILLAR_LABEL[id]}
+      </Text>
     </group>
   )
 }
 
-function FootprintOutline({ color }: { color: string }) {
-  const s = CUBE_SIZE
-  return (
-    <lineSegments position={[0, 0.005, 0]}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[
-            new Float32Array([
-              -s / 2, 0,  s / 2,   s / 2, 0,  s / 2,
-               s / 2, 0,  s / 2,   s / 2, 0, -s / 2,
-               s / 2, 0, -s / 2,  -s / 2, 0, -s / 2,
-              -s / 2, 0, -s / 2,  -s / 2, 0,  s / 2,
-            ]),
-            3,
-          ]}
-        />
-      </bufferGeometry>
-      <lineBasicMaterial color={color} transparent opacity={0.55} />
-    </lineSegments>
-  )
-}
