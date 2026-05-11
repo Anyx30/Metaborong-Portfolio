@@ -562,33 +562,45 @@
   display: none;
 }
 
-.problem-chart-label {
+.problem-tl-team {
   font-family: 'Space Grotesk', var(--font-brand);
   font-weight: 700;
   font-size: 13px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.problem-chart-label-week {
+.problem-tl-week {
+  font-family: var(--font-mono);
+  font-weight: 700;
   font-size: 11px;
-  font-weight: 500;
+  letter-spacing: 0.04em;
 }
-.problem-chart-label-sub {
+.problem-tl-sublabel {
+  font-family: 'Space Grotesk', var(--font-brand);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.problem-tl-boundary {
+  font-family: var(--font-mono);
+  font-weight: 700;
   font-size: 10px;
-  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.problem-tl-tick {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
   letter-spacing: 0.04em;
 }
-.problem-chart-axis-week {
+.problem-tl-axis-meta {
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-.problem-chart-axis-meta {
-  font-family: var(--font-mono);
-  font-size: 9px;
   font-weight: 400;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .problem-chart-sweep {
