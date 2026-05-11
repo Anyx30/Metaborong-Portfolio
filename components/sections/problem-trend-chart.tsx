@@ -200,7 +200,8 @@ export function ProblemTrendChart() {
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid meet"
         className="problem-chart problem-chart-iso"
-        aria-hidden="true"
+        role="img"
+        aria-labelledby="problem-chart-caption"
       >
         <defs>
           <pattern id="problem-closed-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
@@ -331,7 +332,8 @@ export function ProblemTrendChart() {
         viewBox="0 0 360 280"
         preserveAspectRatio="xMidYMid meet"
         className="problem-chart problem-chart-flat"
-        aria-hidden="true"
+        role="img"
+        aria-labelledby="problem-chart-caption"
       >
         <defs>
           <pattern id="problem-closed-hatch-m" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
