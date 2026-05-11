@@ -562,43 +562,61 @@
   display: none;
 }
 
-.problem-tl-team {
+.problem-chart-lane-label {
   font-family: 'Space Grotesk', var(--font-brand);
   font-weight: 700;
   font-size: 13px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.problem-tl-week {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.04em;
+.problem-chart-lane-label.is-emphasis {
+  font-size: 14px;
 }
-.problem-tl-sublabel {
+.problem-chart-zone-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.problem-chart-window-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.problem-chart-week-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.problem-chart-status {
   font-family: 'Space Grotesk', var(--font-brand);
   font-weight: 700;
   font-size: 11px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.problem-tl-boundary {
-  font-family: var(--font-mono);
+.problem-chart-status.is-emphasis {
+  font-size: 12px;
+}
+.problem-chart-status-glyph {
+  font-family: var(--font-brand);
+  font-size: 14px;
   font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
-.problem-tl-tick {
+.problem-chart-axis-week {
   font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.04em;
 }
-.problem-tl-axis-meta {
+.problem-chart-axis-meta {
   font-family: var(--font-mono);
-  font-weight: 400;
   font-size: 9px;
+  font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

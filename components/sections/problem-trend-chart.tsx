@@ -2,127 +2,175 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-const VIEW_W = 720
-const VIEW_H = 360
-const X0 = 110
-const X_END = 660
-const WEEK_COUNT = 12
-const WEEK_DX = (X_END - X0) / WEEK_COUNT
-const WEEK6_X = X0 + 6 * WEEK_DX
-const TRACK_Y = [80, 170, 260] as const
+const VIEW_W = 800
+const VIEW_H = 380
 
-interface Team {
+const AXIS_X0 = 132
+const AXIS_X12 = 560
+const WEEKS_TOTAL = 12
+const PX_PER_WEEK = (AXIS_X12 - AXIS_X0) / WEEKS_TOTAL
+const xAt = (week: number) => AXIS_X0 + week * PX_PER_WEEK
+
+const WEEK6_X = xAt(6)
+const AXIS_BASELINE_Y = 310
+
+const LANE_HEIGHT = 56
+const LANE_TOP = 80
+const BAR_HEIGHT = 28
+
+interface Lane {
   id: 'freelancer' | 'metaborong' | 'agencies'
   label: string
-  week: string
-  weekNum: number
-  subLabel: string
+  shipWeek: number
+  shipWeekLabel?: string
   fill: string
-  emphasis: boolean
+  trackFill: string
+  status: string
+  statusGlyph: '⚠' | '✓' | '✗'
+  emphasis?: boolean
 }
 
-const TEAMS: Team[] = [
+const LANES: Lane[] = [
   {
     id: 'freelancer',
     label: 'FREELANCER',
-    week: 'W3',
-    weekNum: 3,
-    subLabel: 'BRITTLE AT SCALE',
+    shipWeek: 3,
     fill: '#ffba08',
-    emphasis: false,
+    trackFill: 'rgba(255,186,8,0.18)',
+    status: 'BRITTLE AT SCALE',
+    statusGlyph: '⚠',
   },
   {
     id: 'metaborong',
     label: 'METABORONG',
-    week: 'W5',
-    weekNum: 5,
-    subLabel: 'BUILT TO LAST',
+    shipWeek: 5,
     fill: '#38b000',
+    trackFill: 'rgba(56,176,0,0.22)',
+    status: 'BUILT TO LAST',
+    statusGlyph: '✓',
     emphasis: true,
   },
   {
     id: 'agencies',
     label: 'AGENCIES',
-    week: 'W11+',
-    weekNum: 11,
-    subLabel: 'WINDOW CLOSED',
+    shipWeek: 10.5,
     fill: '#fffffc',
-    emphasis: false,
+    trackFill: 'rgba(255,255,252,0.16)',
+    status: 'WINDOW CLOSED',
+    statusGlyph: '✗',
+    shipWeekLabel: '11+',
   },
 ]
 
-function weekToX(week: number): number {
-  return X0 + week * WEEK_DX
-}
-
-function TimelineTrack({ team, idx }: { team: Team; idx: number }) {
-  const y = TRACK_Y[idx]
-  const shipX = weekToX(team.weekNum)
-  const insideWindow = team.weekNum <= 6
-  const markerR = team.emphasis ? 11 : 8
-  const subLabelX = shipX + 18
+function Lane({ lane, index }: { lane: Lane; index: number }) {
+  const yCenter = LANE_TOP + index * LANE_HEIGHT + LANE_HEIGHT / 2
+  const yTop = yCenter - BAR_HEIGHT / 2
+  const shipX = xAt(lane.shipWeek)
+  const insideEnd = Math.min(shipX, WEEK6_X)
+  const outsideStart = WEEK6_X
+  const outsideEnd = shipX
+  const overshootsWindow = lane.shipWeek > 6
 
   return (
     <g>
-      <text x={X0 - 16} y={y + 5} textAnchor="end" fill="#fffffc" className="problem-tl-team">
-        {team.label}
+      {/* Lane name on left */}
+      <text
+        x={AXIS_X0 - 14}
+        y={yCenter + 4}
+        textAnchor="end"
+        fill={lane.emphasis ? '#fffffc' : 'rgba(255,255,252,0.85)'}
+        className={`problem-chart-lane-label${lane.emphasis ? ' is-emphasis' : ''}`}
+      >
+        {lane.label}
       </text>
 
+      {/* Faint dotted track across full timeline */}
       <line
-        x1={X0}
-        y1={y}
-        x2={X_END}
-        y2={y}
+        x1={AXIS_X0}
+        y1={yCenter}
+        x2={AXIS_X12}
+        y2={yCenter}
         stroke="rgba(255,255,252,0.18)"
-        strokeWidth="2"
-      />
-      <line
-        x1={X0}
-        y1={y}
-        x2={shipX}
-        y2={y}
-        stroke={team.fill}
-        strokeWidth={team.emphasis ? 4 : 3}
-        strokeLinecap="round"
+        strokeWidth="1"
+        strokeDasharray="1 4"
       />
 
-      {team.emphasis && (
-        <circle
-          cx={shipX}
-          cy={y}
-          r={markerR + 6}
-          fill={team.fill}
-          fillOpacity="0.18"
+      {/* Solid bar from W0 to ship week (capped at window-close for the inside portion) */}
+      <rect
+        x={AXIS_X0}
+        y={yTop}
+        width={insideEnd - AXIS_X0}
+        height={BAR_HEIGHT}
+        fill={lane.fill}
+        rx="1"
+      />
+
+      {/* Overshoot portion (faded, hatched-feel) past window close */}
+      {overshootsWindow && (
+        <rect
+          x={outsideStart}
+          y={yTop}
+          width={outsideEnd - outsideStart}
+          height={BAR_HEIGHT}
+          fill={lane.fill}
+          fillOpacity="0.32"
+          stroke={lane.fill}
+          strokeOpacity="0.5"
+          strokeDasharray="3 3"
+          rx="1"
         />
       )}
-      <circle
-        cx={shipX}
-        cy={y}
-        r={markerR}
-        fill={team.fill}
-        stroke="#296ff0"
-        strokeWidth="2"
-      />
 
+      {/* Ship marker — pin at the end of the bar */}
+      <g>
+        <line
+          x1={shipX}
+          y1={yTop - 6}
+          x2={shipX}
+          y2={yTop + BAR_HEIGHT + 6}
+          stroke={overshootsWindow ? 'rgba(255,255,252,0.55)' : lane.fill}
+          strokeWidth="1.5"
+        />
+        <circle
+          cx={shipX}
+          cy={yCenter}
+          r="5"
+          fill={overshootsWindow ? '#296ff0' : '#fffffc'}
+          stroke={overshootsWindow ? 'rgba(255,255,252,0.7)' : lane.fill}
+          strokeWidth="2"
+        />
+      </g>
+
+      {/* Week-N tag above the ship marker */}
       <text
         x={shipX}
-        y={y - markerR - 8}
+        y={yTop - 12}
         textAnchor="middle"
         fill="#fffffc"
-        className="problem-tl-week"
+        className="problem-chart-week-tag"
       >
-        {team.week}
+        WEEK {lane.shipWeekLabel ?? lane.shipWeek}
       </text>
 
-      <text
-        x={insideWindow ? subLabelX : shipX - 18}
-        y={y + 5}
-        textAnchor={insideWindow ? 'start' : 'end'}
-        fill={team.emphasis ? '#fffffc' : 'rgba(255,255,252,0.7)'}
-        className="problem-tl-sublabel"
-      >
-        {team.subLabel}
-      </text>
+      {/* Status glyph + label to the right of the bar */}
+      <g>
+        <text
+          x={shipX + 16}
+          y={yCenter + 5}
+          fill={lane.emphasis ? '#fffffc' : 'rgba(255,255,252,0.95)'}
+          className="problem-chart-status-glyph"
+        >
+          {lane.statusGlyph}
+        </text>
+        <text
+          x={shipX + 32}
+          y={yCenter + 5}
+          fill={lane.emphasis ? '#fffffc' : 'rgba(255,255,252,0.85)'}
+          className={`problem-chart-status${lane.emphasis ? ' is-emphasis' : ''}`}
+        >
+          {lane.status}
+        </text>
+      </g>
     </g>
   )
 }
@@ -159,99 +207,118 @@ export function ProblemTrendChart() {
         aria-hidden="true"
       >
         <defs>
-          <linearGradient id="problem-closed-zone" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#040404" stopOpacity="0" />
-            <stop offset="35%" stopColor="#040404" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#040404" stopOpacity="0.28" />
-          </linearGradient>
+          <pattern id="problem-closed-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,252,0.18)" strokeWidth="1" />
+          </pattern>
           <linearGradient id="problem-sweep-gradient" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0%" stopColor="#fffffc" stopOpacity="0" />
-            <stop offset="50%" stopColor="#fffffc" stopOpacity="0.22" />
+            <stop offset="50%" stopColor="#fffffc" stopOpacity="0.18" />
             <stop offset="100%" stopColor="#fffffc" stopOpacity="0" />
           </linearGradient>
         </defs>
 
+        {/* Closed-window zone fill — hatched, distinct */}
         <rect
           x={WEEK6_X}
-          y={28}
-          width={X_END - WEEK6_X + 32}
-          height={VIEW_H - 80}
-          fill="url(#problem-closed-zone)"
+          y={LANE_TOP - 16}
+          width={AXIS_X12 - WEEK6_X + 60}
+          height={AXIS_BASELINE_Y - LANE_TOP + 24}
+          fill="url(#problem-closed-hatch)"
+        />
+        <rect
+          x={WEEK6_X}
+          y={LANE_TOP - 16}
+          width={AXIS_X12 - WEEK6_X + 60}
+          height={AXIS_BASELINE_Y - LANE_TOP + 24}
+          fill="rgba(0,0,0,0.12)"
         />
 
+        {/* Decisive vertical line at week 6 (window closes) */}
         <line
           x1={WEEK6_X}
-          y1={28}
+          y1={LANE_TOP - 12}
           x2={WEEK6_X}
-          y2={VIEW_H - 60}
-          stroke="rgba(255,255,252,0.6)"
-          strokeWidth="1"
-          strokeDasharray="3 4"
+          y2={AXIS_BASELINE_Y + 8}
+          stroke="rgba(255,255,252,0.9)"
+          strokeWidth="1.5"
+          strokeDasharray="4 3"
         />
         <text
           x={WEEK6_X}
-          y={20}
+          y={LANE_TOP - 24}
           textAnchor="middle"
           fill="#fffffc"
-          className="problem-tl-boundary"
+          className="problem-chart-window-label"
         >
-          WINDOW CLOSES
+          ↓ WINDOW CLOSES
         </text>
 
-        {TEAMS.map((team, i) => (
-          <TimelineTrack key={team.id} team={team} idx={i} />
+        {/* Lanes */}
+        {LANES.map((lane, i) => (
+          <Lane key={lane.id} lane={lane} index={i} />
         ))}
 
-        <g className="problem-tl-axis">
-          <line
-            x1={X0}
-            y1={VIEW_H - 50}
-            x2={X_END}
-            y2={VIEW_H - 50}
-            stroke="rgba(255,255,252,0.35)"
-            strokeWidth="1"
-          />
-          {[0, 3, 6, 9, 12].map((w) => (
-            <g key={w}>
-              <line
-                x1={weekToX(w)}
-                y1={VIEW_H - 54}
-                x2={weekToX(w)}
-                y2={VIEW_H - 46}
-                stroke="rgba(255,255,252,0.5)"
-                strokeWidth="1"
-              />
-              <text
-                x={weekToX(w)}
-                y={VIEW_H - 32}
-                textAnchor="middle"
-                fill="rgba(255,255,252,0.8)"
-                className="problem-tl-tick"
-              >
-                {`W${w.toString().padStart(2, '0')}`}
-              </text>
-            </g>
-          ))}
-          <text
-            x={X0}
-            y={VIEW_H - 14}
-            textAnchor="start"
-            fill="rgba(255,255,252,0.55)"
-            className="problem-tl-axis-meta"
-          >
-            [ TREND STARTS ]
-          </text>
-          <text
-            x={X_END}
-            y={VIEW_H - 14}
-            textAnchor="end"
-            fill="rgba(255,255,252,0.55)"
-            className="problem-tl-axis-meta"
-          >
-            [ WINDOW CLOSED ]
-          </text>
-        </g>
+        {/* X axis baseline */}
+        <line
+          x1={AXIS_X0}
+          y1={AXIS_BASELINE_Y}
+          x2={AXIS_X12}
+          y2={AXIS_BASELINE_Y}
+          stroke="rgba(255,255,252,0.55)"
+          strokeWidth="1"
+        />
 
+        {/* X axis week ticks */}
+        {[0, 3, 6, 9, 12].map((w) => (
+          <g key={w}>
+            <line
+              x1={xAt(w)}
+              y1={AXIS_BASELINE_Y - 4}
+              x2={xAt(w)}
+              y2={AXIS_BASELINE_Y + 4}
+              stroke="rgba(255,255,252,0.55)"
+              strokeWidth="1"
+            />
+            <text
+              x={xAt(w)}
+              y={AXIS_BASELINE_Y + 22}
+              textAnchor="middle"
+              fill="rgba(255,255,252,0.85)"
+              className="problem-chart-axis-week"
+            >
+              W{w.toString().padStart(2, '0')}
+            </text>
+          </g>
+        ))}
+        <text
+          x={AXIS_X0}
+          y={AXIS_BASELINE_Y + 40}
+          textAnchor="start"
+          fill="rgba(255,255,252,0.6)"
+          className="problem-chart-axis-meta"
+        >
+          [ TREND STARTS ]
+        </text>
+        <text
+          x={WEEK6_X}
+          y={AXIS_BASELINE_Y + 40}
+          textAnchor="middle"
+          fill="rgba(255,255,252,0.6)"
+          className="problem-chart-axis-meta"
+        >
+          [ WINDOW CLOSES ]
+        </text>
+        <text
+          x={AXIS_X12}
+          y={AXIS_BASELINE_Y + 40}
+          textAnchor="end"
+          fill="rgba(255,255,252,0.6)"
+          className="problem-chart-axis-meta"
+        >
+          [ TREND DISSOLVED ]
+        </text>
+
+        {/* Sweep overlay */}
         <rect
           className="problem-chart-sweep"
           data-active={swept ? 'true' : 'false'}
@@ -263,85 +330,65 @@ export function ProblemTrendChart() {
         />
       </svg>
 
+      {/* Mobile fallback — same logic, more compressed */}
       <svg
-        viewBox="0 0 340 280"
+        viewBox="0 0 360 280"
         preserveAspectRatio="xMidYMid meet"
         className="problem-chart problem-chart-flat"
         aria-hidden="true"
       >
         <defs>
-          <linearGradient id="problem-closed-zone-mobile" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#040404" stopOpacity="0" />
-            <stop offset="50%" stopColor="#040404" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="#040404" stopOpacity="0.28" />
-          </linearGradient>
+          <pattern id="problem-closed-hatch-m" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,252,0.2)" strokeWidth="1" />
+          </pattern>
         </defs>
-
+        {/* W axis: 0 to 12, baseline at y=230 */}
         {(() => {
-          const mX0 = 12
-          const mXEnd = 328
-          const mDX = (mXEnd - mX0) / 12
-          const mWeek6 = mX0 + 6 * mDX
-          const mTrackY = [60, 130, 200]
+          const X0 = 30
+          const X12 = 330
+          const ppw = (X12 - X0) / 12
+          const xa = (w: number) => X0 + w * ppw
+          const w6 = xa(6)
+          const baseline = 235
+          const laneH = 48
+          const laneTop = 40
+          const bh = 22
           return (
             <>
-              <rect x={mWeek6} y={20} width={mXEnd - mWeek6 + 4} height={220} fill="url(#problem-closed-zone-mobile)" />
-              <line
-                x1={mWeek6}
-                y1={20}
-                x2={mWeek6}
-                y2={235}
-                stroke="rgba(255,255,252,0.6)"
-                strokeWidth="1"
-                strokeDasharray="3 4"
-              />
-              <text x={mWeek6} y={14} textAnchor="middle" fill="#fffffc" className="problem-tl-boundary">
-                WINDOW CLOSES
-              </text>
-              {TEAMS.map((team, i) => {
-                const y = mTrackY[i]
-                const shipX = mX0 + team.weekNum * mDX
-                const inside = team.weekNum <= 6
+              <rect x={w6} y={laneTop - 8} width={X12 - w6 + 20} height={baseline - laneTop + 10} fill="url(#problem-closed-hatch-m)" />
+              <rect x={w6} y={laneTop - 8} width={X12 - w6 + 20} height={baseline - laneTop + 10} fill="rgba(0,0,0,0.12)" />
+              <line x1={w6} y1={laneTop - 4} x2={w6} y2={baseline + 6} stroke="rgba(255,255,252,0.9)" strokeWidth="1.5" strokeDasharray="3 3" />
+              {LANES.map((lane, i) => {
+                const yC = laneTop + i * laneH + laneH / 2
+                const yT = yC - bh / 2
+                const shipX = xa(lane.shipWeek)
+                const insideEnd = Math.min(shipX, w6)
+                const overshoots = lane.shipWeek > 6
                 return (
-                  <g key={team.id + '-m'}>
-                    <text x={mX0} y={y - 18} fill="#fffffc" className="problem-tl-team">
-                      {team.label}
+                  <g key={lane.id + '-m'}>
+                    <text x={X0 + 4} y={yT - 6} fill="#fffffc" className="problem-chart-lane-label">
+                      {lane.label}
                     </text>
-                    <line x1={mX0} y1={y} x2={mXEnd} y2={y} stroke="rgba(255,255,252,0.18)" strokeWidth="2" />
-                    <line
-                      x1={mX0}
-                      y1={y}
-                      x2={shipX}
-                      y2={y}
-                      stroke={team.fill}
-                      strokeWidth={team.emphasis ? 4 : 3}
-                      strokeLinecap="round"
-                    />
-                    <circle cx={shipX} cy={y} r={team.emphasis ? 9 : 7} fill={team.fill} stroke="#296ff0" strokeWidth="2" />
-                    <text
-                      x={shipX}
-                      y={y + 22}
-                      textAnchor={inside ? 'start' : 'end'}
-                      fill={team.emphasis ? '#fffffc' : 'rgba(255,255,252,0.7)'}
-                      className="problem-tl-sublabel"
-                    >
-                      {team.week} · {team.subLabel}
+                    <rect x={X0} y={yT} width={insideEnd - X0} height={bh} fill={lane.fill} />
+                    {overshoots && (
+                      <rect x={w6} y={yT} width={shipX - w6} height={bh} fill={lane.fill} fillOpacity="0.32" stroke={lane.fill} strokeOpacity="0.5" strokeDasharray="3 3" />
+                    )}
+                    <circle cx={shipX} cy={yC} r="4" fill={overshoots ? '#296ff0' : '#fffffc'} stroke={lane.fill} strokeWidth="2" />
+                    <text x={shipX + 8} y={yC + 4} fill="rgba(255,255,252,0.85)" className="problem-chart-status">
+                      W{lane.shipWeek === 11.5 ? '11+' : lane.shipWeek} {lane.statusGlyph}
                     </text>
                   </g>
                 )
               })}
+              <line x1={X0} y1={baseline} x2={X12} y2={baseline} stroke="rgba(255,255,252,0.5)" strokeWidth="1" />
               {[0, 6, 12].map((w) => (
-                <text
-                  key={'tick-' + w}
-                  x={mX0 + w * mDX}
-                  y={258}
-                  textAnchor="middle"
-                  fill="rgba(255,255,252,0.7)"
-                  className="problem-tl-tick"
-                >
-                  {`W${w.toString().padStart(2, '0')}`}
+                <text key={w} x={xa(w)} y={baseline + 16} textAnchor="middle" fill="rgba(255,255,252,0.7)" className="problem-chart-axis-week">
+                  W{w.toString().padStart(2, '0')}
                 </text>
               ))}
+              <text x={w6} y={laneTop - 14} textAnchor="middle" fill="#fffffc" className="problem-chart-window-label">
+                ↓ WINDOW CLOSES
+              </text>
             </>
           )
         })()}
