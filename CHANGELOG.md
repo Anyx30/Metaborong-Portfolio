@@ -4,6 +4,45 @@ All major decisions, milestones, and changes to this project.
 
 ---
 
+## 2026-05-13 — Session 13: Parallel section redesigns + C1 SEO baseline (graduate)
+
+### Decision log
+- **First true parallel-session execution.** Three feature branches developed concurrently — `section/problem-redesign` and `section/what-we-build-redesign` on isolated git worktrees, `seo/c1-baseline` on a third worktree off `design-revamp`. Zero file overlap discovered at merge time; zero conflicts. Worktree pattern proved out as the right primitive for multi-terminal Claude sessions on the same repo (single-shared `.git/HEAD` collisions are the real risk, not file conflicts).
+- **Problem section redesign (A1 full chain).** Replaced the 22-line "two-bad-options" Problem block with a high-contrast `#296ff0` blue card featuring an isometric → horizontal-timeline chart and a sibling content column. Thesis shifted from quality-framing ("agencies treat you as a ticket") to speed-framing ("Web3 and AI move in trend windows that close in weeks; most teams can't ship inside them"). Copy locked at 91/100 citability with FAQPage JSON-LD wrapping 5 AEO Q&A pairs and a `DefinedTerm` schema owning the phrase "trend window." Chart a11y via `<figure>`/`<figcaption>` + `role="img"` + `aria-labelledby`. Desktop pointer devices get a `cursor: zoom-in` hover state scaling the chart to 1.10 for label legibility; mobile uses a flat front-elevation fallback. Forced-colors mode honored. Section is a documented deviation from the off-white site grammar (logged in `docs/superpowers/specs/2026-05-11-section-problem.md`).
+- **Services / "What we build" redesign (A1 full chain).** Replaced the trefoil + glyphs + mobile fallback (377 lines deleted across `services-trefoil.tsx`, `services-glyphs.tsx`, `services-mobile.tsx`) with a pure-CSS isometric canvas + split-rail layout unified via an inset-card pattern. Header rhythm tightened, divider weights normalized, inset-card radius locked. Pillar copy refreshed; AI Agents children reordered (top-5 curation per spec deviation #3). Per-pillar `hubCta` shifted to action verbs (`Open Web3` / `Open AI` / `Open Studio`) replacing the passive `Web3 services` / `AI services` / `Product studio` family.
+- **C1 SEO baseline (Context C).** `robots.ts` now disallows `/services/` for every named AI crawler (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, ChatGPT-User, anthropic-ai, Google-Extended, CCBot) — previously these explicit allow rules omitted the disallow, leaving 18 thin "Coming soon" stub pages exposed to retrieval-index ingestion. `lib/schema.ts` rebuilt as an `@id`-linked entity graph: Organization, WebSite, FAQPage, and Service × 3 (one per homepage pillar) with `hasOfferCatalog` enumerating child services. Founder records reference the Organization `@id` instead of duplicating it. Organization gains `logo`, `knowsAbout`. Dynamic OG card via `next/og` `ImageResponse` at `app/opengraph-image.tsx` — Next.js auto-wires the metadata, no asset upload needed. Twitter site/creator handles added.
+- **Workflow doc cleanup.** `docs/superpowers/SESSIONS.md` carried `codex /` references from the original template into the A1/A2/B rewrite even though codex was never explicitly named as a tool by the user. Removed from cheat sheet + chain step 14 / 8 / 11. Step 14 / 8 are now `requesting-code-review (optional)` with explicit gating: skip for small section work already covered by impeccable + design-review. Independent code review remains available via ad-hoc skill invocation when the diff warrants it.
+- **Codex CLI broken on local install** (vendor binary ENOENT in node_modules). Substituted a Claude subagent as the independent voice for the C1 audit; documented as a fallback pattern but did not block the workflow.
+
+### Build state changes
+- **NEW:** `components/sections/problem-trend-chart.tsx`, `problem-aeo-accordion.tsx`, `problem-qa-data.ts` (sectioned chart + AEO accordion + Q&A data source).
+- **REWROTE:** `components/sections/problem.tsx` (22 → 79 lines; full redesign).
+- **NEW:** `components/sections/services-iso-canvas.tsx`, `services-pillars.tsx`.
+- **DELETED:** `components/sections/services-trefoil.tsx`, `services-glyphs.tsx`, `services-mobile.tsx`.
+- **REWROTE:** `components/sections/services.tsx` (trefoil orchestrator → split-rail composer).
+- **UPDATED:** `app/globals.css` — added `.problem-card` + child class block (~335 lines, scoped) with forced-colors + reduced-motion + hover-zoom CSS.
+- **UPDATED:** `lib/schema.ts` — `@id` graph + `serviceSchemas` array (~50 lines added).
+- **UPDATED:** `app/robots.ts` — `STUB_DISALLOW` constant applied to all AI bot rules.
+- **UPDATED:** `app/layout.tsx` — twitter site/creator + OG comment pointing at the new image module.
+- **UPDATED:** `app/page.tsx` — `serviceSchemas.map` wiring into JSON-LD scripts.
+- **NEW:** `app/opengraph-image.tsx` — edge-rendered 1200×630 brand card via `next/og`.
+- **NEW:** `docs/content/sections/problem.md`, `docs/content/sections/services.md` (locked copy).
+- **NEW:** specs + plans under `docs/superpowers/{specs,plans}/2026-05-1{1,2}-section-{problem,services}-*.md`.
+
+### New deviations from DESIGN.md
+- **Problem section:** solid `#296ff0` surface (off-white site grammar), Space Grotesk Bold 32px uppercase H2 (vs Satoshi 56px), JetBrains Mono chip with translucent fill, 1.4 line-height for body+bridge (vs 1.5+). Logged in `docs/superpowers/specs/2026-05-11-section-problem.md`. Recommend DESIGN.md add a "High-contrast statement card" pattern entry if this becomes a repeated pattern; left as section-only deviation for now.
+- **Services section:** Inset-card + split-rail unification pattern (canvas + header rail share a single inset shell). Logged in `docs/superpowers/specs/2026-05-11-section-services-redesign.md` and `2026-05-12-section-services-canvas-css-rebuild.md`. Could graduate to DESIGN.md as a layout primitive if reused elsewhere.
+
+### Known follow-ups
+- DESIGN.md grammar additions (statement-card, inset-card) deferred to a dedicated graduate pass — patterns shipped but not yet promoted to canonical UI grammar.
+- 18 `/services/*` stub pages stay triple-blocked (noindex + robots-disallow + sitemap-excluded). Document a gate condition for relaxing each pillar's blocks as it ships real content.
+- One Problem-chart P1 finding from `/impeccable` deferred: `'use client'` boundary for the IntersectionObserver-driven sweep animation could move to a CSS-only scroll-driven animation, eliminating the client-component overhead for a decorative flourish. Browser support gaps make the refactor not worth the bundle savings today; revisit in 12 months.
+- One Problem-section keyword research recommendation deferred: cross-section reinforcement of the "trend window" term into the hero subhead and at least one service page intro to compound entity authority.
+- Codex CLI install needs repair (`npm install -g @openai/codex` or reinstall) before the `codex` skill is usable again. Workflow doesn't depend on it; flagged so it doesn't surprise the next session.
+- Hero section deviation re-polish (A2) and remaining homepage sections (Why Us, Work Preview, Testimonials, Founders, Comparison, FAQ, Contact CTA) still queued.
+
+---
+
 ## 2026-05-11 — Session 12: Nav full polish pass (correctness → layout → sharpness)
 
 ### Decision log
