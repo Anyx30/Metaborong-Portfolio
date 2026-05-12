@@ -49,7 +49,7 @@ export function ServicesPillars() {
       </div>
 
       {/* Desktop (lg+): scrolltelling. */}
-      <div ref={wrapRef} className="hidden lg:block relative mt-[64px] h-[260vh]">
+      <div ref={wrapRef} className="hidden lg:block relative h-[260vh]">
         {pillars.map((p, i) => (
           <div
             key={p.id}
@@ -90,16 +90,7 @@ function LeftAccordion({
   active: (typeof pillars)[number]
 }) {
   return (
-    <div className="rounded-l-md border border-r-0 border-border bg-white overflow-hidden flex flex-col h-[600px]">
-      {/* Lede — Split-rail F. Lives inside the accordion card so the section's intro
-          shares the left rail and unifies with the experience below. Mobile renders the
-          same copy from services.tsx (lg:hidden). */}
-      <div className="px-[24px] py-[18px] border-b border-border-subtle flex-shrink-0">
-        <p className="text-[13px] leading-[1.6] tracking-[-0.005em] text-gray">
-          A boutique studio for founders without a CTO. Metaborong ships DeFi protocols and crypto wallets across EVM, Solana, and Cosmos; AI agents engineered past demo wrappers; and SaaS products owned by one team from architecture to deployment.
-        </p>
-      </div>
-
+    <div className="border-r border-border-subtle bg-white overflow-hidden flex flex-col h-[600px]">
       <div className="px-[20px] py-[14px] border-b border-border-subtle flex items-center justify-between flex-shrink-0">
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-gray-light">
           Three pillars
@@ -207,7 +198,7 @@ function LeftAccordion({
 
 function RightCanvas({ active, activeId }: { active: (typeof pillars)[number]; activeId: PillarId }) {
   return (
-    <div className="rounded-r-md border border-border bg-white overflow-hidden h-[600px] flex flex-col">
+    <div className="bg-white overflow-hidden h-[600px] flex flex-col">
       <div className="px-[24px] pt-[20px] pb-[12px] flex-shrink-0">
         <p
           key={`hl-${active.id}`}

@@ -35,24 +35,26 @@ const FAQ_JSONLD = {
 export function ServicesSection() {
   return (
     <Section bg="subtle" maxWidth="wide" id="services" aria-labelledby="services-heading">
-      <div className="text-center max-w-[720px] mx-auto">
-        <span className="inline-block border border-border bg-white rounded-md px-[12px] py-[6px] text-[11px] font-bold uppercase tracking-[0.1em] leading-none text-dark font-mono">
-          What we build
-        </span>
-        <h2
-          id="services-heading"
-          className="mt-[24px] text-[clamp(32px,4.4vw,56px)] font-bold tracking-[-0.035em] leading-[1.05] text-dark"
-        >
-          A small, senior team.<br />Three pillars. End to end.
-        </h2>
-        {/* Lede only renders on mobile here; on lg+ it lives at the top of the LeftAccordion
-            so the section's intro shares the accordion's left rail and unifies the two visual axes. */}
-        <p className="mt-[20px] text-[16px] text-gray leading-[1.65] tracking-[-0.01em] lg:hidden">
-          A boutique studio for founders without a CTO. Metaborong ships DeFi protocols and crypto wallets across EVM, Solana, and Cosmos; AI agents engineered past demo wrappers; and SaaS products owned by one team from architecture to deployment.
-        </p>
-      </div>
+      <div className="lg:rounded-md lg:border lg:border-border lg:bg-white lg:overflow-hidden">
+        <div className="lg:border-b lg:border-border-subtle lg:py-[64px] lg:px-[48px]">
+          <div className="text-center max-w-[720px] mx-auto">
+            <span className="inline-block border border-border bg-white rounded-md px-[12px] py-[6px] text-[11px] font-bold uppercase tracking-[0.1em] leading-none text-dark font-mono">
+              What we build
+            </span>
+            <h2
+              id="services-heading"
+              className="mt-[24px] text-[clamp(32px,4.4vw,56px)] font-bold tracking-[-0.035em] leading-[1.05] text-dark"
+            >
+              A small, senior team.<br />Three pillars. End to end.
+            </h2>
+            <p className="mt-[20px] text-[16px] text-gray leading-[1.65] tracking-[-0.01em]">
+              A boutique studio for founders without a CTO. Metaborong ships DeFi protocols and crypto wallets across EVM, Solana, and Cosmos; AI agents engineered past demo wrappers; and SaaS products owned by one team from architecture to deployment.
+            </p>
+          </div>
+        </div>
 
-      <ServicesPillars />
+        <ServicesPillars />
+      </div>
 
       <script
         type="application/ld+json"
