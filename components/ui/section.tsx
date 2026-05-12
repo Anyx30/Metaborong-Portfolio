@@ -2,7 +2,7 @@ import { type HTMLAttributes } from 'react'
 import { Reveal } from '@/components/ui/reveal'
 
 type SectionBg = 'default' | 'subtle' | 'dark'
-type SectionMaxWidth = 'wide' | 'narrow' | 'prose'
+type SectionMaxWidth = 'wide' | 'xwide' | 'narrow' | 'prose'
 
 interface SectionProps extends HTMLAttributes<HTMLElement> {
   bg?: SectionBg
@@ -18,6 +18,7 @@ const bgClass: Record<SectionBg, string> = {
 
 const maxWidthClass: Record<SectionMaxWidth, string> = {
   wide: 'max-w-[1120px]',
+  xwide: 'max-w-[1280px]',
   narrow: 'max-w-[880px]',
   prose: 'max-w-[720px]',
 }

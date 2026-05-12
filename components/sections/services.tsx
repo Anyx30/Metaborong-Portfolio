@@ -34,7 +34,7 @@ const FAQ_JSONLD = {
 
 export function ServicesSection() {
   return (
-    <Section bg="subtle" maxWidth="wide" id="services" aria-labelledby="services-heading">
+    <Section bg="subtle" maxWidth="wide" className="services-section-bridge" id="services" aria-labelledby="services-heading">
       <div className="lg:rounded-lg lg:border lg:border-border lg:bg-white">
         <div className="lg:border-b lg:border-border lg:pt-[64px] lg:pb-[48px] lg:px-[48px]">
           <div className="text-center max-w-[720px] mx-auto">

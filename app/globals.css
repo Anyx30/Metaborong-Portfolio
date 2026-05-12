@@ -543,7 +543,7 @@
 
 .problem-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.58fr) minmax(0, 1fr);
   align-items: center;
   gap: 24px;
   padding: 40px 32px;
@@ -563,7 +563,21 @@
     cursor: zoom-in;
   }
   .problem-chart-wrap:hover {
-    transform: scale(1.1);
+    transform: scale(1.12);
+  }
+}
+
+@media (min-width: 1536px) {
+  .problem-grid {
+    grid-template-columns: minmax(0, 1.68fr) minmax(0, 1fr);
+    gap: 30px;
+    padding: 44px 36px;
+  }
+  .problem-chart-wrap {
+    transform: scale(1.02);
+  }
+  .problem-chart-wrap:hover {
+    transform: scale(1.14);
   }
 }
 
@@ -760,6 +774,24 @@
   line-height: 1.55;
   color: rgba(255, 255, 252, 0.9);
   margin: 0;
+}
+
+/* Smooth boundary between Problem (bg) and Services (bg-subtle). */
+.services-section-bridge {
+  position: relative;
+  isolation: isolate;
+}
+
+.services-section-bridge::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: clamp(44px, 5vw, 72px);
+  transform: translateY(calc(-100% + 1px));
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg-subtle) 100%);
 }
 
 /* Responsive: tablet */

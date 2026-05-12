@@ -27,7 +27,7 @@ const faqPageJsonLd = {
 
 export function ProblemSection() {
   return (
-    <Section bg="default" maxWidth="wide" id="problem">
+    <Section bg="default" maxWidth="xwide" id="problem">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(definedTermJsonLd) }}
