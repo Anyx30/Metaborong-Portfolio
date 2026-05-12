@@ -146,7 +146,7 @@ The Figma direction is a **scroll-driven sticky-stack** with a 3D isometric sign
 
 ### 6. Hard constraints honored
 
-- SSR/SEO: H2, lede, AEO blockquote, all 11 visible child names + descriptions, all 3 hub-CTA links, all FAQ JSON-LD render server-side.
+- SSR/SEO: H2, lede, all 11 visible child names + descriptions, all 3 hub-CTA links, all FAQ JSON-LD render server-side. (Blockquote removed per deviation #7.)
 - ARIA: section uses `aria-labelledby="services-heading"`. Each pillar panel uses `<section aria-labelledby="pillar-<id>-heading">`. The sticky rail is `<nav aria-label="Service pillars">` with an `<ol>` of links anchoring to `#pillar-<id>`.
 - Mobile fallback: renders all 11 visible child names + descriptions in SSR HTML at every viewport.
 - `prefers-reduced-motion: reduce`: short-circuits the iso-block raise animation; all content visible immediately.
@@ -162,7 +162,7 @@ Sticky rail items are anchor links to `#pillar-web3`, `#pillar-ai-agents`, `#pil
 - [ ] All values use tokens (no raw hex/px outside scale).
 - [ ] Seven states implemented for pillar hub CTA and child-service links.
 - [ ] Focus-visible ring renders on keyboard nav for every interactive element.
-- [ ] Tab order: eyebrow → H2 → lede → AEO blockquote → pillar 01 (CTA → child 1 → child 2 …) → pillar 02 → pillar 03.
+- [ ] Tab order: eyebrow → H2 → lede → pillar 01 (CTA → child 1 → child 2 …) → pillar 02 → pillar 03.
 - [ ] Body copy contrast ≥4.5:1 (AA).
 - [ ] `color.text.tertiary` used only for tertiary/disabled.
 - [ ] Mobile fallback renders all child-service names + descriptions in SSR HTML.
@@ -170,7 +170,7 @@ Sticky rail items are anchor links to `#pillar-web3`, `#pillar-ai-agents`, `#pil
 - [ ] No infinite animations.
 - [ ] Tap targets ≥44×44px on touch.
 - [ ] Pillar colors match `services-data.ts`.
-- [ ] AEO blockquote in initial SSR HTML, not hidden behind interaction.
+- [x] Lede contains entity-definition opener + ecosystem fact (EVM/Solana/Cosmos) + accountability claim. _(Replaces the deleted-blockquote AEO surface — see deviation #7.)_
 - [ ] Deviations logged below (filled at step 8 once Figma is pulled).
 
 ## Parallel-session note

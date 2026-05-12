@@ -28,6 +28,10 @@ export function ServicesPillars() {
         }
       },
       {
+        // Crop the viewport to a 2vh-tall band straddling the vertical
+        // midline. An anchor "is intersecting" only while its midpoint
+        // is in that band — so the active pillar flips exactly when its
+        // assigned third of the 260vh scroll range crosses center-screen.
         rootMargin: '-49% 0px -49% 0px',
         threshold: 0,
       },
