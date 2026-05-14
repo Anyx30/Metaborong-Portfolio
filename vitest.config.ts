@@ -46,9 +46,15 @@ export default defineConfig({
       '.next/**',
       'e2e/**',
     ],
-    // Each route-handler test instantiates its own pg-mem DB; tests don't
+    // Each route-handler test instantiates its own database name on a
+    // mongodb-memory-server booted once per Vitest worker; tests don't
     // share state via globals, so parallel runs are safe.
     pool: 'threads',
+    // mongodb-memory-server boots take ~3-10s on a cold binary cache and
+    // ~1s warm. Bump the per-test cap so a slow first test inside a worker
+    // doesn't time out waiting for the server to start.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     coverage: {
       provider: 'v8',
       include: [

@@ -1,25 +1,26 @@
-// Sitemap tests — exercise the SUT against a pg-mem-backed posts table.
+// Sitemap tests — exercise the SUT against a mongodb-memory-server-backed
+// posts collection.
 //
 // listPublishedPosts() is the only data source, so we mock @/db/client and
-// seed posts directly via the Drizzle handle. Pagination is verified with
+// seed posts directly via the Db handle. Pagination is verified with
 // > PAGE_SIZE posts so the cursor-walk in app/sitemap.ts is actually
 // exercised (PAGE_SIZE = 50 in the SUT).
 
 import { describe, expect, it, beforeEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 
 import { createTestDb, type TestDbHandle } from '@/db/test-utils'
-import { posts as postsTable } from '@/db/schema'
+import type { PostDoc } from '@/db/schema'
 
 let testHandle: TestDbHandle
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 
@@ -27,16 +28,44 @@ async function loadSitemap() {
   return (await import('@/app/sitemap')).default
 }
 
+function makePost(overrides: Partial<PostDoc> & Pick<PostDoc, 'slug' | 'title'>): PostDoc {
+  const now = new Date()
+  return {
+    _id:                       randomUUID(),
+    excerpt:                   null,
+    status:                    'draft',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      [],
+    author_name:               'admin',
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
+    geo_variants:              {},
+    ai_readiness_score:        null,
+    ai_readiness_band:         null,
+    ai_readiness_report:       null,
+    ai_readiness_content_hash: null,
+    ai_readiness_checked_at:   null,
+    published_at:              null,
+    created_at:                now,
+    updated_at:                now,
+    ...overrides,
+  }
+}
+
 async function insertPublished(slug: string, title: string, updatedAt: Date) {
-  await testHandle.db.insert(postsTable).values({
+  await testHandle.db.collection<PostDoc>('posts').insertOne(makePost({
     slug,
     title,
     status: 'published',
-    author_name: 'admin',
     published_at: new Date(updatedAt.getTime() - 1000),
     updated_at: updatedAt,
     created_at: updatedAt,
-  })
+  }))
 }
 
 describe('app/sitemap.ts', () => {
@@ -67,12 +96,11 @@ describe('app/sitemap.ts', () => {
   })
 
   it('excludes draft posts', async () => {
-    await testHandle.db.insert(postsTable).values({
+    await testHandle.db.collection<PostDoc>('posts').insertOne(makePost({
       slug: 'still-cooking',
       title: 'Cooking',
       status: 'draft',
-      author_name: 'admin',
-    })
+    }))
     const sitemap = await loadSitemap()
     const out = await sitemap()
     const urls = out.map((e) => e.url)

@@ -1,20 +1,17 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 
-// SUT imports `import { db } from '../../../../db/client'`. The pg-mem-
-// backed test DB is resolved per-suite (not per-test) so we can sequence
-// rate-limit assertions without inter-suite leakage; each describe-block
-// gets a fresh handle by re-creating the mock + reimporting the route.
+// SUT imports `import { db } from '../../../../db/client'`. The
+// mongodb-memory-server-backed test DB is resolved per-test (each test
+// starts with a fresh handle so rate-limit counters don't leak between
+// describes).
 vi.mock('server-only', () => ({}))
 
 // We mock '@/db/client' here, then re-bind it to the per-test handle in
 // beforeEach. Vitest 4 resolves the alias to the same module ID as the
 // SUT's relative import, so this single mock is authoritative.
 vi.mock('@/db/client', () => {
-  // The actual db proxies to whatever createTestDb returns at the time of
-  // each route call. Captured via the testHandle module-level binding.
   return {
     get db() { return testHandle.db },
-    schema: undefined as unknown,
   }
 })
 
@@ -30,9 +27,9 @@ beforeAll(async () => {
   process.env.ADMIN_PASSWORD_HASH = await hashPassword('hunter2')
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   // Fresh in-memory DB per test so rate-limit counters don't leak.
-  testHandle = createTestDb()
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 

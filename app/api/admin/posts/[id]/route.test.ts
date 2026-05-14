@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
@@ -17,7 +17,7 @@ import {
   SESSION_COOKIE,
   createSession,
 } from '@/lib/auth'
-import { posts as postsTable } from '@/db/schema'
+import type { PostDoc } from '@/db/schema'
 
 let testHandle: TestDbHandle
 
@@ -25,8 +25,8 @@ beforeAll(() => {
   process.env.AUTH_SECRET = 'a'.repeat(48)
 })
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 
@@ -52,15 +52,36 @@ function authHeaders(c: { session: string; csrf: string }, withCsrf = true): Rec
   return headers
 }
 
-async function seedPost(opts: { slug?: string; status?: 'draft' | 'published'; published?: boolean } = {}) {
-  const r = await testHandle.db.insert(postsTable).values({
-    slug: opts.slug ?? 's',
-    title: 'T',
-    author_name: 'admin',
-    status: opts.status ?? 'draft',
-    published_at: opts.published ? new Date() : null,
-  }).returning()
-  return r[0]
+async function seedPost(opts: { slug?: string; status?: 'draft' | 'published'; published?: boolean } = {}): Promise<PostDoc> {
+  const now = new Date()
+  const doc: PostDoc = {
+    _id:                       randomUUID(),
+    slug:                      opts.slug ?? 's',
+    title:                     'T',
+    excerpt:                   null,
+    status:                    opts.status ?? 'draft',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      [],
+    author_name:               'admin',
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
+    geo_variants:              {},
+    ai_readiness_score:        null,
+    ai_readiness_band:         null,
+    ai_readiness_report:       null,
+    ai_readiness_content_hash: null,
+    ai_readiness_checked_at:   null,
+    published_at:              opts.published ? new Date() : null,
+    created_at:                now,
+    updated_at:                now,
+  }
+  await testHandle.db.collection<PostDoc>('posts').insertOne(doc)
+  return doc
 }
 
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) })
@@ -101,11 +122,11 @@ describe('GET /api/admin/posts/[id]', () => {
     const { GET } = await loadRoute()
     const res = await GET(
       new NextRequest('http://localhost/x', { headers: authHeaders(c, false) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.post.id).toBe(row.id)
+    expect(body.post.id).toBe(row._id)
     expect(body.post.status).toBe('draft')
   })
 })
@@ -123,7 +144,7 @@ describe('PATCH /api/admin/posts/[id]', () => {
         headers: authHeaders(c, false),
         body: JSON.stringify({ title: 'New' }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(403)
   })
@@ -151,7 +172,7 @@ describe('PATCH /api/admin/posts/[id]', () => {
         method: 'PATCH', headers: authHeaders(c),
         body: JSON.stringify({ title: 'Updated', tags: ['web3'] }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -168,7 +189,7 @@ describe('PATCH /api/admin/posts/[id]', () => {
         method: 'PATCH', headers: authHeaders(c),
         body: JSON.stringify({ status: 'published' }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(422)
     expect((await res.json()).code).toBe('VALIDATION_FAILED')
@@ -183,7 +204,7 @@ describe('PATCH /api/admin/posts/[id]', () => {
         method: 'PATCH', headers: authHeaders(c),
         body: JSON.stringify({ slug: 'changed' }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(422)
     const body = await res.json()
@@ -201,7 +222,7 @@ describe('PATCH /api/admin/posts/[id]', () => {
         method: 'PATCH', headers: authHeaders(c),
         body: JSON.stringify({ slug: 'new' }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     expect((await res.json()).post.slug).toBe('new')
@@ -217,7 +238,7 @@ describe('PATCH /api/admin/posts/[id]', () => {
         method: 'PATCH', headers: authHeaders(c),
         body: JSON.stringify({ slug: 'taken' }),
       }),
-      ctx(target.id),
+      ctx(target._id),
     )
     expect(res.status).toBe(422)
     expect((await res.json()).code).toBe('SLUG_CONFLICT')
@@ -246,7 +267,7 @@ describe('DELETE /api/admin/posts/[id]', () => {
     const { DELETE } = await loadRoute()
     const res = await DELETE(
       new NextRequest('http://localhost/x', { method: 'DELETE', headers: authHeaders(c, false) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(403)
   })
@@ -267,12 +288,12 @@ describe('DELETE /api/admin/posts/[id]', () => {
     const { DELETE } = await loadRoute()
     const res = await DELETE(
       new NextRequest('http://localhost/x', { method: 'DELETE', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ ok: true })
     // Row really gone
-    const remaining = await testHandle.db.select().from(postsTable)
+    const remaining = await testHandle.db.collection<PostDoc>('posts').find({}).toArray()
     expect(remaining.length).toBe(0)
   })
 })

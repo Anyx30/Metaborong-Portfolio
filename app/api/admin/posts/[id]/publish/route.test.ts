@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
@@ -15,7 +15,7 @@ import {
   SESSION_COOKIE,
   createSession,
 } from '@/lib/auth'
-import { posts as postsTable } from '@/db/schema'
+import type { PostDoc } from '@/db/schema'
 
 let testHandle: TestDbHandle
 
@@ -23,8 +23,8 @@ beforeAll(() => {
   process.env.AUTH_SECRET = 'a'.repeat(48)
 })
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 
@@ -44,15 +44,36 @@ function authHeaders(c: { session: string; csrf: string }, withCsrf = true): Rec
 
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) })
 
-async function seedPost(opts: { slug?: string; status?: 'draft' | 'published'; publishedAt?: Date | null } = {}) {
-  const r = await testHandle.db.insert(postsTable).values({
-    slug: opts.slug ?? 's',
-    title: 'T',
-    author_name: 'admin',
-    status: opts.status ?? 'draft',
-    published_at: opts.publishedAt ?? null,
-  }).returning()
-  return r[0]
+async function seedPost(opts: { slug?: string; status?: 'draft' | 'published'; publishedAt?: Date | null } = {}): Promise<PostDoc> {
+  const now = new Date()
+  const doc: PostDoc = {
+    _id:                       randomUUID(),
+    slug:                      opts.slug ?? 's',
+    title:                     'T',
+    excerpt:                   null,
+    status:                    opts.status ?? 'draft',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      [],
+    author_name:               'admin',
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
+    geo_variants:              {},
+    ai_readiness_score:        null,
+    ai_readiness_band:         null,
+    ai_readiness_report:       null,
+    ai_readiness_content_hash: null,
+    ai_readiness_checked_at:   null,
+    published_at:              opts.publishedAt ?? null,
+    created_at:                now,
+    updated_at:                now,
+  }
+  await testHandle.db.collection<PostDoc>('posts').insertOne(doc)
+  return doc
 }
 
 async function loadPublish() {
@@ -71,7 +92,7 @@ describe('POST /api/admin/posts/[id]/publish', () => {
     const { POST } = await loadPublish()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c, false) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(403)
   })
@@ -104,7 +125,7 @@ describe('POST /api/admin/posts/[id]/publish', () => {
     const { POST } = await loadPublish()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -120,7 +141,7 @@ describe('POST /api/admin/posts/[id]/publish', () => {
     const { POST } = await loadPublish()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -134,7 +155,7 @@ describe('POST /api/admin/posts/[id]/publish', () => {
     const { POST } = await loadPublish()
     await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     const calls = (revalidatePath as unknown as ReturnType<typeof vi.fn>).mock.calls
     expect(calls.some(([p]) => p === '/blog')).toBe(true)
@@ -151,7 +172,7 @@ describe('POST /api/admin/posts/[id]/unpublish', () => {
     const { POST } = await loadUnpublish()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c, false) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(403)
   })
@@ -173,7 +194,7 @@ describe('POST /api/admin/posts/[id]/unpublish', () => {
     const { POST } = await loadUnpublish()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -189,7 +210,7 @@ describe('POST /api/admin/posts/[id]/unpublish', () => {
     const { POST } = await loadUnpublish()
     await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     const calls = (revalidatePath as unknown as ReturnType<typeof vi.fn>).mock.calls
     expect(calls.some(([p]) => p === '/blog')).toBe(true)

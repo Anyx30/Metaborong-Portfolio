@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { randomUUID } from 'node:crypto'
 import { createTestDb } from '@/db/test-utils'
-import { posts } from '@/db/schema'
+import type { PostDoc } from '@/db/schema'
 import {
   getPostBySlug,
   getDraftPostById,
@@ -12,7 +13,7 @@ import {
   slugifyTitle,
 } from '@/lib/posts'
 
-// Helper: insert a post and return the row.
+// Helper: insert a post doc and return it.
 type InsertOpts = {
   slug: string
   title: string
@@ -22,19 +23,37 @@ type InsertOpts = {
   geoVariants?: Record<string, unknown>
   excerpt?: string
 }
-async function insertPost(db: ReturnType<typeof createTestDb>['db'], opts: InsertOpts) {
-  const r = await db.insert(posts).values({
-    slug: opts.slug,
-    title: opts.title,
-    status: opts.status ?? 'draft',
-    tags: opts.tags ?? [],
-    author_name: 'admin',
-    excerpt: opts.excerpt ?? null,
-    published_at: opts.publishedAt ?? null,
+async function insertPost(db: Awaited<ReturnType<typeof createTestDb>>['db'], opts: InsertOpts): Promise<PostDoc> {
+  const now = new Date()
+  const doc: PostDoc = {
+    _id:                       randomUUID(),
+    slug:                      opts.slug,
+    title:                     opts.title,
+    excerpt:                   opts.excerpt ?? null,
+    status:                    opts.status ?? 'draft',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      opts.tags ?? [],
+    author_name:               'admin',
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    geo_variants: (opts.geoVariants ?? {}) as any,
-  }).returning()
-  return r[0]
+    geo_variants:              (opts.geoVariants ?? {}) as any,
+    ai_readiness_score:        null,
+    ai_readiness_band:         null,
+    ai_readiness_report:       null,
+    ai_readiness_content_hash: null,
+    ai_readiness_checked_at:   null,
+    published_at:              opts.publishedAt ?? null,
+    created_at:                now,
+    updated_at:                now,
+  }
+  await db.collection<PostDoc>('posts').insertOne(doc)
+  return doc
 }
 
 describe('slugifyTitle', () => {
@@ -62,7 +81,7 @@ describe('slugifyTitle', () => {
 
 describe('rowToPost / rowToSummary', () => {
   it('emits ISO strings for timestamps', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     const row = await insertPost(db, {
       slug: 'a', title: 'A', publishedAt: new Date('2026-01-01T00:00:00Z'), status: 'published',
     })
@@ -73,7 +92,7 @@ describe('rowToPost / rowToSummary', () => {
   })
 
   it('summary marks has_geo_variants from the column', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     const a = await insertPost(db, { slug: 'a', title: 'A' })
     const b = await insertPost(db, { slug: 'b', title: 'B', geoVariants: { US: { title: 'x' } } })
     expect(rowToSummary(a).has_geo_variants).toBe(false)
@@ -83,7 +102,7 @@ describe('rowToPost / rowToSummary', () => {
 
 describe('getPostBySlug', () => {
   it('returns a published post', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, { slug: 'hello', title: 'Hello', status: 'published', publishedAt: new Date() })
     const post = await getPostBySlug('hello', 'OTHER', db)
     expect(post?.slug).toBe('hello')
@@ -91,18 +110,18 @@ describe('getPostBySlug', () => {
   })
 
   it('returns null for a draft post (never exposes drafts publicly)', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, { slug: 'draft', title: 'Draft', status: 'draft' })
     expect(await getPostBySlug('draft', 'OTHER', db)).toBeNull()
   })
 
   it('returns null for a missing slug', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     expect(await getPostBySlug('nope', 'OTHER', db)).toBeNull()
   })
 
   it('merges US variant when region=US and variant exists', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, {
       slug: 'geo', title: 'Base', status: 'published', publishedAt: new Date(),
       geoVariants: { US: { title: 'US title', excerpt: 'US excerpt' } },
@@ -113,7 +132,7 @@ describe('getPostBySlug', () => {
   })
 
   it('falls back to base when region=OTHER even if US variant exists', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, {
       slug: 'geo', title: 'Base', status: 'published', publishedAt: new Date(),
       geoVariants: { US: { title: 'US title' } },
@@ -125,7 +144,7 @@ describe('getPostBySlug', () => {
 
 describe('listPublishedPosts', () => {
   it('orders by published_at DESC', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, {
       slug: 'old', title: 'Old', status: 'published',
       publishedAt: new Date('2024-01-01'),
@@ -143,7 +162,7 @@ describe('listPublishedPosts', () => {
   })
 
   it('excludes drafts', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, {
       slug: 'pub', title: 'Pub', status: 'published', publishedAt: new Date(),
     })
@@ -154,7 +173,7 @@ describe('listPublishedPosts', () => {
   })
 
   it('respects tag filter', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, {
       slug: 'web3', title: 'A', status: 'published', publishedAt: new Date(),
       tags: ['web3'],
@@ -172,7 +191,7 @@ describe('listPublishedPosts', () => {
   })
 
   it('paginates with hasMore set correctly', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     for (let i = 0; i < 7; i++) {
       await insertPost(db, {
         slug: `p${i}`, title: `P${i}`, status: 'published',
@@ -192,7 +211,7 @@ describe('listPublishedPosts', () => {
 
 describe('listAllPublishedForLlms', () => {
   it('returns only published posts ordered by published_at DESC', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, {
       slug: 'old', title: 'Old', status: 'published',
       publishedAt: new Date('2024-01-01'),
@@ -213,7 +232,7 @@ describe('listAllPublishedForLlms', () => {
   })
 
   it('returns the narrow Pick<> shape with no extra fields (no geo_variants leak)', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, {
       slug: 'x', title: 'X', status: 'published',
       publishedAt: new Date('2026-01-01'),
@@ -243,7 +262,7 @@ describe('listAllPublishedForLlms', () => {
   })
 
   it('returns an empty list for an empty catalog', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     const list = await listAllPublishedForLlms(db)
     expect(list).toEqual([])
   })
@@ -251,22 +270,22 @@ describe('listAllPublishedForLlms', () => {
 
 describe('getDraftPostById', () => {
   it('returns drafts (admin caller is responsible for auth)', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     const row = await insertPost(db, { slug: 'd', title: 'D', status: 'draft' })
-    const post = await getDraftPostById(row.id, db)
-    expect(post?.id).toBe(row.id)
+    const post = await getDraftPostById(row._id, db)
+    expect(post?.id).toBe(row._id)
     expect(post?.status).toBe('draft')
   })
 
   it('returns null for a missing id', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     expect(await getDraftPostById('00000000-0000-4000-a000-000000000000', db)).toBeNull()
   })
 })
 
 describe('listAllPostsForAdmin', () => {
   it('lists every post when status="all"', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, { slug: 'a', title: 'A', status: 'draft' })
     await insertPost(db, { slug: 'b', title: 'B', status: 'published', publishedAt: new Date() })
     const all = await listAllPostsForAdmin('all', db)
@@ -274,7 +293,7 @@ describe('listAllPostsForAdmin', () => {
   })
 
   it('filters by status', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     await insertPost(db, { slug: 'a', title: 'A', status: 'draft' })
     await insertPost(db, { slug: 'b', title: 'B', status: 'published', publishedAt: new Date() })
     const drafts    = await listAllPostsForAdmin('draft', db)
@@ -284,7 +303,7 @@ describe('listAllPostsForAdmin', () => {
   })
 
   it('orders by updated_at DESC', async () => {
-    const { db } = createTestDb()
+    const { db } = await createTestDb()
     const a = await insertPost(db, { slug: 'a', title: 'A' })
     // Slight delay to ensure distinct updated_at values
     await new Promise((r) => setTimeout(r, 5))
