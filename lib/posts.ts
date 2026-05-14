@@ -12,12 +12,13 @@
 //     the standalone preview route. The CALLER is responsible for the
 //     admin auth check; this helper does not gate by status.
 //
-// All functions accept an optional Drizzle DB handle so route tests can
-// inject a pg-mem-backed client without monkey-patching the global.
+// All functions accept an optional MongoDB Db handle so route tests can
+// inject an isolated mongodb-memory-server-backed Db without monkey-
+// patching the global. Pattern preserved from the M1 Drizzle design.
 
-import { and, desc, eq, sql } from 'drizzle-orm'
+import type { Db } from 'mongodb'
 import { db as defaultDb } from '../db/client'
-import { posts, type PostRow } from '../db/schema'
+import type { PostDoc } from '../db/schema'
 import {
   type Post,
   type PostSummary,
@@ -25,21 +26,22 @@ import {
 } from './blog-schema'
 import { mergeVariant } from './geo'
 
-// Drizzle's typed db is generic; for the helper signature we use a
-// structural type so route tests can pass in a pg-mem-backed client.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DbLike = any
+type DbLike = Db
+
+function postsOf(handle: DbLike) {
+  return handle.collection<PostDoc>('posts')
+}
 
 // ── row → Post mapping ───────────────────────────────────────────────────────
 
 /**
- * Convert a Drizzle row into the Post wire shape (ISO timestamps, no
+ * Convert a Mongo document into the Post wire shape (ISO timestamps, no
  * undefined fields). Centralised so list / single / patch endpoints all
- * emit the same payload.
+ * emit the same payload. `_id` becomes the wire field `id`.
  */
-export function rowToPost(row: PostRow): Post {
+export function rowToPost(row: PostDoc): Post {
   return {
-    id:                       row.id,
+    id:                       row._id,
     slug:                     row.slug,
     title:                    row.title,
     excerpt:                  row.excerpt ?? null,
@@ -56,7 +58,7 @@ export function rowToPost(row: PostRow): Post {
     canonical_url:            row.canonical_url ?? null,
     geo_variants:             row.geo_variants,
     ai_readiness_score:       row.ai_readiness_score ?? null,
-    // DB column is `text` (free-form); the wire shape narrows to the
+    // DB field is free-form text; the wire shape narrows to the
     // strong/adequate/weak enum. Cast at the boundary — the route handler
     // only ever writes a value emitted by bandFor().
     ai_readiness_band:        (row.ai_readiness_band ?? null) as Post['ai_readiness_band'],
@@ -74,7 +76,7 @@ function toIso(d: Date | string | null | undefined): string | null {
   return d
 }
 
-export function rowToSummary(row: PostRow): PostSummary {
+export function rowToSummary(row: PostDoc): PostSummary {
   // Canonical chip order on the dashboard: US first, EU second. Regions with
   // empty payloads (e.g. `{ US: {} }`) are skipped — the variant only
   // counts if at least one field actually overrides base.
@@ -85,7 +87,7 @@ export function rowToSummary(row: PostRow): PostSummary {
     if (payload && Object.keys(payload).length > 0) variantRegions.push(region)
   }
   return {
-    id:                  row.id,
+    id:                  row._id,
     slug:                row.slug,
     title:               row.title,
     status:              row.status as PostSummary['status'],
@@ -111,12 +113,7 @@ export async function getPostBySlug(
   region: GeoRegion,
   dbHandle: DbLike = defaultDb,
 ): Promise<Post | null> {
-  const rows = await dbHandle
-    .select()
-    .from(posts)
-    .where(and(eq(posts.slug, slug), eq(posts.status, 'published')))
-    .limit(1)
-  const row = rows[0] as PostRow | undefined
+  const row = await postsOf(dbHandle).findOne({ slug, status: 'published' })
   if (!row) return null
   return mergeVariant(rowToPost(row), region)
 }
@@ -135,10 +132,9 @@ export interface ListResult {
 
 /**
  * Paginated list of published posts ordered by published_at DESC. tag
- * filter uses a GIN-indexed array containment check on posts.tags. The
- * total comes from a separate row scan; for v1 the catalog is small
- * enough that a small bounded scan is fine — switch to keyset pagination
- * (or a maintained counter) when post count grows past ~1000.
+ * filter uses Mongo's natural multikey index on `tags`. For v1 the
+ * catalog is small enough that a `countDocuments` per request is fine —
+ * switch to a maintained counter when post count grows past ~10k.
  */
 export async function listPublishedPosts(
   opts: ListOptions = {},
@@ -148,33 +144,16 @@ export async function listPublishedPosts(
   const perPage = Math.min(50, Math.max(1, Math.floor(opts.perPage ?? 12)))
   const offset = (page - 1) * perPage
 
-  const filters = [eq(posts.status, 'published')]
-  if (opts.tag) {
-    // `$1 = ANY(tags)` is functionally equivalent to `tags @> ARRAY[$1]`
-    // and uses the GIN index for tag matches. Using `= ANY` avoids
-    // serializing a single-element JS array as PG's `{tag}` text literal,
-    // which the test driver (pg-mem) parses differently from real PG.
-    filters.push(sql`${opts.tag} = ANY(${posts.tags})`)
-  }
-  const whereClause = filters.length > 1 ? and(...filters) : filters[0]
+  const filter: Record<string, unknown> = { status: 'published' }
+  if (opts.tag) filter.tags = opts.tag
 
-  const rows = (await dbHandle
-    .select()
-    .from(posts)
-    .where(whereClause)
-    .orderBy(desc(posts.published_at))
-    .limit(perPage)
-    .offset(offset)) as PostRow[]
+  const coll = postsOf(dbHandle)
 
-  // Bounded total scan — fetch only the ids of matching rows so we can
-  // return an accurate total + hasMore without an aggregate query (which
-  // doesn't survive pg-mem in tests; see M1 BE handoff §9.6).
-  const totalRows = (await dbHandle
-    .select({ id: posts.id })
-    .from(posts)
-    .where(whereClause)) as Array<{ id: string }>
+  const [rows, total] = await Promise.all([
+    coll.find(filter).sort({ published_at: -1 }).skip(offset).limit(perPage).toArray(),
+    coll.countDocuments(filter),
+  ])
 
-  const total = totalRows.length
   const hasMore = offset + rows.length < total
 
   return {
@@ -198,12 +177,11 @@ export async function listPublishedForFeed(
   'slug' | 'title' | 'excerpt' | 'tags' | 'content_json' | 'published_at'
 >>> {
   const cap = Math.min(200, Math.max(1, Math.floor(limit)))
-  const rows = (await dbHandle
-    .select()
-    .from(posts)
-    .where(eq(posts.status, 'published'))
-    .orderBy(desc(posts.published_at))
-    .limit(cap)) as PostRow[]
+  const rows = await postsOf(dbHandle)
+    .find({ status: 'published' })
+    .sort({ published_at: -1 })
+    .limit(cap)
+    .toArray()
   return rows.map((row) => ({
     slug:         row.slug,
     title:        row.title,
@@ -220,7 +198,7 @@ export async function listPublishedForFeed(
  * complete catalog in a single response so LLM crawlers can ground
  * against everything in one fetch (PRD §5.7 GEO bundle).
  *
- * Drafts are filtered out at the SQL layer; nothing leaks except what
+ * Drafts are filtered out at the query layer; nothing leaks except what
  * /blog already exposes publicly.
  */
 export async function listAllPublishedForLlms(
@@ -229,11 +207,10 @@ export async function listAllPublishedForLlms(
   'slug' | 'title' | 'excerpt' | 'meta_description' |
   'published_at' | 'updated_at' | 'author_name' | 'content_json'
 >>> {
-  const rows = (await dbHandle
-    .select()
-    .from(posts)
-    .where(eq(posts.status, 'published'))
-    .orderBy(desc(posts.published_at))) as PostRow[]
+  const rows = await postsOf(dbHandle)
+    .find({ status: 'published' })
+    .sort({ published_at: -1 })
+    .toArray()
   return rows.map((row) => ({
     slug:             row.slug,
     title:            row.title,
@@ -256,12 +233,7 @@ export async function getDraftPostById(
   id: string,
   dbHandle: DbLike = defaultDb,
 ): Promise<Post | null> {
-  const rows = await dbHandle
-    .select()
-    .from(posts)
-    .where(eq(posts.id, id))
-    .limit(1)
-  const row = rows[0] as PostRow | undefined
+  const row = await postsOf(dbHandle).findOne({ _id: id })
   return row ? rowToPost(row) : null
 }
 
@@ -273,12 +245,11 @@ export async function listAllPostsForAdmin(
   status: 'draft' | 'published' | 'all' = 'all',
   dbHandle: DbLike = defaultDb,
 ): Promise<PostSummary[]> {
-  const where = status === 'all' ? undefined : eq(posts.status, status)
-  const rows = (await dbHandle
-    .select()
-    .from(posts)
-    .where(where)
-    .orderBy(desc(posts.updated_at))) as PostRow[]
+  const filter: Record<string, unknown> = status === 'all' ? {} : { status }
+  const rows = await postsOf(dbHandle)
+    .find(filter)
+    .sort({ updated_at: -1 })
+    .toArray()
   return rows.map(rowToSummary)
 }
 
@@ -307,19 +278,21 @@ export function slugifyTitle(title: string): string {
   return slug || 'untitled'
 }
 
-// Used by the SQL "duplicate-key" error catch in route handlers.
-export const PG_UNIQUE_VIOLATION_CODE = '23505'
+// MongoDB duplicate-key error code. The native driver surfaces it as
+// `err.code === 11000` on either a MongoServerError or a MongoBulkWriteError.
+export const MONGO_DUPLICATE_KEY_CODE = 11000
 
-// drizzle wraps pg errors in DrizzleQueryError({ query, params, cause }),
-// so the PG SQLSTATE code lives one level down. Walk a short cause chain
-// so callers don't have to reach in themselves.
+/**
+ * Walk a short cause chain (the driver occasionally wraps the original
+ * error) to recognise a unique-index violation. Used by the slug-conflict
+ * branch in the POST/PATCH /api/admin/posts routes.
+ */
 export function isUniqueViolation(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let cur: any = err
   for (let i = 0; i < 5 && cur; i++) {
-    if (cur.code === PG_UNIQUE_VIOLATION_CODE) return true
-    if (cur.data && cur.data.code === PG_UNIQUE_VIOLATION_CODE) return true
+    if (cur.code === MONGO_DUPLICATE_KEY_CODE) return true
     cur = cur.cause
   }
   return false
