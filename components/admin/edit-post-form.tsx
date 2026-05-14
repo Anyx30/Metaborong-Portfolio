@@ -145,7 +145,12 @@ function validate(state: FormState, blocks: Block[]): ValidationResult {
 // nothing remains. Block overrides survive only when they carry a non-empty
 // `text` or `alt` for at least one block id. Returns a fresh GeoVariants
 // object — never mutates the input.
-function pruneVariants(variants: GeoVariants): GeoVariants {
+//
+// `liveBlockIds`, when supplied, GCs orphan `block_overrides[id]` entries
+// whose underlying block has been deleted from `content_json`. Callers that
+// don't have a parsed Block[] yet (e.g. autosave-pre-validation paths) can
+// omit the set to preserve the prior behavior of keeping every override.
+function pruneVariants(variants: GeoVariants, liveBlockIds?: Set<string>): GeoVariants {
   const out: GeoVariants = {}
   for (const region of ['US', 'EU'] as const) {
     const payload = variants[region]
@@ -160,6 +165,7 @@ function pruneVariants(variants: GeoVariants): GeoVariants {
     if (payload.block_overrides) {
       const cleanedBlocks: Record<string, { text?: string; alt?: string }> = {}
       for (const [blockId, override] of Object.entries(payload.block_overrides)) {
+        if (liveBlockIds && !liveBlockIds.has(blockId)) continue
         const cleaned: { text?: string; alt?: string } = {}
         if (override.text && override.text !== '') cleaned.text = override.text
         if (override.alt && override.alt !== '') cleaned.alt = override.alt
@@ -237,7 +243,10 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
     const baseline = postToFormState(post)
     if (JSON.stringify(state) !== JSON.stringify(baseline)) return true
     if (JSON.stringify(blocks) !== JSON.stringify(post.content_json)) return true
-    const cleaned = pruneVariants(variants)
+    // Match runSave's GC behavior so deleting an overridden block flips
+    // dirty=true, not just the next autosave that lands the prune.
+    const liveBlockIds = new Set(blocks.map((b) => b.id))
+    const cleaned = pruneVariants(variants, liveBlockIds)
     const baseVariants = post.geo_variants ?? {}
     if (JSON.stringify(cleaned) !== JSON.stringify(baseVariants)) return true
     return false
@@ -370,7 +379,8 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
       return false
     }
     setSave({ kind: 'saving' })
-    const cleanedVariants = pruneVariants(variants)
+    const liveBlockIds = new Set((validation.parsedContent ?? []).map((b) => b.id))
+    const cleanedVariants = pruneVariants(variants, liveBlockIds)
     const patch: Partial<Post> = {
       title:             state.title,
       excerpt:           state.excerpt.trim() || null,
@@ -476,6 +486,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
     setDeleteError(null)
     try {
       await api.delete<{ ok: true }>(`/api/admin/posts/${post.id}`)
+      try { window.localStorage.removeItem(`mb.editor.variant.${post.id}`) } catch { /* private mode */ }
       startTransition(() => {
         router.push('/admin')
         router.refresh()

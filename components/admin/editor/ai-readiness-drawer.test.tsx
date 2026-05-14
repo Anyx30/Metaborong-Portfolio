@@ -107,6 +107,43 @@ describe('<AiReadinessDrawer />', () => {
     expect(banner.textContent ?? '').toMatch(/Try again at \d{2}:\d{2}/)
   })
 
+  it('rate-limited banner renders the exact HH:MM derived from Retry-After', async () => {
+    // Pins the wall clock so the drawer's `new Date(Date.now() + retryAfter*1000)`
+    // computation lands on a known local-time HH:MM, then asserts the banner
+    // matches that exact pair. Catches off-by-one factor bugs (e.g. ms vs s)
+    // that the format-only `\d{2}:\d{2}` regex above would let through.
+    // `shouldAdvanceTime: true` keeps testing-library's findByTestId polling
+    // from stalling on fake timers.
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      vi.setSystemTime(new Date('2026-05-08T14:00:00Z'))
+      apiPost.mockRejectedValueOnce(
+        new ApiError({ status: 429, code: 'RATE_LIMITED', error: 'Too many', retryAfter: 1800 }),
+      )
+      render(
+        <AiReadinessDrawer
+          open
+          onClose={() => {}}
+          post={{ id: 'p1', title: 'Hello', status: 'published' }}
+          initialReport={null}
+        />,
+      )
+
+      const banner = await screen.findByTestId('ai-readiness-banner-rate-limited')
+
+      // Mirror the drawer's own math (line 192-202) in the runner's local TZ.
+      // 14:00:00Z + 1800s = 14:30:00Z; the banner uses .getHours() /
+      // .getMinutes() which read local time, so derive the expected pair the
+      // same way to stay TZ-agnostic.
+      const expected = new Date(Date.now() + 1800 * 1000)
+      const hh = expected.getHours().toString().padStart(2, '0')
+      const mm = expected.getMinutes().toString().padStart(2, '0')
+      expect(banner.textContent ?? '').toContain(`Try again at ${hh}:${mm}`)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('shows a "publish first" banner with a Publish-now button on POST_NOT_PUBLISHED', async () => {
     apiPost.mockRejectedValueOnce(
       new ApiError({ status: 409, code: 'POST_NOT_PUBLISHED', error: 'Score is only available after publish in v1.5.' }),
@@ -142,6 +179,11 @@ describe('<AiReadinessDrawer />', () => {
     )
     const banner = await screen.findByTestId('ai-readiness-banner-mcp-disabled')
     expect(banner).toHaveTextContent(/service not configured/i)
+    // Per the M7 Tester N1 defect — the rendered banner must not name any
+    // env var to the admin. Rule out both the AI_READINESS_ prefix and
+    // the broader MCP_ token used elsewhere in the wire contract.
+    expect(banner.textContent ?? '').not.toMatch(/AI_READINESS_/i)
+    expect(banner.textContent ?? '').not.toMatch(/MCP_/)
   })
 
   it('Re-scan button fires a fresh POST when a report is already shown', async () => {
@@ -177,6 +219,42 @@ describe('<AiReadinessDrawer />', () => {
       expect(apiPost).toHaveBeenCalledWith('/api/admin/posts/p1/ai-readiness')
     })
     expect(await screen.findByTestId('ai-readiness-overall-score')).toHaveTextContent('78')
+  })
+
+  it('autoScanFiredRef latch survives same-prop re-render; close+reopen with cached state stays no-op', async () => {
+    // Mount with open=true → POST fires once. A re-render with the same
+    // open=true and the same post must NOT re-fire (latch held). Closing
+    // (open=false) returns null but doesn't unmount the component instance,
+    // so when open flips back to true the local state is still 'ready' and
+    // the auto-scan effect bails on `state.kind === 'ready'` — no second
+    // POST. Soft-prompt's "Score" CTA passes initialReport=null on a fresh
+    // *mount*; that path is covered separately by the existing
+    // 'auto-fires a POST when opened without an initialReport' case.
+    apiPost.mockResolvedValueOnce(makeResponse())
+    const props = {
+      onClose: () => {},
+      post: { id: 'p1', title: 'Hello', status: 'published' as const },
+      initialReport: null,
+    }
+
+    const { rerender } = render(<AiReadinessDrawer open {...props} />)
+    await waitFor(() => {
+      expect(apiPost).toHaveBeenCalledWith('/api/admin/posts/p1/ai-readiness')
+    })
+    expect(apiPost).toHaveBeenCalledTimes(1)
+
+    // Re-render with identical props — latch must hold; no second POST.
+    rerender(<AiReadinessDrawer open {...props} />)
+    await act(async () => { await Promise.resolve() })
+    expect(apiPost).toHaveBeenCalledTimes(1)
+
+    // Close → reopen on the same instance: latch resets, but the cached
+    // 'ready' state from the first scan persists, so the auto-scan effect
+    // bails on `state.kind === 'ready'` and POST stays at 1.
+    rerender(<AiReadinessDrawer open={false} {...props} />)
+    rerender(<AiReadinessDrawer open {...props} />)
+    await act(async () => { await Promise.resolve() })
+    expect(apiPost).toHaveBeenCalledTimes(1)
   })
 
   it('does not render at all when open=false', () => {

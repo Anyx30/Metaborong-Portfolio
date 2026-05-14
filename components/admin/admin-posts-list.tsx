@@ -299,6 +299,7 @@ function DeleteConfirmModal({
     setBusy(true)
     try {
       await api.delete<{ ok: true }>(`/api/admin/posts/${target.id}`)
+      try { window.localStorage.removeItem(`mb.editor.variant.${target.id}`) } catch { /* private mode */ }
       onDeleted(target.id)
     } catch (err) {
       const msg =
