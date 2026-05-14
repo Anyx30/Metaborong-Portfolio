@@ -20,7 +20,7 @@ export function ComparisonSection() {
             <thead>
               <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                 <th style={{ textAlign: 'left', padding: '12px 16px', color: '#999999', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', width: '22%' }} />
-                <th style={{ textAlign: 'left', padding: '12px 16px', color: '#204AF8', fontSize: 13, fontWeight: 700, width: '26%' }}>Metaborong</th>
+                <th style={{ textAlign: 'left', padding: '12px 16px', color: '#296ff0', fontSize: 13, fontWeight: 700, width: '26%' }}>Metaborong</th>
                 <th style={{ textAlign: 'left', padding: '12px 16px', color: '#676767', fontSize: 13, fontWeight: 600, width: '26%' }}>Large Web3 Agency</th>
                 <th style={{ textAlign: 'left', padding: '12px 16px', color: '#676767', fontSize: 13, fontWeight: 600, width: '26%' }}>Freelance Team</th>
               </tr>

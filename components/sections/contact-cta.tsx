@@ -9,7 +9,7 @@ export function ContactCtaSection() {
           Tell us what you are building. We will tell you how we would approach it — no pitch deck, no fluff, no commitment required.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
-          <a href="mailto:contact@metaborong.com?subject=New%20project%20inquiry" style={{ display: 'inline-flex', alignItems: 'stretch', background: '#204AF8', color: '#fff', fontSize: 15, fontWeight: 600, textDecoration: 'none', letterSpacing: '-0.01em', fontFeatureSettings: '"tnum"' }}>
+          <a href="mailto:contact@metaborong.com?subject=New%20project%20inquiry" style={{ display: 'inline-flex', alignItems: 'stretch', background: '#296ff0', color: '#fff', fontSize: 15, fontWeight: 600, textDecoration: 'none', letterSpacing: '-0.01em', fontFeatureSettings: '"tnum"' }}>
             <span style={{ padding: '12px 22px' }}>Email us</span>
             <span aria-hidden="true" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.10)', borderLeft: '1px solid rgba(255,255,255,0.15)' }}>→</span>
           </a>

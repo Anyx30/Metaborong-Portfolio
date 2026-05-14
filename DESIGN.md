@@ -114,7 +114,7 @@ canonical.
 #### Brand
 | Alias                 | CSS var          | Hex       | Use                                          |
 |-----------------------|------------------|-----------|----------------------------------------------|
-| `color.brand.primary` | `--color-brand`  | `#204AF8` | Web3 pillar, primary CTA, hub                |
+| `color.brand.primary` | `--color-brand`  | `#296ff0` | Web3 pillar, primary CTA, hub                |
 | `color.brand.accent`  | `--color-accent` | `#F6851B` | Product Studio pillar, HUD                   |
 | `color.brand.ai`      | `--color-ai`     | `#10b981` | AI Agents pillar (only)                      |
 
@@ -439,6 +439,7 @@ Run before marking a section shipped.
 
 | Date       | Decision                                                                                                                                                  | Rationale                                                                                  |
 |------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| 2026-05-14 | Brand blue refreshed from `#204AF8` → `#296ff0` (Figma source: file `mQsbMuw0spVgIu7jXirr3o`, node `60:910`, "Let's Talk" button + 1px outer ring). Token `--color-brand` updated; Web3 pillar follows. Replaces all hardcoded `#204AF8` hex and matching `rgba(32,74,248,*)` occurrences across components, globals.css, OG image. | Align live build to current Figma source-of-truth. New blue is lighter, more cyan-leaning. Web3 pillar stays unified with brand. |
 | 2026-05-06 | DESIGN.md polish pass — semantic alias layer, A11y section, motion duration tokens, shadow scale, surface-raised, focus-visible token, seven-state matrix, Do/Don't rules, Card radius rule, QA checklist, authoring workflow. | Doc craft upgrade benchmarked against supermemory.ai; tightens authoring discipline without visual drift. |
 | 2026-05-06 | DESIGN.md created from shipped state                                                                                                                      | Single source of truth was missing; consolidated tokens, primitives, motion grammar.        |
 | 2026-05-05 | Services right column adopts boxing pattern (1px grey + colored bar from H2)                                                                              | supermemory.ai-style enclosure for sharpness; pillar accent moves into panel only.          |

@@ -32,22 +32,37 @@ interface LogoProps {
   href?: string
 }
 
+// `sm` is the navbar variant: Figma node 60:951 (file mQsbMuw0spVgIu7jXirr3o).
+// Mobile baseline 36px container / 22px wordmark; bumps to 44px / 26px at lg+
+// to anchor the nav at desktop widths. md/lg buckets unchanged.
+// Pixel-arbitrary values used because the project's @theme spacing scale
+// overrides Tailwind defaults (e.g., --spacing-8 = 64px, not 32px).
 const containerSizes: Record<LogoSize, string> = {
-  sm: 'w-7 h-7',
-  md: 'w-9 h-9',
-  lg: 'w-12 h-12',
+  sm: 'w-[36px] h-[36px] lg:w-[44px] lg:h-[44px]',
+  md: 'w-[36px] h-[36px]',
+  lg: 'w-[48px] h-[48px]',
 }
 const iconSizes: Record<LogoSize, string> = {
-  sm: 'w-4 h-[9px]',
+  sm: 'w-[20px] h-[12px] lg:w-[25px] lg:h-[14px]',
   md: 'w-5 h-[11px]',
   lg: 'w-7 h-[16px]',
 }
 const textSizes: Record<LogoSize, string> = {
-  sm: 'text-sm',
+  sm: 'text-[22px] lg:text-[26px]',
   md: 'text-base',
   lg: 'text-xl',
 }
-const radii: Record<LogoSize, number> = { sm: 4, md: 5, lg: 7 }
+const textWeights: Record<LogoSize, string> = {
+  sm: 'font-medium',
+  md: 'font-semibold',
+  lg: 'font-semibold',
+}
+const gaps: Record<LogoSize, string> = {
+  sm: 'gap-[6px]',
+  md: 'gap-2.5',
+  lg: 'gap-2.5',
+}
+const radii: Record<LogoSize, number> = { sm: 5, md: 5, lg: 7 }
 
 export function Logo({
   size = 'md',
@@ -56,16 +71,16 @@ export function Logo({
   href = '/',
 }: LogoProps) {
   return (
-    <a href={href} className="flex items-center gap-2.5 no-underline" style={{ textDecoration: 'none' }}>
+    <a href={href} className={`flex items-center ${gaps[size]} no-underline`} style={{ textDecoration: 'none' }}>
       <div
-        className={`${containerSizes[size]} flex items-center justify-center flex-shrink-0`}
-        style={{ background: '#204AF8', borderRadius: radii[size] }}
+        className={`${containerSizes[size]} flex items-center justify-center flex-shrink-0 bg-brand`}
+        style={{ borderRadius: radii[size] }}
       >
         <MMark className={iconSizes[size]} color="white" />
       </div>
       {showWordmark && (
         <span
-          className={`${textSizes[size]} font-semibold tracking-[-0.03em] leading-none`}
+          className={`${textSizes[size]} ${textWeights[size]} tracking-[-0.03em] leading-none`}
           style={{ color: wordmarkColor, fontFamily: 'var(--font-brand)' }}
         >
           Metaborong

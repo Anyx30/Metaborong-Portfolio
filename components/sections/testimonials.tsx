@@ -18,7 +18,7 @@ export function TestimonialsSection() {
             <div key={t.name} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 32 }}>
               <p style={{ fontSize: 16, color: '#303030', lineHeight: 1.7, letterSpacing: '-0.01em', marginBottom: 24, fontStyle: 'italic' }}>&ldquo;{t.quote}&rdquo;</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#204AF8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{t.name[0]}</div>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#296ff0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{t.name[0]}</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#303030', letterSpacing: '-0.01em' }}>{t.name}</div>
                   <div style={{ fontSize: 12, color: '#676767' }}>{t.role}</div>

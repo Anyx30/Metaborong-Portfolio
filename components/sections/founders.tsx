@@ -18,14 +18,14 @@ export function FoundersSection() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
           {founders.map(f => (
             <div key={f.name} style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: '32px 28px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: 12, background: '#f5f7ff', border: '1px solid rgba(32,74,248,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#204AF8', marginBottom: 20 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 12, background: '#f5f7ff', border: '1px solid rgba(41, 111, 240,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: '#296ff0', marginBottom: 20 }}>
                 {f.name.split(' ').map(n => n[0]).join('')}
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: '#303030', marginBottom: 4 }}>{f.name}</h3>
-              <p style={{ fontSize: 12, color: '#204AF8', fontWeight: 600, letterSpacing: '0.02em', marginBottom: 14 }}>{f.role}</p>
+              <p style={{ fontSize: 12, color: '#296ff0', fontWeight: 600, letterSpacing: '0.02em', marginBottom: 14 }}>{f.role}</p>
               <p style={{ fontSize: 13, color: '#676767', lineHeight: 1.7, letterSpacing: '-0.005em', marginBottom: 20 }}>{f.bio}</p>
-              <a href={f.linkedin} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#204AF8', fontWeight: 500, textDecoration: 'none' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#204AF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+              <a href={f.linkedin} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#296ff0', fontWeight: 500, textDecoration: 'none' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#296ff0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
                 LinkedIn
               </a>
             </div>

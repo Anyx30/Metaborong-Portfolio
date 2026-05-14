@@ -1,5 +1,5 @@
 const reasons = [
-  { tag: 'Speed',           color: '#204AF8', title: 'Speed that respects your runway',    body: 'We ship in weeks, not quarters. A lean, senior team means no account managers between you and the people writing code. Direct communication, fast decisions, fewer handoffs.' },
+  { tag: 'Speed',           color: '#296ff0', title: 'Speed that respects your runway',    body: 'We ship in weeks, not quarters. A lean, senior team means no account managers between you and the people writing code. Direct communication, fast decisions, fewer handoffs.' },
   { tag: 'Product thinking',color: '#F6851B', title: 'Product thinking, not just execution', body: 'We pressure-test assumptions before we write a line of code. If your spec has a gap, we name it. If a simpler approach would do the same job, we say so.' },
   { tag: 'Niche depth',     color: '#10b981', title: 'Niche depth where it counts',        body: 'Multichain Web3 architecture. DeFi primitives. AI agent orchestration. We go deep in the areas where generalist agencies stop.' },
 ]

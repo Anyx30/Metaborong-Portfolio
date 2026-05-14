@@ -3,7 +3,7 @@
 import { type PillarId } from '@/components/sections/services-data'
 
 // Per the Figma (Frame 1707481128), the active cube uses #296ff0 not the brand
-// #204AF8 — the design lightens the blue slightly for the iso surface so the
+// #296ff0 — the design lightens the blue slightly for the iso surface so the
 // inset white shine reads correctly.
 const PILLAR_COLOR: Record<PillarId, string> = {
   'web3': '#296ff0',

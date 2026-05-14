@@ -28,7 +28,7 @@ export const pillars: Pillar[] = [
     id: 'web3',
     num: '01',
     label: 'Web3 / Blockchain',
-    color: '#204AF8',
+    color: '#296ff0',
     headline: 'Decentralised protocol engineering',
     body: 'DeFi protocols, NFT marketplaces, wallets, and DAO systems — smart-contract engineering across EVM, Solana, and Cosmos.',
     hubHref: '/services/web3/',
