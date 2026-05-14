@@ -4,7 +4,7 @@ import { ConsentBanner, ConsentRevokePill } from '@/components/consent/consent-b
 
 export const metadata: Metadata = {
   title: {
-    default: 'Web3 & AI Development Studio | Metaborong',
+    default: 'Web3 Protocols, AI Agents & SaaS Products | Metaborong',
     template: '%s | Metaborong',
   },
   description:

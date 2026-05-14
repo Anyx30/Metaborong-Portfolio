@@ -6,7 +6,7 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, React.CSSProperties> = {
-  blue:   { background: '#eef1fe', color: '#204AF8', border: '1px solid #dde4fe' },
+  blue:   { background: '#eef1fe', color: '#296ff0', border: '1px solid #dde4fe' },
   orange: { background: '#fff4ea', color: '#F6851B', border: '1px solid #fed7aa' },
   gray:   { background: '#f9fafb', color: '#676767', border: '1px solid #e5e7eb' },
   dark:   { background: '#0a0a0a', color: '#fff' },

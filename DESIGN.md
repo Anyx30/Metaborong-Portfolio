@@ -114,7 +114,7 @@ canonical.
 #### Brand
 | Alias                 | CSS var          | Hex       | Use                                          |
 |-----------------------|------------------|-----------|----------------------------------------------|
-| `color.brand.primary` | `--color-brand`  | `#204AF8` | Web3 pillar, primary CTA, hub                |
+| `color.brand.primary` | `--color-brand`  | `#296ff0` | Web3 pillar, primary CTA, hub                |
 | `color.brand.accent`  | `--color-accent` | `#F6851B` | Product Studio pillar, HUD                   |
 | `color.brand.ai`      | `--color-ai`     | `#10b981` | AI Agents pillar (only)                      |
 
@@ -206,8 +206,12 @@ surfaces that genuinely lift off the canvas (hover affordance on cards, overlays
 - **Section primitive:** `components/ui/section.tsx` — wraps every section.
   - Vertical padding: `py-[96px]` (`space.9`).
   - Horizontal padding: `px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]`.
-  - Max-width variants: `wide` (1120), `narrow` (880), `prose` (720).
+  - Max-width variants: `wide` (1120), `xwide` (1280), `narrow` (880), `prose` (720).
   - Auto-wraps children in `<Reveal>`.
+- **Canonical horizontal padding token:** `var(--section-px)` (`app/globals.css`).
+  Same value as the Section primitive's responsive class chain (24 → 48 → 96 → 128 at
+  sm/md/lg/xl). Inline-style sections and any surface that can't consume the Tailwind
+  class **must** use this CSS variable — never a hardcoded `padding: '96px 80px'`.
 - **Two-column sections** (services, founders, contact) use
   `grid-cols-1 lg:grid-cols-2 gap-[48px]`.
 - **Mobile breakpoint discipline.** Mobile fallbacks must render server-side. Must not
@@ -373,6 +377,7 @@ section enter at 400ms (`var(--duration-base)`). Signature visuals (orb, trefoil
 
 ### Don't
 - **Must not** introduce one-off spacing or typography exceptions.
+- **Must not** hardcode horizontal section padding in inline styles (e.g., `padding: '96px 80px'`). Use the Section primitive or `var(--section-px)`.
 - **Must not** use `color.text.tertiary` (#999) for body copy — only tertiary/disabled.
 - **Must not** add a second `html { @apply font-sans }` — Tailwind override breaks Satoshi.
 - **Must not** use `display:none` to hide content that has SEO value.
@@ -439,6 +444,8 @@ Run before marking a section shipped.
 
 | Date       | Decision                                                                                                                                                  | Rationale                                                                                  |
 |------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| 2026-05-14 | Homepage edge alignment fix — introduced `var(--section-px)` token (24/48/96/128 at sm/md/lg/xl). Migrated 7 inline-style sections + footer from hardcoded `padding: '96px 80px'`. Hero left copy column reduced from `xl:px-[144px]` to `xl:px-[128px]` for alignment with the rest of the page. Hero right column (ASCII video) now inset by `var(--section-px)` from viewport-right edge. | Inline-style sections were rendering 80px on both mobile and desktop (mobile bug + desktop staircase). Aligning all outer edges + reducing mobile to 24px per DESIGN.md. |
+| 2026-05-14 | Brand blue refreshed from `#204AF8` → `#296ff0` (Figma source: file `mQsbMuw0spVgIu7jXirr3o`, node `60:910`, "Let's Talk" button + 1px outer ring). Token `--color-brand` updated; Web3 pillar follows. Replaces all hardcoded `#204AF8` hex and matching `rgba(32,74,248,*)` occurrences across components, globals.css, OG image. | Align live build to current Figma source-of-truth. New blue is lighter, more cyan-leaning. Web3 pillar stays unified with brand. |
 | 2026-05-06 | DESIGN.md polish pass — semantic alias layer, A11y section, motion duration tokens, shadow scale, surface-raised, focus-visible token, seven-state matrix, Do/Don't rules, Card radius rule, QA checklist, authoring workflow. | Doc craft upgrade benchmarked against supermemory.ai; tightens authoring discipline without visual drift. |
 | 2026-05-06 | DESIGN.md created from shipped state                                                                                                                      | Single source of truth was missing; consolidated tokens, primitives, motion grammar.        |
 | 2026-05-05 | Services right column adopts boxing pattern (1px grey + colored bar from H2)                                                                              | supermemory.ai-style enclosure for sharpness; pillar accent moves into panel only.          |

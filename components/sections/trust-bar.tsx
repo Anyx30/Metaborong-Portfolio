@@ -23,7 +23,7 @@ const clients: Client[] = [
   { name: 'Diamante',   src: '/clients/diamante.svg',   href: 'https://www.diamante.io/',   scale: 1.3, customColor: '#B026FF' },
   { name: 'OrbitX',     src: '/clients/orbitx.svg',     href: 'https://orbitxpay.com/',     scale: 1.1 },
   { name: 'PredictRAM', src: '/clients/predictram.png', href: 'https://predictram.com/',    scale: 1.5, softMute: true },
-  { name: 'magic',      src: '/clients/magic.svg',      href: 'https://omagic.ai/',         scale: 1.2 },
+  { name: 'Magic',      src: '/clients/magic.svg',      href: 'https://omagic.ai/',         scale: 1.2 },
 ]
 
 export function TrustBar() {
@@ -50,10 +50,12 @@ export function TrustBar() {
                   className="group relative flex items-center justify-center rounded-md transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                   style={{ height: cellH }}
                 >
-                  {/* Invisible image forces the parent 'a' tag to automatically snap to the exact intrinsic layout width/height */}
+                  {/* Invisible image forces the parent 'a' tag to automatically snap to the exact intrinsic layout width/height.
+                      alt="" so screen readers don't double-announce — the visible mask-rendered logo is the accessible name carrier via the parent <a> aria-label. */}
                   <img
                     src={c.src}
-                    alt={c.name}
+                    alt=""
+                    aria-hidden="true"
                     className="opacity-0 pointer-events-none select-none object-contain"
                     style={{ height: cap, width: 'auto' }}
                   />

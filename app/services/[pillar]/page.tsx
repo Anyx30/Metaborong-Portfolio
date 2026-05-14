@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const p = pillars.find((x) => x.id === pillar)
   if (!p) return { robots: { index: false, follow: false } }
   return {
-    title: `${p.label} — Metaborong`,
+    title: p.label,
     description: `${p.headline}. Coming soon.`,
     robots: { index: false, follow: false },
   }

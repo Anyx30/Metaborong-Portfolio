@@ -1,7 +1,7 @@
 const projects = [
-  { name: 'KGeN',               category: 'Web3 · Gaming', color: '#204AF8' },
+  { name: 'KGeN',               category: 'Web3 · Gaming', color: '#296ff0' },
   { name: 'DATA3 AI',           category: 'AI · Data',     color: '#10b981' },
-  { name: 'Bionic',             category: 'Web3 · DeFi',   color: '#204AF8' },
+  { name: 'Bionic',             category: 'Web3 · DeFi',   color: '#296ff0' },
   { name: 'Bayan — AI Chatbot', category: 'AI · Voice',    color: '#10b981' },
 ]
 

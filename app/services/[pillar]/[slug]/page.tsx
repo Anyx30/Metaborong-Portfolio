@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const c = p?.children.find((x) => x.slug === slug)
   if (!p || !c) return { robots: { index: false, follow: false } }
   return {
-    title: `${c.name} — Metaborong`,
+    title: c.name,
     description: `${c.description} Coming soon.`,
     robots: { index: false, follow: false },
   }
