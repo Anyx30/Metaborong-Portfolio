@@ -20,16 +20,16 @@
 //   - 504 MCP_UPSTREAM_ERROR   upstream timed out (10s cap, AbortError)
 //
 // Persistence (POST happy path): writes ai_readiness_score, _band, _report
-// (jsonb), _content_hash, and _checked_at on the post row. Hash is
-// sha256(canonicalUrl + '|' + updated_at) — coarse, but the URL changes
-// only when the slug changes (and PATCH bumps updated_at on every edit),
-// so cache invalidation tracks user-visible content changes for free.
+// (nested BSON doc), _content_hash, and _checked_at on the post row.
+// Hash is sha256(canonicalUrl + '|' + post.updated_at) — coarse, but the
+// URL changes only when the slug changes (and PATCH bumps updated_at on
+// every edit), so cache invalidation tracks user-visible content changes
+// for free.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'node:crypto'
-import { and, eq, gte } from 'drizzle-orm'
+import { createHash, randomUUID } from 'node:crypto'
 import { db } from '../../../../../../db/client'
-import { posts, ai_readiness_attempts } from '../../../../../../db/schema'
+import type { PostDoc, AiReadinessAttemptDoc } from '../../../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../../../lib/auth'
 import { errorResponse } from '../../../../../../lib/api'
 import {
@@ -52,6 +52,14 @@ const CACHE_FRESHNESS_MS  = 60 * 60 * 1000
 
 type RouteCtx = { params: Promise<{ id: string }> }
 
+function postsColl() {
+  return db.collection<PostDoc>('posts')
+}
+
+function attemptsColl() {
+  return db.collection<AiReadinessAttemptDoc>('ai_readiness_attempts')
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function canonicalScanUrl(post: {
@@ -73,22 +81,18 @@ function contentHashFor(canonical: string, updatedAt: Date | string): string {
 
 async function countRecentAttempts(adminEmail: string): Promise<number> {
   const since = new Date(Date.now() - RATE_WINDOW_SECONDS * 1000)
-  // Mirror lib/api/login/route.ts: select rows directly (capped) instead of
-  // a count(*) aggregate, because pg-mem returns aggregates without column
-  // metadata that drizzle's positional decoder needs.
-  const rows = await db
-    .select({ id: ai_readiness_attempts.id })
-    .from(ai_readiness_attempts)
-    .where(and(
-      eq(ai_readiness_attempts.admin_email, adminEmail),
-      gte(ai_readiness_attempts.attempted_at, since),
-    ))
-    .limit(RATE_MAX_PER_WINDOW + 1)
-  return rows.length
+  return attemptsColl().countDocuments({
+    admin_email: adminEmail,
+    attempted_at: { $gte: since },
+  })
 }
 
 async function recordAttempt(adminEmail: string): Promise<void> {
-  await db.insert(ai_readiness_attempts).values({ admin_email: adminEmail })
+  await attemptsColl().insertOne({
+    _id: randomUUID(),
+    admin_email: adminEmail,
+    attempted_at: new Date(),
+  })
 }
 
 // ── POST ─────────────────────────────────────────────────────────────────────
@@ -114,8 +118,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   const { id } = await ctx.params
   if (!UUID_RE.test(id)) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
-  const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1)
-  const post = rows[0]
+  const post = await postsColl().findOne({ _id: id })
   if (!post) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
   // PRD §5.10 v1.5: scoring requires a public URL. v1.6 will add a
@@ -198,16 +201,18 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   const band = bandFor(score)
   const checkedAt = new Date()
 
-  await db
-    .update(posts)
-    .set({
-      ai_readiness_score:        score,
-      ai_readiness_band:         band,
-      ai_readiness_report:       report,
-      ai_readiness_content_hash: hash,
-      ai_readiness_checked_at:   checkedAt,
-    })
-    .where(eq(posts.id, id))
+  await postsColl().updateOne(
+    { _id: id },
+    {
+      $set: {
+        ai_readiness_score:        score,
+        ai_readiness_band:         band,
+        ai_readiness_report:       report,
+        ai_readiness_content_hash: hash,
+        ai_readiness_checked_at:   checkedAt,
+      },
+    },
+  )
 
   return NextResponse.json({
     score,
@@ -234,28 +239,28 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   const { id } = await ctx.params
   if (!UUID_RE.test(id)) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
-  const rows = await db
-    .select({
-      score:     posts.ai_readiness_score,
-      band:      posts.ai_readiness_band,
-      report:    posts.ai_readiness_report,
-      checkedAt: posts.ai_readiness_checked_at,
-    })
-    .from(posts)
-    .where(eq(posts.id, id))
-    .limit(1)
-  const row = rows[0]
+  const row = await postsColl().findOne(
+    { _id: id },
+    {
+      projection: {
+        ai_readiness_score:      1,
+        ai_readiness_band:       1,
+        ai_readiness_report:     1,
+        ai_readiness_checked_at: 1,
+      },
+    },
+  )
   if (!row) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
-  if (row.score === null || row.score === undefined) {
+  if (row.ai_readiness_score === null || row.ai_readiness_score === undefined) {
     return errorResponse(404, 'NOT_SCORED', 'post has not been scanned')
   }
 
   return NextResponse.json({
-    score:     row.score,
-    band:      row.band,
-    report:    row.report,
+    score:     row.ai_readiness_score,
+    band:      row.ai_readiness_band,
+    report:    row.ai_readiness_report,
     cached:    true,
-    scannedAt: isoOf(row.checkedAt),
+    scannedAt: isoOf(row.ai_readiness_checked_at),
   })
 }

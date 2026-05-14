@@ -6,10 +6,9 @@
 // CSRF + admin gates apply.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { db } from '../../../../../../db/client'
-import { posts } from '../../../../../../db/schema'
+import type { PostDoc } from '../../../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../../../lib/auth'
 import { errorResponse } from '../../../../../../lib/api'
 import { rowToPost } from '../../../../../../lib/posts'
@@ -29,17 +28,18 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   const { id } = await ctx.params
   if (!UUID_RE.test(id)) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
-  const updated = await db
-    .update(posts)
-    .set({
-      status: 'draft',
-      updated_at: new Date(),
-      // published_at intentionally untouched.
-    })
-    .where(eq(posts.id, id))
-    .returning()
+  const row = await db.collection<PostDoc>('posts').findOneAndUpdate(
+    { _id: id },
+    {
+      $set: {
+        status: 'draft',
+        updated_at: new Date(),
+        // published_at intentionally untouched.
+      },
+    },
+    { returnDocument: 'after' },
+  )
 
-  const row = updated[0]
   if (!row) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
   revalidatePath('/blog')

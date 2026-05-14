@@ -12,9 +12,8 @@
 // delete in v1.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
 import { db } from '../../../../../db/client'
-import { images } from '../../../../../db/schema'
+import type { ImageDoc } from '../../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../../lib/auth'
 import { errorResponse } from '../../../../../lib/api'
 import { rowToImage } from '../../../../../lib/images'
@@ -25,6 +24,10 @@ export const runtime = 'nodejs'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 type RouteCtx = { params: Promise<{ id: string }> }
+
+function imagesColl() {
+  return db.collection<ImageDoc>('images')
+}
 
 export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   const csrfFail = requireCsrf(req)
@@ -57,21 +60,19 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   const update = parsed.data
 
   // Empty body — return the existing row so callers don't have to special-
-  // case "no change". Drizzle's update().set({}) is a runtime error so we
-  // need this branch regardless.
+  // case "no change". Mongo's $set: {} is a no-op but we still want to
+  // return the unmodified row, so just findOne.
   if (Object.keys(update).length === 0) {
-    const rows = await db.select().from(images).where(eq(images.id, id)).limit(1)
-    const row = rows[0]
+    const row = await imagesColl().findOne({ _id: id })
     if (!row) return errorResponse(404, 'NOT_FOUND', 'image not found')
     return NextResponse.json({ image: rowToImage(row) })
   }
 
-  const updated = await db
-    .update(images)
-    .set(update)
-    .where(eq(images.id, id))
-    .returning()
-  const row = updated[0]
+  const row = await imagesColl().findOneAndUpdate(
+    { _id: id },
+    { $set: update },
+    { returnDocument: 'after' },
+  )
   if (!row) return errorResponse(404, 'NOT_FOUND', 'image not found')
   return NextResponse.json({ image: rowToImage(row) })
 }

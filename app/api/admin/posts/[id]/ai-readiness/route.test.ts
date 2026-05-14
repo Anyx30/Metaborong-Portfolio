@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,7 +14,7 @@ import {
   SESSION_COOKIE,
   createSession,
 } from '@/lib/auth'
-import { posts as postsTable, ai_readiness_attempts } from '@/db/schema'
+import type { PostDoc, AiReadinessAttemptDoc } from '@/db/schema'
 
 // In-test override for what scanUrl returns / throws. Each test sets the
 // next behavior; the mock below dispatches into it.
@@ -41,8 +41,8 @@ beforeAll(() => {
   process.env.AUTH_SECRET = 'a'.repeat(48)
 })
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   disabledFlag = false
   scanResult = null
   vi.clearAllMocks()
@@ -75,22 +75,37 @@ function authHeaders(c: { session: string; csrf: string }, withCsrf = true): Rec
   return headers
 }
 
-async function seedPost(opts: { status?: 'draft' | 'published'; published?: boolean; score?: number; band?: string; report?: unknown; hash?: string; checkedAt?: Date | null } = {}) {
-  const r = await testHandle.db.insert(postsTable).values({
-    slug: 'sample-post',
-    title: 'Sample',
-    author_name: 'admin',
-    status: opts.status ?? 'published',
-    published_at: opts.published === false ? null : new Date('2026-05-01T00:00:00Z'),
-    canonical_url: null,
-    ai_readiness_score: opts.score ?? null,
-    ai_readiness_band: opts.band ?? null,
+async function seedPost(opts: { status?: 'draft' | 'published'; published?: boolean; score?: number; band?: string; report?: unknown; hash?: string; checkedAt?: Date | null } = {}): Promise<PostDoc> {
+  const now = new Date()
+  const doc: PostDoc = {
+    _id:                       randomUUID(),
+    slug:                      'sample-post',
+    title:                     'Sample',
+    excerpt:                   null,
+    status:                    opts.status ?? 'published',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      [],
+    author_name:               'admin',
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
+    geo_variants:              {},
+    ai_readiness_score:        opts.score ?? null,
+    ai_readiness_band:         opts.band ?? null,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ai_readiness_report: (opts.report ?? null) as any,
+    ai_readiness_report:       (opts.report ?? null) as any,
     ai_readiness_content_hash: opts.hash ?? null,
-    ai_readiness_checked_at: opts.checkedAt ?? null,
-  }).returning()
-  return r[0]
+    ai_readiness_checked_at:   opts.checkedAt ?? null,
+    published_at:              opts.published === false ? null : new Date('2026-05-01T00:00:00Z'),
+    created_at:                now,
+    updated_at:                now,
+  }
+  await testHandle.db.collection<PostDoc>('posts').insertOne(doc)
+  return doc
 }
 
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) })
@@ -178,7 +193,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(409)
     const body = await res.json()
@@ -193,7 +208,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -203,7 +218,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     expect(typeof body.scannedAt).toBe('string')
 
     // Persisted: score, band, hash, checkedAt all populated.
-    const stored = await testHandle.db.select().from(postsTable)
+    const stored = await testHandle.db.collection<PostDoc>('posts').find({}).toArray()
     expect(stored[0].ai_readiness_score).toBe(85)
     expect(stored[0].ai_readiness_band).toBe('strong')
     expect(stored[0].ai_readiness_content_hash).toBeTruthy()
@@ -217,17 +232,22 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     // Compute the same hash the route will compute.
     const canonical = `https://www.metaborong.com/blog/${row.slug}/`
     const hash = createHash('sha256')
-      .update(`${canonical}|${(row.updated_at as Date).toISOString()}`)
+      .update(`${canonical}|${row.updated_at.toISOString()}`)
       .digest('hex')
     // Seed a cache hit: same hash, fresh checkedAt.
-    await testHandle.db.update(postsTable).set({
-      ai_readiness_score: 73,
-      ai_readiness_band: 'adequate',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ai_readiness_report: { ...sampleReport, overallScore: 73 } as any,
-      ai_readiness_content_hash: hash,
-      ai_readiness_checked_at: new Date(),
-    })
+    await testHandle.db.collection<PostDoc>('posts').updateOne(
+      { _id: row._id },
+      {
+        $set: {
+          ai_readiness_score: 73,
+          ai_readiness_band: 'adequate',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ai_readiness_report: { ...sampleReport, overallScore: 73 } as any,
+          ai_readiness_content_hash: hash,
+          ai_readiness_checked_at: new Date(),
+        },
+      },
+    )
 
     // Make scanUrl explode if reached — proves we returned from cache.
     scanResult = { mode: 'throw', err: new Error('should-not-be-called') }
@@ -235,7 +255,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -249,17 +269,17 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const row = await seedPost()
     // Pre-seed 30 attempts in the last hour for this admin.
     const now = new Date()
-    for (let i = 0; i < 30; i++) {
-      await testHandle.db.insert(ai_readiness_attempts).values({
-        admin_email: 'admin@example.com',
-        attempted_at: new Date(now.getTime() - i * 1000),
-      })
-    }
+    const attempts: AiReadinessAttemptDoc[] = Array.from({ length: 30 }, (_, i) => ({
+      _id: randomUUID(),
+      admin_email: 'admin@example.com',
+      attempted_at: new Date(now.getTime() - i * 1000),
+    }))
+    await testHandle.db.collection<AiReadinessAttemptDoc>('ai_readiness_attempts').insertMany(attempts)
     scanResult = { mode: 'ok', report: sampleReport }
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(429)
     expect(res.headers.get('Retry-After')).toBeTruthy()
@@ -274,7 +294,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(504)
     expect((await res.json()).code).toBe('MCP_UPSTREAM_ERROR')
@@ -288,7 +308,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(503)
     expect((await res.json()).code).toBe('MCP_DISABLED')
@@ -302,7 +322,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(502)
     expect((await res.json()).code).toBe('MCP_UPSTREAM_ERROR')
@@ -316,7 +336,7 @@ describe('POST /api/admin/posts/[id]/ai-readiness', () => {
     const { POST } = await loadRoute()
     const res = await POST(
       new NextRequest('http://localhost/x', { method: 'POST', headers: authHeaders(c) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(502)
   })
@@ -353,7 +373,7 @@ describe('GET /api/admin/posts/[id]/ai-readiness', () => {
     const { GET } = await loadRoute()
     const res = await GET(
       new NextRequest('http://localhost/x', { headers: authHeaders(c, false) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(404)
     expect((await res.json()).code).toBe('NOT_SCORED')
@@ -383,7 +403,7 @@ describe('GET /api/admin/posts/[id]/ai-readiness', () => {
     const { GET } = await loadRoute()
     const res = await GET(
       new NextRequest('http://localhost/x', { headers: authHeaders(c, false) }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()

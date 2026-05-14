@@ -3,11 +3,11 @@
 // blocksToMarkdown → text/markdown pipeline.
 
 import { describe, expect, it, beforeEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 vi.mock('next/headers', () => ({
   headers: async () => new Headers(),
@@ -15,18 +15,47 @@ vi.mock('next/headers', () => ({
 
 import { NextRequest } from 'next/server'
 import { createTestDb, type TestDbHandle } from '@/db/test-utils'
-import { posts as postsTable } from '@/db/schema'
+import type { PostDoc } from '@/db/schema'
 import type { Block } from '@/lib/blog-schema'
 
 let testHandle: TestDbHandle
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 
 async function loadRoute() {
   return await import('@/app/blog/[slug]/raw.md/route')
+}
+
+function makePost(opts: Partial<PostDoc> & Pick<PostDoc, 'slug' | 'title'>): PostDoc {
+  const now = new Date()
+  return {
+    _id:                       randomUUID(),
+    excerpt:                   null,
+    status:                    'draft',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      [],
+    author_name:               'admin',
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
+    geo_variants:              {},
+    ai_readiness_score:        null,
+    ai_readiness_band:         null,
+    ai_readiness_report:       null,
+    ai_readiness_content_hash: null,
+    ai_readiness_checked_at:   null,
+    published_at:              null,
+    created_at:                now,
+    updated_at:                now,
+    ...opts,
+  }
 }
 
 describe('GET /blog/[slug]/raw.md', () => {
@@ -35,7 +64,7 @@ describe('GET /blog/[slug]/raw.md', () => {
       { id: '1', type: 'heading',   data: { text: 'Section', level: 2 } },
       { id: '2', type: 'paragraph', data: { text: 'A thing.' } },
     ]
-    await testHandle.db.insert(postsTable).values({
+    await testHandle.db.collection<PostDoc>('posts').insertOne(makePost({
       slug: 'hello-world',
       title: 'Hello world',
       status: 'published',
@@ -44,7 +73,7 @@ describe('GET /blog/[slug]/raw.md', () => {
       tags: ['tag1', 'tag2'],
       content_json: blocks,
       published_at: new Date('2026-04-12T08:00:00Z'),
-    })
+    }))
 
     const { GET } = await loadRoute()
     const res = await GET(
@@ -74,12 +103,11 @@ describe('GET /blog/[slug]/raw.md', () => {
   })
 
   it('returns 404 for a draft post (published-only readers)', async () => {
-    await testHandle.db.insert(postsTable).values({
+    await testHandle.db.collection<PostDoc>('posts').insertOne(makePost({
       slug: 'still-cooking',
       title: 'Cooking',
       status: 'draft',
-      author_name: 'admin',
-    })
+    }))
     const { GET } = await loadRoute()
     const res = await GET(
       new NextRequest('http://localhost/blog/still-cooking/raw.md'),

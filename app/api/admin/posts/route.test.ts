@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
-// SUT bootstraps `db` from `@/db/client`. Mock that to a per-test pg-mem
-// handle so each test starts with a clean DB. The proxy `get db()` is
-// re-evaluated on every access, picking up `testHandle` after each
-// beforeEach reassignment.
+// SUT bootstraps `db` from `@/db/client`. Mock that to a per-test
+// mongodb-memory-server-backed handle so each test starts with a clean
+// DB. The proxy `get db()` is re-evaluated on every access, picking up
+// `testHandle` after each beforeEach reassignment.
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -18,7 +18,7 @@ import {
   SESSION_COOKIE,
   createSession,
 } from '@/lib/auth'
-import { posts as postsTable } from '@/db/schema'
+import type { PostDoc } from '@/db/schema'
 
 let testHandle: TestDbHandle
 
@@ -26,8 +26,8 @@ beforeAll(() => {
   process.env.AUTH_SECRET = 'a'.repeat(48)
 })
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 
@@ -48,6 +48,35 @@ function authedHeaders(creds: { session: string; csrf: string }, withCsrfHeader 
   }
   if (withCsrfHeader) headers[CSRF_HEADER] = creds.csrf
   return headers
+}
+
+function makePost(overrides: Partial<PostDoc> & Pick<PostDoc, 'slug' | 'title'>): PostDoc {
+  const now = new Date()
+  return {
+    _id:                       randomUUID(),
+    excerpt:                   null,
+    status:                    'draft',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      [],
+    author_name:               'admin',
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
+    geo_variants:              {},
+    ai_readiness_score:        null,
+    ai_readiness_band:         null,
+    ai_readiness_report:       null,
+    ai_readiness_content_hash: null,
+    ai_readiness_checked_at:   null,
+    published_at:              null,
+    created_at:                now,
+    updated_at:                now,
+    ...overrides,
+  }
 }
 
 // ── GET /api/admin/posts ─────────────────────────────────────────────────────
@@ -72,9 +101,9 @@ describe('GET /api/admin/posts', () => {
 
   it('lists drafts and published with no filter', async () => {
     const creds = await bakedAuthCookies()
-    await testHandle.db.insert(postsTable).values([
-      { slug: 'a', title: 'A', status: 'draft', author_name: 'admin' },
-      { slug: 'b', title: 'B', status: 'published', author_name: 'admin', published_at: new Date() },
+    await testHandle.db.collection<PostDoc>('posts').insertMany([
+      makePost({ slug: 'a', title: 'A', status: 'draft' }),
+      makePost({ slug: 'b', title: 'B', status: 'published', published_at: new Date() }),
     ])
     const { GET } = await loadRoute()
     const res = await GET(new NextRequest('http://localhost/api/admin/posts', {
@@ -87,9 +116,9 @@ describe('GET /api/admin/posts', () => {
 
   it('respects ?status=draft filter', async () => {
     const creds = await bakedAuthCookies()
-    await testHandle.db.insert(postsTable).values([
-      { slug: 'a', title: 'A', status: 'draft', author_name: 'admin' },
-      { slug: 'b', title: 'B', status: 'published', author_name: 'admin', published_at: new Date() },
+    await testHandle.db.collection<PostDoc>('posts').insertMany([
+      makePost({ slug: 'a', title: 'A', status: 'draft' }),
+      makePost({ slug: 'b', title: 'B', status: 'published', published_at: new Date() }),
     ])
     const { GET } = await loadRoute()
     const res = await GET(new NextRequest('http://localhost/api/admin/posts?status=draft', {
@@ -167,9 +196,9 @@ describe('POST /api/admin/posts', () => {
 
   it('returns 422 SLUG_CONFLICT on duplicate slug', async () => {
     const creds = await bakedAuthCookies()
-    await testHandle.db.insert(postsTable).values({
-      slug: 'taken', title: 'Taken', author_name: 'admin',
-    })
+    await testHandle.db.collection<PostDoc>('posts').insertOne(
+      makePost({ slug: 'taken', title: 'Taken' }),
+    )
     const { POST } = await loadRoute()
     const res = await POST(new NextRequest('http://localhost/api/admin/posts', {
       method: 'POST',

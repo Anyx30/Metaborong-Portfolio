@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 // Mock points (the same pattern as the M2 posts route tests).
 //
 //   server-only      — throws outside the Next runtime; shim it.
 //   @/db/client      — proxy db getter so each test starts with a fresh
-//                       in-memory pg-mem instance.
+//                       isolated mongodb-memory-server-backed Db.
 //   @vercel/blob     — `put` returns a deterministic public URL; `del` is
 //                       a no-op spy. The route NEVER hits real Vercel Blob.
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 vi.mock('@vercel/blob', () => ({
   put: vi.fn(async (pathname: string) => ({
@@ -31,7 +31,7 @@ import {
   SESSION_COOKIE,
   createSession,
 } from '@/lib/auth'
-import { images as imagesTable } from '@/db/schema'
+import type { ImageDoc } from '@/db/schema'
 
 let testHandle: TestDbHandle
 
@@ -39,8 +39,8 @@ beforeAll(() => {
   process.env.AUTH_SECRET = 'a'.repeat(48)
 })
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 
@@ -226,7 +226,7 @@ describe('POST /api/admin/images', () => {
     expect(optsArg.addRandomSuffix).toBe(false)
 
     // DB row really persisted with the URL we returned.
-    const rows = await testHandle.db.select().from(imagesTable)
+    const rows = await testHandle.db.collection<ImageDoc>('images').find({}).toArray()
     expect(rows.length).toBe(1)
     expect(rows[0].blob_url).toBe(body.image.blob_url)
   })
@@ -294,15 +294,18 @@ describe('GET /api/admin/images', () => {
   it('paginates 30 images into a 24/6 split using nextCursor', async () => {
     const c = await authedCookies()
     const baseTs = Date.parse('2026-05-01T00:00:00.000Z')
-    await testHandle.db.insert(imagesTable).values(
-      Array.from({ length: 30 }, (_, i) => ({
-        blob_url:   `https://abc123.public.blob.vercel-storage.com/images/img-${i}.webp`,
-        width:      10,
-        height:     10,
-        filename:   `f-${i}.jpg`,
-        created_at: new Date(baseTs + i * 1000),
-      })),
-    )
+    const docs: ImageDoc[] = Array.from({ length: 30 }, (_, i) => ({
+      _id:        randomUUID(),
+      blob_url:   `https://abc123.public.blob.vercel-storage.com/images/img-${i}.webp`,
+      width:      10,
+      height:     10,
+      alt:        '',
+      focal_x:    0.5,
+      focal_y:    0.5,
+      filename:   `f-${i}.jpg`,
+      created_at: new Date(baseTs + i * 1000),
+    }))
+    await testHandle.db.collection<ImageDoc>('images').insertMany(docs)
 
     const { GET } = await loadRoute()
 
@@ -332,9 +335,11 @@ describe('GET /api/admin/images', () => {
 
   it('treats a malformed cursor as no cursor (returns the first page)', async () => {
     const c = await authedCookies()
-    await testHandle.db.insert(imagesTable).values({
+    await testHandle.db.collection<ImageDoc>('images').insertOne({
+      _id: randomUUID(),
       blob_url: 'https://abc.public.blob.vercel-storage.com/images/x.webp',
-      width: 1, height: 1, filename: 'x.jpg',
+      width: 1, height: 1, alt: '', focal_x: 0.5, focal_y: 0.5,
+      filename: 'x.jpg', created_at: new Date(),
     })
     const { GET } = await loadRoute()
     const res = await GET(new NextRequest('http://localhost/api/admin/images?cursor=!!!', {

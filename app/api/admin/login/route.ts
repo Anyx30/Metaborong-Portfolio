@@ -16,9 +16,9 @@
 // admin routes verify CSRF via lib/auth.requireCsrf().
 
 import { NextRequest, NextResponse } from 'next/server'
-import { and, gte, sql } from 'drizzle-orm'
+import { randomUUID } from 'node:crypto'
 import { db } from '../../../../db/client'
-import { login_attempts } from '../../../../db/schema'
+import type { LoginAttemptDoc } from '../../../../db/schema'
 import {
   createSession,
   issueCsrfToken,
@@ -32,34 +32,36 @@ export const runtime = 'nodejs' // bcryptjs needs Node, not edge
 const RATE_WINDOW_SECONDS = 15 * 60
 const RATE_MAX_ATTEMPTS   = 5
 
+function loginAttempts() {
+  return db.collection<LoginAttemptDoc>('login_attempts')
+}
+
 async function countRecentFailures(ip: string): Promise<number> {
   // The rate-limit window holds at most RATE_MAX_ATTEMPTS rows per IP — a
   // successful login wipes them, the limit gate refuses further work past
-  // the cap, and a periodic prune (M8) keeps stragglers bounded. So
-  // selecting the rows directly with a LIMIT cap is cheap, and avoids a
-  // SELECT count(*)::int aggregate that pg-mem (used in tests) returns
-  // with no column-alias metadata, breaking the test harness.
+  // the cap, and the TTL index in db/collections.ts (3600s) keeps
+  // stragglers bounded. Counting a small bounded set with countDocuments
+  // is cheap and avoids reading rows we won't use.
   const since = new Date(Date.now() - RATE_WINDOW_SECONDS * 1000)
-  const rows = await db
-    .select({ id: login_attempts.id })
-    .from(login_attempts)
-    .where(and(
-      sql`${login_attempts.ip} = ${ip}`,
-      gte(login_attempts.attempted_at, since),
-    ))
-    .limit(RATE_MAX_ATTEMPTS + 1)
-  return rows.length
+  return loginAttempts().countDocuments({
+    ip,
+    attempted_at: { $gte: since },
+  })
 }
 
 async function recordFailure(ip: string): Promise<void> {
-  await db.insert(login_attempts).values({ ip })
+  await loginAttempts().insertOne({
+    _id: randomUUID(),
+    ip,
+    attempted_at: new Date(),
+  })
 }
 
 async function clearFailuresForIp(ip: string): Promise<void> {
   // Clean up the recent failures so a successful login zeroes the counter for
-  // this IP. Old rows beyond the window are pruned by a periodic job in M8;
-  // for v1 this opportunistic cleanup keeps the table bounded.
-  await db.delete(login_attempts).where(sql`${login_attempts.ip} = ${ip}`)
+  // this IP. Older rows beyond the TTL window are auto-pruned by Mongo's
+  // TTL monitor (db/collections.ts).
+  await loginAttempts().deleteMany({ ip })
 }
 
 export async function POST(req: NextRequest) {

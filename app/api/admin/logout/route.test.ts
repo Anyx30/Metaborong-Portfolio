@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 
-// SUT does not touch the database, so we still mock '@/db/client' to be a
-// no-op — Vitest module resolution would otherwise complain when the
-// proxy tries to read POSTGRES_URL during route load.
+// SUT does not touch the database, so we mock '@/db/client' to a no-op —
+// Vitest module resolution would otherwise eagerly evaluate the proxy and
+// try to read MONGODB_URI at route-load time.
 vi.mock('server-only', () => ({}))
-vi.mock('@/db/client', () => ({ db: {}, schema: undefined }))
+vi.mock('@/db/client', () => ({ db: {} }))
 
 import { NextRequest, NextResponse } from 'next/server'
 import {

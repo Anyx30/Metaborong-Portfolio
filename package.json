@@ -11,9 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -25,8 +23,8 @@
     "@tiptap/starter-kit": "^3.22.5",
     "@vercel/blob": "^2.3.3",
     "bcryptjs": "^3.0.3",
-    "drizzle-orm": "^0.45.2",
     "jose": "^6.2.3",
+    "mongodb": "^6.10.0",
     "lucide-react": "^1.11.0",
     "next": "16.2.4",
     "postcss": "^8.5.12",
@@ -43,17 +41,14 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
-    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.184.0",
     "@vitest/coverage-v8": "^4.1.5",
-    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "happy-dom": "^20.9.0",
-    "pg": "^8.20.0",
-    "pg-mem": "^3.0.14",
+    "mongodb-memory-server": "^10.1.4",
     "typescript": "^5",
     "vitest": "^4.1.5"
   }

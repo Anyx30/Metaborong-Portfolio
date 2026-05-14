@@ -19,10 +19,14 @@ import 'server-only'
 import { randomUUID } from 'node:crypto'
 import sharp from 'sharp'
 import { put as blobPut, del as blobDel } from '@vercel/blob'
-import { and, desc, eq, inArray, lt, or } from 'drizzle-orm'
+import type { Db } from 'mongodb'
 import { db as defaultDb } from '../db/client'
-import { images, type ImageRow } from '../db/schema'
+import type { ImageDoc } from '../db/schema'
 import { type Image } from './blog-schema'
+
+function imagesOf(handle: Db) {
+  return handle.collection<ImageDoc>('images')
+}
 
 export const IMAGE_MAX_BYTES = 8 * 1024 * 1024 // 8 MB
 export const IMAGE_PAGE_SIZE = 24
@@ -152,9 +156,9 @@ export function sanitizeOriginalFilename(raw: string | null | undefined): string
 
 // ── row → wire ───────────────────────────────────────────────────────────────
 
-export function rowToImage(row: ImageRow): Image {
+export function rowToImage(row: ImageDoc): Image {
   return {
-    id:         row.id,
+    id:         row._id,
     blob_url:   row.blob_url,
     width:      row.width,
     height:     row.height,
@@ -196,8 +200,7 @@ export function decodeCursor(raw: string): DecodedCursor | null {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DbLike = any
+type DbLike = Db
 
 /**
  * Server-only fetch of a single image row by id. Returns null when the
@@ -208,12 +211,7 @@ export async function getImageById(
   id: string,
   dbHandle: DbLike = defaultDb,
 ): Promise<Image | null> {
-  const rows = (await dbHandle
-    .select()
-    .from(images)
-    .where(eq(images.id, id))
-    .limit(1)) as ImageRow[]
-  const row = rows[0]
+  const row = await imagesOf(dbHandle).findOne({ _id: id })
   return row ? rowToImage(row) : null
 }
 
@@ -228,18 +226,17 @@ export async function getImagesByIds(
 ): Promise<Map<string, Image>> {
   const out = new Map<string, Image>()
   if (ids.length === 0) return out
-  const rows = (await dbHandle
-    .select()
-    .from(images)
-    .where(inArray(images.id, ids as string[]))) as ImageRow[]
-  for (const row of rows) out.set(row.id, rowToImage(row))
+  const rows = await imagesOf(dbHandle)
+    .find({ _id: { $in: ids as string[] } })
+    .toArray()
+  for (const row of rows) out.set(row._id, rowToImage(row))
   return out
 }
 
 /**
- * One page of images, ordered (created_at DESC, id DESC). The cursor is
- * the (created_at, id) tuple of the LAST row of the previous page; the
- * SQL where clause returns rows strictly older than that tuple.
+ * One page of images, ordered (created_at DESC, _id DESC). The cursor is
+ * the (created_at, _id) tuple of the LAST row of the previous page; the
+ * Mongo filter returns rows strictly older than that tuple.
  */
 export async function listImagesPage(
   cursorParam: string | null,
@@ -247,24 +244,25 @@ export async function listImagesPage(
 ): Promise<{ images: Image[]; nextCursor: string | null }> {
   const cursor = cursorParam ? decodeCursor(cursorParam) : null
 
-  const where = cursor
-    ? or(
-        lt(images.created_at, cursor.createdAt),
-        and(eq(images.created_at, cursor.createdAt), lt(images.id, cursor.id)),
-      )
-    : undefined
+  const filter: Record<string, unknown> = cursor
+    ? {
+        $or: [
+          { created_at: { $lt: cursor.createdAt } },
+          { created_at: cursor.createdAt, _id: { $lt: cursor.id } },
+        ],
+      }
+    : {}
 
-  const rows = (await dbHandle
-    .select()
-    .from(images)
-    .where(where)
-    .orderBy(desc(images.created_at), desc(images.id))
-    .limit(IMAGE_PAGE_SIZE + 1)) as ImageRow[]
+  const rows = await imagesOf(dbHandle)
+    .find(filter)
+    .sort({ created_at: -1, _id: -1 })
+    .limit(IMAGE_PAGE_SIZE + 1)
+    .toArray()
 
   const page    = rows.slice(0, IMAGE_PAGE_SIZE)
   const hasMore = rows.length > IMAGE_PAGE_SIZE
   const last    = page[page.length - 1]
-  const nextCursor = hasMore && last ? encodeCursor(last.created_at, last.id) : null
+  const nextCursor = hasMore && last ? encodeCursor(last.created_at, last._id) : null
 
   return { images: page.map(rowToImage), nextCursor }
 }

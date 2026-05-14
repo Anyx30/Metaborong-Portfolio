@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/db/client', () => ({
   get db() { return testHandle.db },
-  schema: undefined as unknown,
 }))
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,7 +14,7 @@ import {
   SESSION_COOKIE,
   createSession,
 } from '@/lib/auth'
-import { images as imagesTable } from '@/db/schema'
+import type { ImageDoc } from '@/db/schema'
 
 let testHandle: TestDbHandle
 
@@ -22,8 +22,8 @@ beforeAll(() => {
   process.env.AUTH_SECRET = 'a'.repeat(48)
 })
 
-beforeEach(() => {
-  testHandle = createTestDb()
+beforeEach(async () => {
+  testHandle = await createTestDb()
   vi.resetModules()
 })
 
@@ -49,14 +49,20 @@ function authHeaders(c: { session: string; csrf: string }, withCsrf = true): Rec
   return headers
 }
 
-async function seedImage() {
-  const r = await testHandle.db.insert(imagesTable).values({
-    blob_url: 'https://abc.public.blob.vercel-storage.com/images/x.webp',
-    width:    100,
-    height:   100,
-    filename: 'orig.jpg',
-  }).returning()
-  return r[0]
+async function seedImage(): Promise<ImageDoc> {
+  const doc: ImageDoc = {
+    _id:        randomUUID(),
+    blob_url:   'https://abc.public.blob.vercel-storage.com/images/x.webp',
+    width:      100,
+    height:     100,
+    alt:        '',
+    focal_x:    0.5,
+    focal_y:    0.5,
+    filename:   'orig.jpg',
+    created_at: new Date(),
+  }
+  await testHandle.db.collection<ImageDoc>('images').insertOne(doc)
+  return doc
 }
 
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) })
@@ -72,7 +78,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c, false),
         body:    JSON.stringify({ alt: 'a cat on a mat' }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(403)
     expect((await res.json()).code).toBe('CSRF_FAILED')
@@ -131,11 +137,11 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({ alt: 'A red square', focal_x: 0.25, focal_y: 0.75 }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.image.id).toBe(row.id)
+    expect(body.image.id).toBe(row._id)
     expect(body.image.alt).toBe('A red square')
     expect(body.image.focal_x).toBeCloseTo(0.25, 5)
     expect(body.image.focal_y).toBeCloseTo(0.75, 5)
@@ -154,7 +160,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({ focal_x: 1.5 }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(422)
     const body = await res.json()
@@ -172,7 +178,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({ focal_y: -0.1 }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(422)
     expect((await res.json()).field).toBe('focal_y')
@@ -188,7 +194,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({ blob_url: 'https://evil/' }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(422)
     expect((await res.json()).code).toBe('VALIDATION_FAILED')
@@ -204,7 +210,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    '{not-json',
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(422)
     expect((await res.json()).code).toBe('VALIDATION_FAILED')
@@ -220,7 +226,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({ alt: 'just alt' }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -239,11 +245,11 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({}),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.image.id).toBe(row.id)
+    expect(body.image.id).toBe(row._id)
     expect(body.image.alt).toBe(row.alt)
   })
 
@@ -257,7 +263,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({ focal_x: 0 }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     expect((await res.json()).image.focal_x).toBe(0)
@@ -273,7 +279,7 @@ describe('PATCH /api/admin/images/[id]', () => {
         headers: authHeaders(c),
         body:    JSON.stringify({ focal_y: 1 }),
       }),
-      ctx(row.id),
+      ctx(row._id),
     )
     expect(res.status).toBe(200)
     expect((await res.json()).image.focal_y).toBe(1)

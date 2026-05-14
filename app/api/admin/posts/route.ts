@@ -5,12 +5,13 @@
 // Both routes require an admin session (401 otherwise). POST also requires
 // CSRF (403 otherwise). Body is validated by Zod; bad shape → 422 with the
 // §2.2 envelope + a `field` path. Slug collisions on POST → 422 with
-// SLUG_CONFLICT (the underlying UNIQUE index makes the check race-safe;
-// we catch the PG duplicate-key error and translate).
+// SLUG_CONFLICT (the underlying unique index makes the check race-safe;
+// we catch the Mongo duplicate-key error and translate).
 
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { db } from '../../../../db/client'
-import { posts } from '../../../../db/schema'
+import type { PostDoc } from '../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../lib/auth'
 import { errorResponse } from '../../../../lib/api'
 import {
@@ -25,6 +26,10 @@ import {
 } from '../../../../lib/post-validation'
 
 export const runtime = 'nodejs'
+
+function postsColl() {
+  return db.collection<PostDoc>('posts')
+}
 
 // ── GET /api/admin/posts ─────────────────────────────────────────────────────
 
@@ -80,21 +85,37 @@ export async function POST(req: NextRequest) {
   const { title } = parsed.data
   const slug = parsed.data.slug ?? slugifyTitle(title)
 
+  const now = new Date()
+  const doc: PostDoc = {
+    _id:                       randomUUID(),
+    slug,
+    title,
+    excerpt:                   null,
+    status:                    'draft',
+    content_json:              [],
+    content_schema_version:    1,
+    cover_image_id:            null,
+    og_image_id:               null,
+    tags:                      [],
+    author_name:               identity.email,
+    author_url:                null,
+    meta_title:                null,
+    meta_description:          null,
+    canonical_url:             null,
+    geo_variants:              {},
+    ai_readiness_score:        null,
+    ai_readiness_band:         null,
+    ai_readiness_report:       null,
+    ai_readiness_content_hash: null,
+    ai_readiness_checked_at:   null,
+    published_at:              null,
+    created_at:                now,
+    updated_at:                now,
+  }
+
   try {
-    const inserted = await db
-      .insert(posts)
-      .values({
-        slug,
-        title,
-        status: 'draft',
-        author_name: identity.email, // editor-supplied later via PATCH; sane default
-      })
-      .returning()
-    const row = inserted[0]
-    if (!row) {
-      return errorResponse(500, 'INTERNAL', 'insert returned no row')
-    }
-    return NextResponse.json({ post: rowToPost(row) }, { status: 201 })
+    await postsColl().insertOne(doc)
+    return NextResponse.json({ post: rowToPost(doc) }, { status: 201 })
   } catch (err) {
     if (isUniqueViolation(err)) {
       return errorResponse(

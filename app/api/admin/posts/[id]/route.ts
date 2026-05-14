@@ -10,10 +10,9 @@
 // rather than 500 so probing the surface doesn't leak schema details.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { db } from '../../../../../db/client'
-import { posts } from '../../../../../db/schema'
+import type { PostDoc } from '../../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../../lib/auth'
 import { errorResponse } from '../../../../../lib/api'
 import {
@@ -28,6 +27,10 @@ export const runtime = 'nodejs'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 type RouteCtx = { params: Promise<{ id: string }> }
+
+function postsColl() {
+  return db.collection<PostDoc>('posts')
+}
 
 // ── GET ──────────────────────────────────────────────────────────────────────
 
@@ -90,16 +93,15 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     )
   }
 
-  const update: Record<string, unknown> = { ...body, updated_at: new Date() }
+  const update = { ...body, updated_at: new Date() }
 
   let row
   try {
-    const updated = await db
-      .update(posts)
-      .set(update)
-      .where(eq(posts.id, id))
-      .returning()
-    row = updated[0]
+    row = await postsColl().findOneAndUpdate(
+      { _id: id },
+      { $set: update },
+      { returnDocument: 'after' },
+    )
   } catch (err) {
     if (isUniqueViolation(err)) {
       return errorResponse(
@@ -146,12 +148,9 @@ export async function DELETE(req: NextRequest, ctx: RouteCtx) {
   const existing = await getDraftPostById(id)
   if (!existing) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
-  const deleted = await db
-    .delete(posts)
-    .where(eq(posts.id, id))
-    .returning({ id: posts.id })
+  const result = await postsColl().deleteOne({ _id: id })
 
-  if (deleted.length === 0) {
+  if (result.deletedCount === 0) {
     return errorResponse(404, 'NOT_FOUND', 'post not found')
   }
 

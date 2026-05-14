@@ -22,8 +22,9 @@
 //      effort blob delete so we don't leave orphans.
 
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { db } from '../../../../db/client'
-import { images } from '../../../../db/schema'
+import type { ImageDoc } from '../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../lib/auth'
 import { errorResponse } from '../../../../lib/api'
 import {
@@ -40,6 +41,10 @@ import {
 } from '../../../../lib/images'
 
 export const runtime = 'nodejs'
+
+function imagesColl() {
+  return db.collection<ImageDoc>('images')
+}
 
 // ── GET /api/admin/images ────────────────────────────────────────────────────
 
@@ -136,27 +141,22 @@ export async function POST(req: NextRequest) {
     return errorResponse(502, 'INTERNAL', 'upload failed')
   }
 
-  // (7) Persist row. Roll back the blob on insert failure.
+  // (7) Persist doc. Roll back the blob on insert failure.
   const filename = sanitizeOriginalFilename(file.name ?? null)
+  const doc: ImageDoc = {
+    _id:        randomUUID(),
+    blob_url:   uploaded.url,
+    width:      transcoded.width,
+    height:     transcoded.height,
+    alt:        '',
+    focal_x:    0.5,
+    focal_y:    0.5,
+    filename,
+    created_at: new Date(),
+  }
   try {
-    const inserted = await db
-      .insert(images)
-      .values({
-        blob_url: uploaded.url,
-        width:    transcoded.width,
-        height:   transcoded.height,
-        alt:      '',
-        focal_x:  0.5,
-        focal_y:  0.5,
-        filename,
-      })
-      .returning()
-    const row = inserted[0]
-    if (!row) {
-      void bestEffortDeleteBlob(uploaded.url)
-      return errorResponse(500, 'INTERNAL', 'insert returned no row')
-    }
-    return NextResponse.json({ image: rowToImage(row) }, { status: 201 })
+    await imagesColl().insertOne(doc)
+    return NextResponse.json({ image: rowToImage(doc) }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/admin/images] insert failed:', err)
     void bestEffortDeleteBlob(uploaded.url)
