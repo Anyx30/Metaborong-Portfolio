@@ -21,11 +21,8 @@ import type {
 } from './schema'
 
 declare global {
-  // eslint-disable-next-line no-var
   var __mb_mongo_client: MongoClient | undefined
-  // eslint-disable-next-line no-var
   var __mb_mongo_db: Db | undefined
-  // eslint-disable-next-line no-var
   var __mb_mongo_indexes_promise: Promise<void> | undefined
 }
 
