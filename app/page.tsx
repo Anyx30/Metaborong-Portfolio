@@ -15,12 +15,12 @@ import { ContactCtaSection } from '@/components/sections/contact-cta'
 import { organizationSchema, websiteSchema, faqSchema, serviceSchemas } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Web3 & AI Development Studio | Metaborong',
+  // Title inherits from layout.tsx default — single source of truth.
   description:
     'Metaborong builds DeFi protocols, AI agent systems, and custom SaaS products for founders and crypto-native teams. Fast delivery, product-first thinking.',
   alternates: { canonical: 'https://www.metaborong.com' },
   openGraph: {
-    title: 'Web3 & AI Development Studio | Metaborong',
+    title: 'Web3 Protocols, AI Agents & SaaS Products | Metaborong',
     description:
       'Metaborong builds DeFi protocols, AI agent systems, and custom SaaS products for founders and crypto-native teams.',
     url: 'https://www.metaborong.com',
