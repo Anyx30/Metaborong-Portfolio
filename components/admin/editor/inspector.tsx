@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/react'
 import { useEffect, useId, useState } from 'react'
 import type { GeoVariants, SemanticRole } from '@/lib/blog-schema'
 import { NODE_NAMES } from '@/lib/editor/serialize'
+import { InfoTooltip } from '../info-tooltip'
 
 // Block types that accept a per-block text override on a variant tab. The
 // `image` block accepts an alt override instead. List / code / faq are
@@ -143,7 +144,10 @@ export function Inspector({
             code, and FAQ overrides are deferred to v1.6.
           </p>
         ) : (
-          <Field label={overrideKind === 'alt' ? `${region} alt override` : `${region} text override`}>
+          <Field
+            label={overrideKind === 'alt' ? `${region} alt override` : `${region} text override`}
+            info={`Replaces the block's ${overrideKind === 'alt' ? 'alt text' : 'text'} when the reader is in ${region}. Leave empty to inherit the Base version. Useful for region-specific phrasing or compliance (e.g. EU privacy wording).`}
+          >
             <input
               type="text"
               value={overrideValue}
@@ -185,7 +189,10 @@ export function Inspector({
         </p>
       ) : null}
 
-      <Field label="Role">
+      <Field
+        label="Role"
+        info="Tags a block's semantic intent for SEO/AEO/GEO outputs. 'tldr' surfaces in /llms.txt, 'definition' wraps for featured-snippet eligibility, 'step' aggregates into HowTo schema when 3+ are present, 'evidence' marks source citations, 'cta' is excluded from AI summaries."
+      >
         <select
           value={role}
           onChange={(e) => update({ role: e.target.value || null })}
@@ -228,14 +235,17 @@ export function Inspector({
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, info, children }: { label: string; info?: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-[4px]">
-      <span
-        className="text-[10px] font-medium uppercase tracking-[0.12em] text-gray"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        {label}
+      <span className="flex items-center gap-1">
+        <span
+          className="text-[10px] font-medium uppercase tracking-[0.12em] text-gray"
+          style={{ fontFamily: 'var(--font-mono)' }}
+        >
+          {label}
+        </span>
+        {info ? <InfoTooltip info={info} label={`Help: ${label}`} /> : null}
       </span>
       {children}
     </label>
@@ -249,7 +259,10 @@ function inputCls() {
 function HeadingFields({ attrs, update }: { attrs: Record<string, unknown>; update: (a: Record<string, unknown>) => void }) {
   return (
     <>
-      <Field label="Level">
+      <Field
+        label="Level"
+        info="Heading hierarchy (H2–H6). H1 is reserved for the post title — never editable. Keep the outline non-decreasing by 1 (no H2 → H4 jumps); search engines penalise broken hierarchies."
+      >
         <select
           value={(attrs.level as number) ?? 2}
           onChange={(e) => update({ level: Number(e.target.value) })}
@@ -258,7 +271,10 @@ function HeadingFields({ attrs, update }: { attrs: Record<string, unknown>; upda
           {[2, 3, 4, 5, 6].map((l) => <option key={l} value={l}>{`H${l}`}</option>)}
         </select>
       </Field>
-      <Field label="Anchor (optional)">
+      <Field
+        label="Anchor (optional)"
+        info="URL fragment for in-page jump links (e.g. /blog/post#getting-started). Auto-derived from the heading text if left blank. Use kebab-case."
+      >
         <input
           type="text"
           value={(attrs.anchor as string | null) ?? ''}
@@ -281,12 +297,18 @@ function ListFields({ attrs, update }: { attrs: Record<string, unknown>; update:
   const labelId = useId()
   return (
     <div className="flex flex-col gap-[4px]">
-      <span
-        id={labelId}
-        className="text-[10px] font-medium uppercase tracking-[0.12em] text-gray"
-        style={{ fontFamily: 'var(--font-mono)' }}
-      >
-        List style
+      <span className="flex items-center gap-1">
+        <span
+          id={labelId}
+          className="text-[10px] font-medium uppercase tracking-[0.12em] text-gray"
+          style={{ fontFamily: 'var(--font-mono)' }}
+        >
+          List style
+        </span>
+        <InfoTooltip
+          info="Ordered (1, 2, 3) implies sequence — use when order matters. Unordered (•) is for collections where order doesn't matter."
+          label="Help: List style"
+        />
       </span>
       <div role="group" aria-labelledby={labelId} className="flex gap-2">
         <button
@@ -308,7 +330,10 @@ function ListFields({ attrs, update }: { attrs: Record<string, unknown>; update:
 
 function CalloutFields({ attrs, update }: { attrs: Record<string, unknown>; update: (a: Record<string, unknown>) => void }) {
   return (
-    <Field label="Tone">
+    <Field
+      label="Tone"
+      info="Visual + semantic flavour. Tip = helpful aside, Warning = caution / pitfall, Note = neutral information. Each tone gets its own colour and icon on the public page."
+    >
       <select
         value={(attrs.tone as string) ?? 'note'}
         onChange={(e) => update({ tone: e.target.value })}
@@ -326,7 +351,10 @@ function ImageFields({ attrs, update }: { attrs: Record<string, unknown>; update
   const altMissing = !((attrs.alt as string) ?? '').trim()
   return (
     <>
-      <Field label="Image ID (UUID)">
+      <Field
+        label="Image ID (UUID)"
+        info="UUID of an image already uploaded to the library. Easier path: use the slash menu (/) → 'image' which opens the picker and fills this for you."
+      >
         <input
           type="text"
           value={(attrs.imageId as string) ?? ''}
@@ -336,7 +364,10 @@ function ImageFields({ attrs, update }: { attrs: Record<string, unknown>; update
           style={{ fontFamily: 'var(--font-mono)' }}
         />
       </Field>
-      <Field label="Alt text *">
+      <Field
+        label="Alt text *"
+        info="Required. Describes the image for screen readers and when images fail to load. Be specific (e.g. 'Diagram of MCP request flow' beats 'image')."
+      >
         <input
           type="text"
           aria-required="true"
@@ -346,7 +377,10 @@ function ImageFields({ attrs, update }: { attrs: Record<string, unknown>; update
           className={`${inputCls()} ${altMissing ? '!border-[#fda29b]' : ''}`}
         />
       </Field>
-      <Field label="Caption (optional)">
+      <Field
+        label="Caption (optional)"
+        info="Optional visible text under the image. Use for image credits or extra context the alt text shouldn't repeat."
+      >
         <input
           type="text"
           value={(attrs.caption as string | null) ?? ''}
@@ -360,7 +394,10 @@ function ImageFields({ attrs, update }: { attrs: Record<string, unknown>; update
 
 function QuoteFields({ attrs, update }: { attrs: Record<string, unknown>; update: (a: Record<string, unknown>) => void }) {
   return (
-    <Field label="Citation (optional)">
+    <Field
+      label="Citation (optional)"
+      info="Who said the quote (e.g. 'Tim Berners-Lee'). Becomes the visible <cite> tag on the rendered page; helps with attribution and SEO authority signals."
+    >
       <input
         type="text"
         value={(attrs.cite as string | null) ?? ''}
@@ -374,7 +411,10 @@ function QuoteFields({ attrs, update }: { attrs: Record<string, unknown>; update
 
 function CodeFields({ attrs, update }: { attrs: Record<string, unknown>; update: (a: Record<string, unknown>) => void }) {
   return (
-    <Field label="Language">
+    <Field
+      label="Language"
+      info="Code highlighting hint (e.g. 'ts', 'bash', 'json'). Used as a CSS class on the rendered <pre><code>; full syntax highlighting is on the v2.1 roadmap."
+    >
       <input
         type="text"
         value={(attrs.lang as string) ?? ''}
@@ -390,7 +430,10 @@ function CodeFields({ attrs, update }: { attrs: Record<string, unknown>; update:
 function FaqFields({ attrs, update }: { attrs: Record<string, unknown>; update: (a: Record<string, unknown>) => void }) {
   return (
     <>
-      <Field label="Question">
+      <Field
+        label="Question"
+        info="Phrase as a complete question (e.g. 'How does the MCP cache work?'). FAQ blocks aggregate into the page's FAQPage JSON-LD — Google's rich result for Q&A pages."
+      >
         <input
           type="text"
           value={(attrs.question as string) ?? ''}
@@ -398,7 +441,10 @@ function FaqFields({ attrs, update }: { attrs: Record<string, unknown>; update: 
           className={inputCls()}
         />
       </Field>
-      <Field label="Answer">
+      <Field
+        label="Answer"
+        info="Multi-line allowed. Keep it concise — featured-snippet eligibility favours 40–60 word answers that directly address the question."
+      >
         <textarea
           rows={4}
           value={(attrs.answer as string) ?? ''}
