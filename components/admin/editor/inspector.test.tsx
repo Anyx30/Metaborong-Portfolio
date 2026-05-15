@@ -135,6 +135,8 @@ describe('<Inspector /> — variant override panel', () => {
     expect(altInput.value).toBe('')
 
     // The aria-label encodes "<region> alt override" for SR announcement.
-    expect(screen.getByLabelText(/US alt override/i)).toBeInTheDocument()
+    // Anchor with ^/$ so the new InfoTooltip's "Help: US alt override"
+    // button doesn't also match this regex.
+    expect(screen.getByLabelText(/^US alt override$/i)).toBeInTheDocument()
   })
 })

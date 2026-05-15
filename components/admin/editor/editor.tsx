@@ -66,6 +66,11 @@ export function BlockEditor({
         blockquote: false,
         codeBlock: false,
         horizontalRule: false,
+        // StarterKit's TrailingNode would auto-append an empty mbHeading
+        // after the last block, which fails Zod's "text length >= 1" check
+        // and blocks save. Disabled — users press Enter to add a new block,
+        // matching the slash-menu insertion flow.
+        trailingNode: false,
       }),
       ...MB_NODES,
       UniqueIds,

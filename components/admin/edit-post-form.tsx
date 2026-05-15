@@ -19,6 +19,7 @@ import { AiReadinessButton } from '@/components/admin/editor/ai-readiness-button
 import { AiReadinessDrawer } from '@/components/admin/editor/ai-readiness-drawer'
 import type { AiReadinessApiResponse } from '@/lib/ai-readiness/ui-types'
 import { ImagePicker, type PickerMode } from '@/components/admin/images/image-picker'
+import { InfoTooltip } from '@/components/admin/info-tooltip'
 
 type SaveState =
   | { kind: 'idle' }
@@ -611,39 +612,63 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
             }}
           />
           {post.status === 'published' ? (
-            <button
-              type="button"
-              onClick={handleUnpublish}
-              disabled={statusBusy !== null}
-              className="inline-flex h-[36px] items-center rounded-md border border-border bg-white px-3 text-[13px] font-medium text-dark transition-colors duration-150 hover:border-brand/30 disabled:opacity-60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            >
-              {statusBusy === 'unpublish' ? 'Unpublishing…' : 'Unpublish'}
-            </button>
+            <span className="inline-flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleUnpublish}
+                disabled={statusBusy !== null}
+                className="inline-flex h-[36px] items-center rounded-md border border-border bg-white px-3 text-[13px] font-medium text-dark transition-colors duration-150 hover:border-brand/30 disabled:opacity-60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              >
+                {statusBusy === 'unpublish' ? 'Unpublishing…' : 'Unpublish'}
+              </button>
+              <InfoTooltip
+                info="Reverts the post to draft. The /blog/[slug] URL starts returning 404 within seconds. Sitemap, RSS, and llms.txt drop the post on the next revalidation."
+                label="Help: Unpublish"
+              />
+            </span>
           ) : (
+            <span className="inline-flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={statusBusy !== null || !validation.ok}
+                className="inline-flex h-[36px] items-center rounded-md bg-brand px-3 text-[13px] font-semibold text-white transition-opacity duration-150 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              >
+                {statusBusy === 'publish' ? 'Publishing…' : 'Publish'}
+              </button>
+              <InfoTooltip
+                info="Makes the post live at /blog/[slug] immediately — no redeploy. Adds it to the sitemap, RSS, and llms.txt. Once published, the slug locks to preserve backlinks."
+                label="Help: Publish"
+              />
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1">
             <button
               type="button"
-              onClick={handlePublish}
-              disabled={statusBusy !== null || !validation.ok}
-              className="inline-flex h-[36px] items-center rounded-md bg-brand px-3 text-[13px] font-semibold text-white transition-opacity duration-150 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              onClick={() => runSave()}
+              disabled={save.kind === 'saving' || !dirty || !validation.ok}
+              className="inline-flex h-[36px] items-center rounded-md border border-border bg-white px-3 text-[13px] font-medium text-dark transition-colors duration-150 hover:border-brand/30 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
-              {statusBusy === 'publish' ? 'Publishing…' : 'Publish'}
+              {save.kind === 'saving' ? 'Saving…' : 'Save'}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => runSave()}
-            disabled={save.kind === 'saving' || !dirty || !validation.ok}
-            className="inline-flex h-[36px] items-center rounded-md border border-border bg-white px-3 text-[13px] font-medium text-dark transition-colors duration-150 hover:border-brand/30 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          >
-            {save.kind === 'saving' ? 'Saving…' : 'Save'}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setShowDelete(true); setConfirmSlug('') }}
-            className="inline-flex h-[36px] items-center rounded-md border border-transparent px-3 text-[13px] font-medium text-gray transition-colors duration-150 hover:border-[#fda29b] hover:text-[#b42318] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          >
-            Delete
-          </button>
+            <InfoTooltip
+              info="Saves the current draft. The editor also auto-saves every 2 seconds while you're editing — manual Save is a belt-and-braces backup or for triggering a server-side validation pass."
+              label="Help: Save"
+            />
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => { setShowDelete(true); setConfirmSlug('') }}
+              className="inline-flex h-[36px] items-center rounded-md border border-transparent px-3 text-[13px] font-medium text-gray transition-colors duration-150 hover:border-[#fda29b] hover:text-[#b42318] focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              Delete
+            </button>
+            <InfoTooltip
+              info="Irreversible. Deletes the post and all its variants. You'll be asked to type the slug to confirm. Uploaded images stay in the library for reuse."
+              label="Help: Delete"
+            />
+          </span>
         </div>
       </div>
 
@@ -655,6 +680,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Title"
           id="f-title"
+          info="The post's H1 and primary search snippet. Aim for 50–60 characters; over that, search engines truncate. On a variant tab, overrides the Base title for that region only."
           error={errs.title}
           variantOverride={overrides('title')}
           onResetOverride={() => resetOverride('title')}
@@ -673,6 +699,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Slug"
           id="f-slug"
+          info="The URL fragment after /blog/. Locks after first publish so backlinks don't break. Keep it kebab-case (lowercase-with-hyphens) and stable."
           error={errs.slug}
           hint={
             onVariantTab ? 'Slug is base-only; switch to Base to edit.' :
@@ -694,6 +721,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Excerpt"
           id="f-excerpt"
+          info="1–2 sentence summary surfaced on the /blog listing, in OG previews, and in RSS. Becomes Article.description in JSON-LD if no role='intro' block exists. Aim for under 160 chars."
           error={errs.excerpt}
           className="md:col-span-2"
           variantOverride={overrides('excerpt')}
@@ -712,6 +740,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Tags"
           id="f-tags"
+          info="Comma-separated keywords. Drives the filter chip on /blog and the per-tag RSS feed. Keep them lowercase-with-hyphens for URL consistency."
           error={errs.tags}
           hint={onVariantTab ? 'Tags are base-only; switch to Base to edit.' : 'Comma-separated. lowercase-with-hyphens.'}
         >
@@ -730,6 +759,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Author name"
           id="f-author"
+          info="Becomes Article.author.name in the JSON-LD. Search engines and LLMs use this for E-E-A-T (Experience, Expertise, Authoritativeness, Trust) attribution."
           error={errs.author_name}
           hint={onVariantTab ? 'Author name is base-only; switch to Base to edit.' : undefined}
         >
@@ -747,6 +777,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Author URL"
           id="f-author-url"
+          info="Optional link to the author's profile or bio page. Strengthens authorship signals — LLMs preferentially cite posts where the author has a verifiable bio URL."
           error={errs.author_url}
           hint={onVariantTab ? 'Author URL is base-only; switch to Base to edit.' : undefined}
         >
@@ -765,6 +796,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Meta title"
           id="f-meta-title"
+          info="Overrides the post title in the browser tab and search result link. Leave empty to fall back to the title. Useful for shorter SEO-optimized versions of long titles."
           error={errs.meta_title}
           variantOverride={overrides('meta_title')}
           onResetOverride={() => resetOverride('meta_title')}
@@ -782,6 +814,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Meta description"
           id="f-meta-desc"
+          info="Overrides the excerpt in search snippet previews. Leave empty to fall back to the excerpt. Aim for 150–160 characters — Google truncates beyond that."
           error={errs.meta_description}
           variantOverride={overrides('meta_description')}
           onResetOverride={() => resetOverride('meta_description')}
@@ -799,6 +832,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="Cover image"
           id="f-cover"
+          info="Hero image at the top of the post page and the listing thumbnail. Pick from the library or upload new. Alt text on the image asset itself is used by screen readers."
           error={errs.cover_image_id}
           hint={
             onVariantTab ? 'Cover image is base-only; switch to Base to edit.' :
@@ -821,6 +855,7 @@ export function EditPostForm({ initialPost, initialCover = null, initialOg = nul
         <Field
           label="OG image"
           id="f-og"
+          info="Image used in social-card previews (Twitter, Facebook, Slack, LinkedIn). Falls back to the cover image when unset. Recommended size: 1200×630."
           error={errs.og_image_id}
           hint={
             onVariantTab ? 'OG image is base-only; switch to Base to edit.' :
@@ -945,7 +980,7 @@ function VariantTabs({
     { key: 'EU',    label: 'EU' },
   ]
   return (
-    <nav role="tablist" aria-label="Geo variant" className="flex gap-1 border-b border-border" data-testid="variant-tabs">
+    <nav role="tablist" aria-label="Geo variant" className="flex items-center gap-1 border-b border-border" data-testid="variant-tabs">
       {TABS.map((t) => {
         const isActive = active === t.key
         return (
@@ -965,15 +1000,23 @@ function VariantTabs({
           </button>
         )
       })}
+      <span className="ml-1 -mb-px h-[36px] inline-flex items-center">
+        <InfoTooltip
+          info="Region-specific overrides for title, excerpt, meta fields, and per-block text/alt. Base is the canonical version. US/EU readers see the matching variant if it exists; otherwise they fall back to Base. Canonical URL is single — no SEO duplication."
+          label="Help: Geo variants"
+          side="bottom-start"
+        />
+      </span>
     </nav>
   )
 }
 
 function Field({
-  label, id, hint, error, children, className, variantOverride, onResetOverride,
+  label, id, info, hint, error, children, className, variantOverride, onResetOverride,
 }: {
   label: string
   id: string
+  info?: string
   hint?: string
   error?: string
   children: React.ReactNode
@@ -984,13 +1027,16 @@ function Field({
   return (
     <div className={`flex flex-col gap-[6px] ${className ?? ''}`}>
       <div className="flex flex-wrap items-center justify-between gap-[6px]">
-        <label
-          htmlFor={id}
-          className="text-[12px] font-medium uppercase tracking-[0.08em] text-gray"
-          style={{ fontFamily: 'var(--font-mono)' }}
-        >
-          {label}
-        </label>
+        <span className="flex items-center gap-1">
+          <label
+            htmlFor={id}
+            className="text-[12px] font-medium uppercase tracking-[0.08em] text-gray"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            {label}
+          </label>
+          {info ? <InfoTooltip info={info} label={`Help: ${label}`} side="bottom-start" /> : null}
+        </span>
         {variantOverride ? (
           <span className="flex items-center gap-2">
             <span

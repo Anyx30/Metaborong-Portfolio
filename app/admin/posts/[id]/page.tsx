@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { getDraftPostById } from '@/lib/posts'
 import { getImageById } from '@/lib/images'
 import { EditPostForm } from '@/components/admin/edit-post-form'
+import { InfoTooltip } from '@/components/admin/info-tooltip'
 
 export const metadata: Metadata = {
   title: 'Edit post',
@@ -47,14 +48,21 @@ export default async function AdminEditPostPage({ params }: EditPageProps) {
             {post.title || 'Untitled draft'}
           </h1>
         </div>
-        <Link
-          href={`/admin/posts/${post.id}/preview`}
-          target="_blank"
-          rel="noopener"
-          className="inline-flex h-[36px] items-center gap-2 rounded-md border border-border bg-white px-3 text-[13px] font-medium text-dark no-underline transition-colors duration-150 hover:border-brand/30 hover:text-brand focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-        >
-          Open standalone preview ↗
-        </Link>
+        <span className="inline-flex items-center gap-2">
+          <Link
+            href={`/admin/posts/${post.id}/preview`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex h-[36px] items-center gap-2 rounded-md border border-border bg-white px-3 text-[13px] font-medium text-dark no-underline transition-colors duration-150 hover:border-brand/30 hover:text-brand focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            Open standalone preview ↗
+          </Link>
+          <InfoTooltip
+            info="Opens a full-bleed admin-only preview of the saved draft in a new tab. Useful for previewing on a phone or sharing with a teammate. The URL is admin-gated — unauthenticated visits redirect to /admin/login."
+            label="Help: Open standalone preview"
+            side="bottom-end"
+          />
+        </span>
       </header>
 
       <EditPostForm initialPost={post} initialCover={initialCover} initialOg={initialOg} />

@@ -139,7 +139,7 @@ describe('<EditPostForm />', () => {
     expect(screen.getByLabelText(/^slug$/i)).toHaveValue('sample-post')
     expect(screen.getByLabelText(/^excerpt$/i)).toHaveValue('Lede.')
     expect(screen.getByLabelText(/^tags$/i)).toHaveValue('web3')
-    expect(screen.getByLabelText(/author name/i)).toHaveValue('Arnab Ray')
+    expect(screen.getByLabelText(/^author name$/i)).toHaveValue('Arnab Ray')
   })
 
   it('flags an empty title with an inline error and disables Save', () => {
