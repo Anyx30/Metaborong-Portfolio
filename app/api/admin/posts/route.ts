@@ -9,16 +9,11 @@
 // we catch the Mongo duplicate-key error and translate).
 
 import { NextRequest, NextResponse } from 'next/server'
-import { randomUUID } from 'node:crypto'
-import { db } from '../../../../db/client'
-import type { PostDoc } from '../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../lib/auth'
 import { errorResponse } from '../../../../lib/api'
 import {
-  isUniqueViolation,
+  createPost,
   listAllPostsForAdmin,
-  rowToPost,
-  slugifyTitle,
 } from '../../../../lib/posts'
 import {
   createPostBodySchema,
@@ -26,10 +21,6 @@ import {
 } from '../../../../lib/post-validation'
 
 export const runtime = 'nodejs'
-
-function postsColl() {
-  return db.collection<PostDoc>('posts')
-}
 
 // ── GET /api/admin/posts ─────────────────────────────────────────────────────
 
@@ -82,51 +73,22 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { title } = parsed.data
-  const slug = parsed.data.slug ?? slugifyTitle(title)
+  const result = await createPost({
+    title:       parsed.data.title,
+    slug:        parsed.data.slug,
+    author_name: identity.email,
+  })
 
-  const now = new Date()
-  const doc: PostDoc = {
-    _id:                       randomUUID(),
-    slug,
-    title,
-    excerpt:                   null,
-    status:                    'draft',
-    content_json:              [],
-    content_schema_version:    1,
-    cover_image_id:            null,
-    og_image_id:               null,
-    tags:                      [],
-    author_name:               identity.email,
-    author_url:                null,
-    meta_title:                null,
-    meta_description:          null,
-    canonical_url:             null,
-    geo_variants:              {},
-    ai_readiness_score:        null,
-    ai_readiness_band:         null,
-    ai_readiness_report:       null,
-    ai_readiness_content_hash: null,
-    ai_readiness_checked_at:   null,
-    published_at:              null,
-    created_at:                now,
-    updated_at:                now,
-  }
-
-  try {
-    await postsColl().insertOne(doc)
-    return NextResponse.json({ post: rowToPost(doc) }, { status: 201 })
-  } catch (err) {
-    if (isUniqueViolation(err)) {
-      return errorResponse(
-        422,
-        'SLUG_CONFLICT',
-        'a post with this slug already exists',
-        { field: 'slug' },
-      )
+  if (!result.ok) {
+    switch (result.code) {
+      case 'SLUG_CONFLICT':
+        return errorResponse(422, 'SLUG_CONFLICT', result.message, { field: result.field })
+      case 'VALIDATION_FAILED':
+        return errorResponse(422, 'VALIDATION_FAILED', result.message, { field: result.field })
+      case 'INTERNAL':
+        return errorResponse(500, 'INTERNAL', result.message)
     }
-    // Don't leak the raw error; log for ops.
-    console.error('[POST /api/admin/posts] insert failed:', err)
-    return errorResponse(500, 'INTERNAL', 'failed to create post')
   }
+
+  return NextResponse.json({ post: result.post }, { status: 201 })
 }

@@ -46,7 +46,13 @@ function buildClient(): { client: MongoClient; db: Db } {
   if (!uri || !uri.trim()) {
     throw new Error('MONGODB_URI is not configured')
   }
-  const client = new MongoClient(uri)
+  // serverSelectionTimeoutMS caps how long the driver waits to pick a
+  // reachable replica before throwing. Without it, a Mongo outage hangs
+  // every DB-touching request up to the Vercel function timeout — and
+  // since /api/mcp is exposed to retry-aggressive AI clients, that
+  // amplifies into a request pile-up. 5s is the standard hardening
+  // recommendation (MCP Tester N3, docs/cms/reports/mcp-2026-05-15.md).
+  const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 })
   const db = client.db(dbNameFromUri(uri))
   return { client, db }
 }

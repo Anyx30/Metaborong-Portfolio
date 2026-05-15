@@ -301,3 +301,89 @@ export async function bestEffortDeleteBlob(url: string): Promise<void> {
     console.warn('[images] failed to clean up orphan blob:', err)
   }
 }
+
+// ── createImageFromBytes ─────────────────────────────────────────────────────
+//
+// The full upload pipeline lifted out of the admin route handler so the MCP
+// cms_upload_image tool can call it without going through HTTP. The route
+// still owns multipart parsing + the wire-bound size check (which has to
+// happen against the multipart body, not the file bytes); from then on
+// both callers share this helper.
+
+export interface CreateImageInput {
+  /** Raw image bytes. Must already be ≤ IMAGE_MAX_BYTES — the helper
+   *  re-checks defensively. */
+  buffer:    Buffer
+  /** Alt text. Empty string is the legacy default for the admin uploader;
+   *  the MCP tool insists on a non-empty value at its own validation layer. */
+  alt?:      string
+  /** Original filename for display. Sanitised before persisting. */
+  filename?: string | null
+  /** 0–1 focal point coordinates. Default centred at (0.5, 0.5). */
+  focal_x?:  number
+  focal_y?:  number
+}
+
+export type CreateImageError =
+  | { ok: false; code: 'UPLOAD_TOO_LARGE';   message: string }
+  | { ok: false; code: 'UPLOAD_BAD_TYPE';    message: string }
+  /** Blob upload failed upstream — route maps to 502. */
+  | { ok: false; code: 'BLOB_UPLOAD_FAILED'; message: string }
+  /** DB insert failed after a successful blob upload — route maps to 500. */
+  | { ok: false; code: 'DB_INSERT_FAILED';   message: string }
+
+export type CreateImageResult =
+  | { ok: true; image: Image }
+  | CreateImageError
+
+export async function createImageFromBytes(
+  input: CreateImageInput,
+  dbHandle: Db = defaultDb,
+): Promise<CreateImageResult> {
+  if (input.buffer.length > IMAGE_MAX_BYTES) {
+    return { ok: false, code: 'UPLOAD_TOO_LARGE', message: 'file exceeds 8MB limit' }
+  }
+
+  const detected = sniffImageFormat(input.buffer)
+  if (!detected) {
+    return { ok: false, code: 'UPLOAD_BAD_TYPE', message: 'Only JPG/PNG/WebP allowed.' }
+  }
+
+  let transcoded: TranscodedImage
+  try {
+    transcoded = await transcodeToWebp(input.buffer)
+  } catch (err) {
+    console.error('[lib/images.createImageFromBytes] sharp transcode failed:', err)
+    return { ok: false, code: 'UPLOAD_BAD_TYPE', message: 'Only JPG/PNG/WebP allowed.' }
+  }
+
+  let uploaded: UploadedBlob
+  try {
+    uploaded = await uploadWebpToBlob(transcoded.buffer)
+  } catch (err) {
+    console.error('[lib/images.createImageFromBytes] blob upload failed:', err)
+    return { ok: false, code: 'BLOB_UPLOAD_FAILED', message: 'upload failed' }
+  }
+
+  const filename = sanitizeOriginalFilename(input.filename ?? null)
+  const doc: ImageDoc = {
+    _id:        randomUUID(),
+    blob_url:   uploaded.url,
+    width:      transcoded.width,
+    height:     transcoded.height,
+    alt:        input.alt ?? '',
+    focal_x:    typeof input.focal_x === 'number' ? input.focal_x : 0.5,
+    focal_y:    typeof input.focal_y === 'number' ? input.focal_y : 0.5,
+    filename,
+    created_at: new Date(),
+  }
+
+  try {
+    await imagesOf(dbHandle).insertOne(doc)
+    return { ok: true, image: rowToImage(doc) }
+  } catch (err) {
+    console.error('[lib/images.createImageFromBytes] insert failed:', err)
+    void bestEffortDeleteBlob(uploaded.url)
+    return { ok: false, code: 'DB_INSERT_FAILED', message: 'failed to persist image' }
+  }
+}

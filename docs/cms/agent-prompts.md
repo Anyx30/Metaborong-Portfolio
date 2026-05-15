@@ -801,3 +801,78 @@ These are the slices to dispatch agents against, in order:
 | 6 | Geo-variants                                | Variant fields in PATCH, server-side variant resolver        | Base/US/EU tabs in editor, region selector in preview pane   |
 | 7 | AI Readiness MCP                            | MCP client, /api/admin/posts/[id]/ai-readiness, caching, rate limit | AI readiness drawer, dashboard column, soft-prompt on publish |
 | 8 | Hardening                                   | CSRF middleware, magic-byte validation, login rate limit polish | A11y pass, Lighthouse pass, focus management audit       |
+
+---
+
+## 11. Claude MCP Server (M10 — authoring from Claude)
+
+`POST /api/mcp` exposes the CMS write surface to Claude (and any MCP-aware
+client) via the Model Context Protocol "Streamable HTTP" transport
+(2025-03-26). Tools call the same `lib/posts.ts` / `lib/images.ts` helpers
+that the admin UI uses, so a draft authored by Claude is structurally
+indistinguishable from one created in the dashboard.
+
+### 11.1 Surface
+
+| Tool                | Purpose                                                                                                                                | Notes                                                                                |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `cms_create_draft`  | Create a draft from markdown. Returns `{ id, slug }`.                                                                                  | Status is force-set to `draft`. Publishing remains admin-UI only.                    |
+| `cms_patch_post`    | Partial update by id. Returns `{ id }`.                                                                                                | Supplying `markdown` replaces `content_json` wholesale. Cannot change status/slug-of-published. |
+| `cms_upload_image`  | Upload from `{ url }`, `{ base64, content_type }`, or `data:` URL. Returns `{ id, blob_url, width, height }`.                          | Same magic-byte sniff + sharp transcode + Vercel Blob pipeline as the admin uploader. |
+| `cms_list_posts`    | List `{ status?, limit?, offset? }`. Returns `{ posts: PostSummary[], total }`.                                                        | Default page size 20, max 100. Ordered by `updated_at DESC`.                          |
+| `cms_get_post`      | Fetch `{ id }`. Returns `{ post: Post }` including `content_json`.                                                                     | Use before patching so Claude can read the current content.                           |
+
+### 11.2 Auth
+
+Bearer token via env var `MCP_ADMIN_TOKEN`. Every request must carry
+`Authorization: Bearer <MCP_ADMIN_TOKEN>`. Comparison is constant-time;
+mismatch → JSON-RPC error with HTTP 401 and `error.data.code = "UNAUTHORIZED"`.
+If the env var is unset, all requests get HTTP 503 with
+`error.data.code = "MCP_DISABLED"`.
+
+### 11.3 Error envelope
+
+JSON-RPC 2.0 errors map to CMS codes via `error.data`:
+
+```jsonc
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32001,                  // JSON-RPC layer code (per lib/mcp/types.ts)
+    "message": "human-readable",
+    "data": {
+      "code": "VALIDATION_FAILED",   // CMS-side machine code (mirrors /api/admin/**)
+      "field": "title"               // optional dotted path
+    }
+  }
+}
+```
+
+### 11.4 Markdown contract
+
+The body of `cms_create_draft` and `cms_patch_post` is plain markdown. The
+walker (`lib/markdown/markdown-to-blocks.ts`) maps:
+
+- `##..######` → heading (level 2–6; **H1 is rejected**)
+- paragraph → paragraph (inline emphasis stripped to plain text)
+- `-`/`*` / `1.` → list (ordered=true|false)
+- `` ```lang `` → code
+- `![alt](uuid)` → image (src **must** be a UUID returned by `cms_upload_image`)
+- `> body` → quote (trailing `— cite` line becomes `cite`)
+- `> [!tip|note|warn] …` → callout
+- `> [!takeaway] …` → key-takeaway
+- `> [!faq] Q\n> A` → faq
+
+Role hints: either `<!-- role: tldr -->` on its own line immediately before
+the block, or a `block_roles` map `{ 0: 'intro', 3: 'tldr' }` passed in the
+tool arguments. The map wins on conflict at the same index.
+
+### 11.5 Out of scope for v1
+
+- Publishing / unpublishing (must stay admin-UI-only)
+- Deleting posts
+- Patching `status`, `published_at`, or a published post's slug
+- Rich inline markdown (bold/italic/link) is stripped to plain text
+- Batch image upload
+- Webhooks back to Claude when a human publishes a draft

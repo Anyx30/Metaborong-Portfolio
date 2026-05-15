@@ -17,8 +17,7 @@ import { requireAdmin, requireCsrf } from '../../../../../lib/auth'
 import { errorResponse } from '../../../../../lib/api'
 import {
   getDraftPostById,
-  isUniqueViolation,
-  rowToPost,
+  updatePost,
 } from '../../../../../lib/posts'
 import { patchPostBodySchema } from '../../../../../lib/post-validation'
 
@@ -78,56 +77,33 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       { field: issue?.path?.join('.') || undefined },
     )
   }
-  const body = parsed.data
 
-  // Read existing row so we can enforce slug-immutability after first publish.
-  const existing = await getDraftPostById(id)
-  if (!existing) return errorResponse(404, 'NOT_FOUND', 'post not found')
+  const result = await updatePost(id, parsed.data)
 
-  if (body.slug && body.slug !== existing.slug && existing.published_at !== null) {
-    return errorResponse(
-      422,
-      'VALIDATION_FAILED',
-      'Slug is immutable after first publish.',
-      { field: 'slug' },
-    )
-  }
-
-  const update = { ...body, updated_at: new Date() }
-
-  let row
-  try {
-    row = await postsColl().findOneAndUpdate(
-      { _id: id },
-      { $set: update },
-      { returnDocument: 'after' },
-    )
-  } catch (err) {
-    if (isUniqueViolation(err)) {
-      return errorResponse(
-        422,
-        'SLUG_CONFLICT',
-        'a post with this slug already exists',
-        { field: 'slug' },
-      )
+  if (!result.ok) {
+    switch (result.code) {
+      case 'NOT_FOUND':
+        return errorResponse(404, 'NOT_FOUND', result.message)
+      case 'VALIDATION_FAILED':
+        return errorResponse(422, 'VALIDATION_FAILED', result.message, { field: result.field })
+      case 'SLUG_CONFLICT':
+        return errorResponse(422, 'SLUG_CONFLICT', result.message, { field: result.field })
+      case 'INTERNAL':
+        return errorResponse(500, 'INTERNAL', result.message)
     }
-    console.error('[PATCH /api/admin/posts/:id] update failed:', err)
-    return errorResponse(500, 'INTERNAL', 'failed to update post')
   }
-
-  if (!row) return errorResponse(404, 'NOT_FOUND', 'post not found')
 
   // If slug changed AND post is currently published, refresh both the old
   // and the new slug paths so neither serves stale content.
-  if (existing.status === 'published') {
+  if (result.previousStatus === 'published') {
     revalidatePath('/blog')
-    revalidatePath(`/blog/${existing.slug}`, 'page')
-    if (row.slug !== existing.slug) {
-      revalidatePath(`/blog/${row.slug}`, 'page')
+    revalidatePath(`/blog/${result.previousSlug}`, 'page')
+    if (result.post.slug !== result.previousSlug) {
+      revalidatePath(`/blog/${result.post.slug}`, 'page')
     }
   }
 
-  return NextResponse.json({ post: rowToPost(row) })
+  return NextResponse.json({ post: result.post })
 }
 
 // ── DELETE ───────────────────────────────────────────────────────────────────

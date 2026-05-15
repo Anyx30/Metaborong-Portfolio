@@ -22,29 +22,17 @@
 //      effort blob delete so we don't leave orphans.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { randomUUID } from 'node:crypto'
-import { db } from '../../../../db/client'
-import type { ImageDoc } from '../../../../db/schema'
 import { requireAdmin, requireCsrf } from '../../../../lib/auth'
 import { errorResponse } from '../../../../lib/api'
 import {
   IMAGE_MAX_BYTES,
   WIRE_READ_HEADROOM,
-  bestEffortDeleteBlob,
+  createImageFromBytes,
   listImagesPage,
   readBoundedBody,
-  rowToImage,
-  sanitizeOriginalFilename,
-  sniffImageFormat,
-  transcodeToWebp,
-  uploadWebpToBlob,
 } from '../../../../lib/images'
 
 export const runtime = 'nodejs'
-
-function imagesColl() {
-  return db.collection<ImageDoc>('images')
-}
 
 // ── GET /api/admin/images ────────────────────────────────────────────────────
 
@@ -116,50 +104,25 @@ export async function POST(req: NextRequest) {
 
   const inputBytes = Buffer.from(await file.arrayBuffer())
 
-  // (4) Magic-byte sniff.
-  const detected = sniffImageFormat(inputBytes)
-  if (!detected) {
-    return errorResponse(415, 'UPLOAD_BAD_TYPE', 'Only JPG/PNG/WebP allowed.')
+  // (4–7) Magic-byte sniff → sharp → blob → DB. The pipeline body lives
+  //       in lib/images.createImageFromBytes() so the MCP tool can share it.
+  const result = await createImageFromBytes({
+    buffer:   inputBytes,
+    filename: file.name ?? null,
+  })
+
+  if (!result.ok) {
+    switch (result.code) {
+      case 'UPLOAD_TOO_LARGE':
+        return errorResponse(413, 'UPLOAD_TOO_LARGE', result.message)
+      case 'UPLOAD_BAD_TYPE':
+        return errorResponse(415, 'UPLOAD_BAD_TYPE', result.message)
+      case 'BLOB_UPLOAD_FAILED':
+        return errorResponse(502, 'INTERNAL', result.message)
+      case 'DB_INSERT_FAILED':
+        return errorResponse(500, 'INTERNAL', result.message)
+    }
   }
 
-  // (5) sharp transcode. A buffer that the sniff approved but sharp can't
-  //     decode (corrupted / truncated) collapses to 415 too.
-  let transcoded
-  try {
-    transcoded = await transcodeToWebp(inputBytes)
-  } catch (err) {
-    console.error('[POST /api/admin/images] sharp transcode failed:', err)
-    return errorResponse(415, 'UPLOAD_BAD_TYPE', 'Only JPG/PNG/WebP allowed.')
-  }
-
-  // (6) Vercel Blob upload.
-  let uploaded
-  try {
-    uploaded = await uploadWebpToBlob(transcoded.buffer)
-  } catch (err) {
-    console.error('[POST /api/admin/images] blob upload failed:', err)
-    return errorResponse(502, 'INTERNAL', 'upload failed')
-  }
-
-  // (7) Persist doc. Roll back the blob on insert failure.
-  const filename = sanitizeOriginalFilename(file.name ?? null)
-  const doc: ImageDoc = {
-    _id:        randomUUID(),
-    blob_url:   uploaded.url,
-    width:      transcoded.width,
-    height:     transcoded.height,
-    alt:        '',
-    focal_x:    0.5,
-    focal_y:    0.5,
-    filename,
-    created_at: new Date(),
-  }
-  try {
-    await imagesColl().insertOne(doc)
-    return NextResponse.json({ image: rowToImage(doc) }, { status: 201 })
-  } catch (err) {
-    console.error('[POST /api/admin/images] insert failed:', err)
-    void bestEffortDeleteBlob(uploaded.url)
-    return errorResponse(500, 'INTERNAL', 'failed to persist image')
-  }
+  return NextResponse.json({ image: result.image }, { status: 201 })
 }
