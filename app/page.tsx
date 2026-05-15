@@ -12,7 +12,7 @@ import { FoundersSection } from '@/components/sections/founders'
 import { ComparisonSection } from '@/components/sections/comparison'
 import { FaqSection } from '@/components/sections/faq'
 import { ContactCtaSection } from '@/components/sections/contact-cta'
-import { organizationSchema, websiteSchema, faqSchema, serviceSchemas } from '@/lib/schema'
+import { organizationSchema, websiteSchema, faqSchema, whyUsAeoSchema, serviceSchemas } from '@/lib/schema'
 
 export const metadata: Metadata = {
   // Title inherits from layout.tsx default — single source of truth.
@@ -41,6 +41,10 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(whyUsAeoSchema) }}
       />
       {serviceSchemas.map((schema) => (
         <script

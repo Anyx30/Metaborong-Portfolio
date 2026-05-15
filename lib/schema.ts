@@ -74,6 +74,26 @@ export const faqSchema = {
   })),
 }
 
+// Standalone FAQPage entry exposing the Why-Us AEO answer block as an
+// extractable question/answer pair for AI engines (Perplexity, ChatGPT, AI Overviews).
+// The visible UI is a paragraph in the Why-Us section; this schema makes the
+// extraction unambiguous without duplicating the visible FAQ list.
+export const whyUsAeoSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${BASE}/#why-us-aeo`,
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'What makes Metaborong different from larger Web3 and AI agencies?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Founders pick Metaborong over larger Web3 and AI agencies for three reasons: shorter time to a first working version, sharper push-back on the brief, and the specialist depth — multichain protocols and AI agent orchestration — most studios don’t have.',
+      },
+    },
+  ],
+}
+
 // One Service node per homepage pillar — anchors the studio's three offerings
 // as discrete entities for AI search engines and rich-result eligibility.
 export const serviceSchemas = pillars.map((p) => ({

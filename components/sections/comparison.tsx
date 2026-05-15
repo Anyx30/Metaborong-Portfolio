@@ -1,19 +1,22 @@
 const rows = [
-  { label: 'Team access',        mb: 'Direct — founders',    large: 'Account manager layer',  free: 'Direct but inconsistent' },
-  { label: 'AI-native services', mb: 'Core offering',        large: 'Add-on or absent',       free: 'Rare' },
-  { label: 'DeFi depth',         mb: 'Deep, multichain',     large: 'Generic',                free: 'Depends on individual' },
-  { label: 'Speed to delivery',  mb: 'Weeks',                large: 'Months',                 free: 'Unpredictable' },
-  { label: 'Product thinking',   mb: 'Built in',             large: 'Execution-focused',      free: 'Absent' },
-  { label: 'Track record',       mb: '8 shipped products',   large: 'Hundreds of clients ✓',  free: 'Case by case' },
+  { label: 'Team access',        mb: 'Direct — founders',                              large: 'Account manager layer',  free: 'Direct but inconsistent' },
+  { label: 'AI-native services', mb: 'Core offering',                                  large: 'Add-on or absent',       free: 'Rare' },
+  { label: 'DeFi depth',         mb: '7 chains — Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, Avalanche',  large: 'Generic',                free: 'Depends on individual' },
+  { label: 'Speed to delivery',  mb: 'Weeks',                                          large: 'Months',                 free: 'Unpredictable' },
+  { label: 'Product thinking',   mb: 'Built in',                                       large: 'Execution-focused',      free: 'Absent' },
+  { label: 'Track record',       mb: 'DeFi · AI · SaaS shipped',                       large: 'Hundreds of clients ✓',  free: 'Case by case' },
 ]
 
 export function ComparisonSection() {
   return (
     <section style={{ padding: '96px var(--section-px)', background: '#f5f7ff' }}>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <div style={{ marginBottom: 48 }}>
+        <div style={{ marginBottom: 32 }}>
           <p style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#999999', fontWeight: 600, marginBottom: 12 }}>Comparison</p>
-          <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 700, letterSpacing: '-0.035em', color: '#303030' }}>How Metaborong compares</h2>
+          <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 700, letterSpacing: '-0.035em', color: '#303030', marginBottom: 16 }}>How Metaborong compares</h2>
+          <p style={{ fontSize: 16, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 600 }}>
+            If you&apos;re choosing between us, a large agency, or a freelance team — here&apos;s the honest read.
+          </p>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
@@ -21,7 +24,7 @@ export function ComparisonSection() {
               <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                 <th style={{ textAlign: 'left', padding: '12px 16px', color: '#999999', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', width: '22%' }} />
                 <th style={{ textAlign: 'left', padding: '12px 16px', color: '#296ff0', fontSize: 13, fontWeight: 700, width: '26%' }}>Metaborong</th>
-                <th style={{ textAlign: 'left', padding: '12px 16px', color: '#676767', fontSize: 13, fontWeight: 600, width: '26%' }}>Large Web3 Agency</th>
+                <th style={{ textAlign: 'left', padding: '12px 16px', color: '#676767', fontSize: 13, fontWeight: 600, width: '26%' }}>Large Web3 or AI Agency</th>
                 <th style={{ textAlign: 'left', padding: '12px 16px', color: '#676767', fontSize: 13, fontWeight: 600, width: '26%' }}>Freelance Team</th>
               </tr>
             </thead>
@@ -37,7 +40,7 @@ export function ComparisonSection() {
             </tbody>
           </table>
         </div>
-        <p style={{ marginTop: 16, fontSize: 12, color: '#999999' }}>✓ denotes where the alternative genuinely wins. Large agencies have longer track records — a real advantage for enterprises needing procurement comfort.</p>
+        <p style={{ marginTop: 16, fontSize: 12, color: '#999999', lineHeight: 1.6 }}>✓ marks where the alternative genuinely wins. Larger agencies have longer track records — a real advantage for enterprises needing procurement comfort. We win on speed, AI-native depth, and direct access.</p>
       </div>
     </section>
   )

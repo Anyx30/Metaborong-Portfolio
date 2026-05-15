@@ -1,7 +1,8 @@
+// TODO: replace [TODO: …] segments with one concrete project, credential, or stack detail per founder.
 const founders = [
-  { name: 'Arnab Ray',    role: 'CEO & Co-Founder', bio: 'Leads strategy, client relationships, and business direction. Background in technology entrepreneurship and Web3 ecosystem development.',                linkedin: 'https://linkedin.com/in/arnab-ray' },
-  { name: 'Anik Ghosh',   role: 'COO & Co-Founder', bio: 'Oversees operations, project delivery, and go-to-market execution. Ensures every project ships on time and to spec.',                                linkedin: 'https://linkedin.com/in/anik-ghosh' },
-  { name: 'Soumojit Ash', role: 'CTO & Co-Founder', bio: 'Leads technical architecture across Web3 and AI systems. Deep expertise in blockchain protocols, smart contracts, and AI agent design.',               linkedin: 'https://linkedin.com/in/soumojit-ash' },
+  { name: 'Arnab Ray',    role: 'CEO & Co-Founder', bio: 'Runs strategy and go-to-market for the studio. [TODO: one specific past project or Web3-/AI-ecosystem credential Arnab personally led.]',                                     linkedin: 'https://linkedin.com/in/arnab-ray' },
+  { name: 'Anik Ghosh',   role: 'COO & Co-Founder', bio: 'Owns project delivery. Every engagement ships on schedule because Anik says no when it can’t. [TODO: one operational signal — prior company, delivery record, or domain.]', linkedin: 'https://linkedin.com/in/anik-ghosh' },
+  { name: 'Soumojit Ash', role: 'CTO & Co-Founder', bio: 'Designs the architecture under every protocol and AI system we ship. [TODO: chains or frameworks Soumojit has shipped on.]',                                                   linkedin: 'https://linkedin.com/in/soumojit-ash' },
 ]
 
 export function FoundersSection() {
@@ -13,7 +14,7 @@ export function FoundersSection() {
           <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 700, letterSpacing: '-0.035em', color: '#303030' }}>The team behind the work</h2>
         </div>
         <p style={{ fontSize: 16, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 560, marginBottom: 48 }}>
-          A technical co-founding team with hands-on delivery experience across Web3 and AI. When you work with Metaborong, you work directly with the people who built the portfolio above.
+          Three founders, hands-on in every engagement. The portfolio above was built by us — not by a contracting layer we manage. You&apos;ll be in Slack with the people writing your code.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
           {founders.map(f => (

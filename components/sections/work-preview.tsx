@@ -9,13 +9,16 @@ export function WorkPreviewSection() {
   return (
     <section style={{ padding: '96px var(--section-px)', background: '#fff' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 48 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
             <p style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#999999', fontWeight: 600, marginBottom: 12 }}>Our work</p>
             <h2 style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.035em', color: '#303030' }}>What we&apos;ve built</h2>
           </div>
           <a href="/#contact" style={{ fontSize: 14, fontWeight: 600, color: '#296ff0', textDecoration: 'none' }}>Talk to us →</a>
         </div>
+        <p style={{ fontSize: 16, color: '#676767', lineHeight: 1.65, letterSpacing: '-0.01em', maxWidth: 600, marginBottom: 48 }}>
+          Live products across DeFi, AI, gaming, and SaaS — each shipped with founders we still work with. Case studies are on the way.
+        </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           {projects.map(p => (
             <div key={p.name} style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: '32px 28px', display: 'flex', flexDirection: 'column', gap: 12 }}>

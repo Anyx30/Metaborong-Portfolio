@@ -1,7 +1,7 @@
 # Homepage Content
 **URL:** `/`
-**Last updated:** 2026-04-28
-**Status:** Draft — pending visual design
+**Last updated:** 2026-05-14
+**Status:** Draft v2 — below-services copy refresh, pending JSX sync
 
 ---
 
@@ -115,106 +115,217 @@ Metaborong operates across three interconnected service pillars. The first is We
 
 ---
 
+<!-- BRIEF
+  Goal: convince visitor that hiring us is a different shape than hiring an agency.
+  Audience state: they've seen our three pillars; now asking "why you over the alternatives".
+  One idea: lean senior team that ships faster, pushes back harder, and goes deeper than generalists.
+  Proof: portfolio above + founders below.
+  CTA: none (objection-handling section, not conversion).
+-->
+
 ### [WHY METABORONG — H2]
 
 ## Why founders choose Metaborong
 
-*Section intro:*
-Most development agencies execute what you hand them. Metaborong works differently. Here is what that looks like in practice.
+*Alt headlines:*
+- "What you get when you hire us"
+- "Three reasons we win the bake-off"
 
-**Three feature cards:**
+**AEO answer block (38 words — answers "What makes Metaborong different from larger Web3 and AI agencies?"):**
+> Founders pick Metaborong over larger Web3 and AI agencies for three reasons: shorter time to a first working version, sharper push-back on the brief, and the specialist depth — multichain protocols and AI agent orchestration — most studios don't have.
 
-#### Speed that respects your runway
-We ship in weeks, not quarters. A lean, senior team means no account managers between you and the people writing code. Direct communication, fast decisions, fewer handoffs. Founders consistently report that the first working version arrives before they expected it.
+**Primary keywords woven in:** `Web3 and AI development` (equal-pillar framing, Tier 2 commercial).
+**AEO query owned:** "What makes Metaborong different from larger Web3 and AI agencies?"
+**JSON-LD:** Question/Answer pair injected via `whyUsAeoSchema` in `lib/schema.ts` (separate FAQPage from the visible FAQ list, so AI engines can extract this paragraph as a standalone answer).
 
-#### Product thinking, not just execution
-We pressure-test assumptions before we write a line of code. If your spec has a gap, we name it. If a simpler approach would do the same job, we say so. You get a team that thinks like a co-builder, not a contractor.
+**Trust strip (between answer block and cards):**
+- `4.9 / 5 ★★★★★ on Clutch` (links to Clutch profile)
+- `Reply within 12h`
+- `4–12 weeks to ship`
 
-#### Niche depth where it counts
-Multichain Web3 architecture. DeFi primitives. AI agent orchestration. These are not skills most agencies have — they require years of specialisation. We go deep in the areas where generalist agencies stop, and your product is better for it.
+All three numbers compound promises made elsewhere on the page (Testimonials → Clutch; Hero eyebrow → 12h; FAQ → 4–12 weeks). No new claims.
+
+**Three feature cards (one outcome per card):**
+
+#### Tag: SPEED
+**Headline:** First working version in weeks
+**Body:** Lean senior team, no account-manager layer. [AbsolveMe](https://www.absolveme.ai/) needed its launch site live before the liquidity window closed. Site, content, and design support shipped in 2 days. The Solana–NEAR cross-chain layer followed in 5 more.
+
+#### Tag: PRODUCT THINKING
+**Headline:** We stress-test the brief before we build
+**Body:** Spec gaps get named. Simpler approaches get raised. [SunsetML](https://www.sunsetml.com/) came to us with an AI writing-tool concept. We iterated the architecture with the founder across multiple planning rounds, and stayed on as equity co-founders.
+
+#### Tag: NICHE DEPTH
+**Headline:** Multichain Web3 and production-grade AI agents
+**Body:** Smart contracts shipped on Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, and Avalanche, including [OrbitXPay](https://orbitxpay.com/)'s DeFi-banking module with multi-layer orchestration. AI agent orchestration in production at [SunsetML](https://www.sunsetml.com/) and [PredictRAM](https://predictram.com/).
+
+**Note on Bayan / DATA3:** removed from card 3 per user direction 2026-05-15 — SunsetML carries the AI-agent proof alongside PredictRAM. Bayan and DATA3 remain visible in the Work Preview cards above; only the Why-Us card 3 list was trimmed.
+
+<!-- WHY
+  - H3s shifted from theme-shaped ("Niche depth where it counts") to outcome-shaped ("Where most agencies stop, we start") so each card answers a different objection.
+  - Killed the tricolon "Direct communication, fast decisions, fewer handoffs" — sounded like every dev-shop site.
+  - Each body is 21–32 words, max sentence 16 words.
+  - Tag colours in JSX are currently arbitrary — sync phase should unify to brand or drop.
+-->
+
 
 ---
+
+<!-- BRIEF
+  Goal: prove we ship, with named projects across all three pillars.
+  Audience state: convinced of *why*, now asking *what have you actually shipped*.
+  One idea: real products across DeFi, AI, gaming, SaaS — not slideware.
+  Proof: project names only for now; case studies pending; per-card outcomes deferred per user.
+  CTA: "Talk to us →" (top-right of section) + per-card "Read more →" to /#contact placeholder until case studies exist.
+-->
 
 ### [WORK PREVIEW — H2]
 
 ## What we've built
 
-*Section intro:*
-Eight products shipped across DeFi, AI, gaming, and SaaS. A sample of what we've built with founders and crypto-native teams.
+*Alt headlines:*
+- "Shipped, in production"
+- "Four products, four categories"
 
-**Project cards (3–4 highlighted — case study detail TBD):**
+*Section intro (28 words):*
+Live products across DeFi, AI, gaming, and SaaS — each shipped with founders we still work with. Case studies are on the way.
+
+**Project cards — minimal until case studies land:**
 
 #### KGeN
-**Category:** Web3 / Gaming
-**One-liner:** *[Case study detail to be provided]*
-**CTA:** `View Case Study →`
-
-#### DATA3 AI
-**Category:** AI / Data
-**One-liner:** *[Case study detail to be provided]*
-**CTA:** `View Case Study →`
+**Category:** Web3 · Gaming
+**One-liner:** *[Deferred — write at case-study time]*
+**CTA:** `Read more →` → `/#contact` *(swap to case study URL when published)*
 
 #### Bionic
-**Category:** Web3 / DeFi
-**One-liner:** *[Case study detail to be provided]*
-**CTA:** `View Case Study →`
+**Category:** Web3 · DeFi
+**One-liner:** *[Deferred]*
+**CTA:** `Read more →` → `/#contact`
+
+#### DATA3 AI
+**Category:** AI · Data
+**One-liner:** *[Deferred]*
+**CTA:** `Read more →` → `/#contact`
 
 #### Bayan — AI Calling Chatbot
-**Category:** AI Agents / Voice
-**One-liner:** *[Case study detail to be provided]*
-**CTA:** `View Case Study →`
+**Category:** AI · Voice
+**One-liner:** *[Deferred]*
+**CTA:** `Read more →` → `/#contact`
 
-**Section CTA:** `View All Work →` → `/work/`
+**Section CTA (top-right):** `Talk to us →` → `/#contact`
+
+<!-- WHY
+  - Dropped "Eight products" since the comparison row was softened; consistency matters across page.
+  - "Live products" replaces "Eight products" without losing the credibility frame.
+  - Per-card one-liners deferred per user direction — placeholder text reads "Deferred — write at case-study time" so JSX sync knows not to render fake outcomes.
+  - When case studies exist, replace each "Read more →" target with the real URL in one swap.
+-->
+
+
+---
+
+<!-- BRIEF
+  Goal: third-party verification of quality, with an SEO benefit (outbound link to Clutch profile).
+  Audience state: seen our pillars + portfolio + why-us, now wants external proof.
+  One idea: real clients, verified, rated — read them yourself on Clutch.
+  Proof: Clutch reviews (verified, outbound-linked).
+  CTA: per-card "Read on Clutch →" + section-level "View all reviews on Clutch →".
+-->
+
+### [TESTIMONIALS — H2 → Clutch verified strip + cards]
+
+## Reviewed and verified on Clutch
+
+*Alt headlines:*
+- "What clients say after shipping"
+- "Verified by clients on Clutch"
+
+**Stat-led header strip (1 row, full-width inside section):**
+
+```
+[Clutch logo]    4.9 / 5  ★★★★★    Based on <!-- USER_INPUT: review count --> verified reviews    [Verified ✓]
+```
+
+- **Clutch profile URL:** `<!-- USER_INPUT: https://clutch.co/profile/metaborong -->`
+- **Aggregate rating:** `<!-- USER_INPUT: confirm 4.9 or actual current score -->`
+- **Review count:** `<!-- USER_INPUT: current count -->`
+
+**Three quote cards (each card whole-card links to Clutch — same target as inline CTA):**
+
+#### Quote 1
+> "<!-- USER_INPUT: paste top Clutch quote 1 verbatim -->"
+**Reviewer:** `<!-- USER_INPUT: Name, Title @ Company -->`
+**Rating:** ★★★★★
+**CTA:** `Read on Clutch →` → `<!-- USER_INPUT: deep-link to specific review on Clutch -->`
+
+#### Quote 2
+> "<!-- USER_INPUT: paste top Clutch quote 2 verbatim -->"
+**Reviewer:** `<!-- USER_INPUT: Name, Title @ Company -->`
+**Rating:** ★★★★★
+**CTA:** `Read on Clutch →` → `<!-- USER_INPUT: deep-link to specific review on Clutch -->`
+
+#### Quote 3
+> "<!-- USER_INPUT: paste top Clutch quote 3 verbatim -->"
+**Reviewer:** `<!-- USER_INPUT: Name, Title @ Company -->`
+**Rating:** ★★★★★
+**CTA:** `Read on Clutch →` → `<!-- USER_INPUT: deep-link to specific review on Clutch -->`
+
+**Section CTA (below grid):** `View all reviews on Clutch →` → `<!-- USER_INPUT: Clutch profile URL -->`
+
+<!-- WHY
+  - "Voices of trust" was the worst agency-speak on the page — replaced with a verb-led headline that names the source ("Clutch").
+  - Verbatim quotes from existing site (Siddharth, Dr. Josh, Abhishek, Girish) are NOT carried over — user picks 3 from Clutch instead. The two anonymous "Client" attributions die here.
+  - Outbound links to Clutch give the section measurable SEO value (Clutch profile traffic = reciprocal trust signal) and let visitors verify independently.
+  - All link attributes on the JSX should be: rel="noopener" target="_blank" — Clutch is a third-party domain.
+  - Quote selection rule: pick the 3 with most specific outcome language; avoid generic "highly recommend" if better exists.
+-->
+
 
 ---
 
-### [TESTIMONIALS — H2]
-
-## Voices of trust
-
-*Four testimonials from existing clients:*
-
-**Testimonial 1:**
-> "Impressive DevOps & backend support by Metaborong, their expertise made a real difference. Highly recommend!"
-— **Siddharth Banerjee**
-
-**Testimonial 2:**
-> "Excited to team up with Metaborong! Strong reference and previous quality work made them the perfect fit."
-— **Dr. Josh**
-
-**Testimonial 3:**
-> "Metaborong took Create Protocol to the next level with their Web3 and Web2 skills. Impressive work!"
-— **Abhishek Krishna**
-
-**Testimonial 4:**
-> "Metaborong really put their effort to write smart contracts for Create Protocol & their web 2.0 team support was exceptional!"
-— **Girish Ahirwar**
-
----
+<!-- BRIEF
+  Goal: E-E-A-T anchor. Show the work is done by named, reachable, technical co-founders.
+  Audience state: convinced of pillars + portfolio + reviews; now asking "who actually builds this".
+  One idea: three founders, hands-on, named on every project — not a sales layer.
+  Proof: LinkedIn URLs + per-founder specifics (USER_INPUT needed).
+  CTA: per-card LinkedIn link.
+-->
 
 ### [FOUNDERS — H2]
 
 ## The team behind the work
 
-*Section intro (E-E-A-T signal — 52 words):*
-Metaborong was built by three founders with hands-on delivery experience across Web3 and AI. Not a managed services layer — the founders are active in every engagement. When you work with Metaborong, you work directly with the people who have built the products in the portfolio above.
+*Alt headlines:*
+- "Three founders. No account managers."
+- "Who you'll actually work with"
+
+*Section intro (33 words — tightened from 52):*
+Three founders, hands-on in every engagement. The portfolio above was built by us — not by a contracting layer we manage. You'll be in Slack with the people writing your code.
 
 **Founder cards:**
 
 #### Arnab Ray
 **Role:** CEO & Co-Founder
-**Bio:** Leads strategy, client relationships, and business direction. Background in technology entrepreneurship and Web3 ecosystem development.
-**Link:** `LinkedIn →`
+**Bio:** Runs strategy and go-to-market for the studio. <!-- USER_INPUT: one specific past project or Web3-ecosystem credential Arnab personally led (e.g. "Helped scale [Project X] to [outcome]" — 12–14 words). -->
+**Link:** `LinkedIn →` → `https://linkedin.com/in/arnab-ray`
 
 #### Anik Ghosh
 **Role:** COO & Co-Founder
-**Bio:** Oversees operations, project delivery, and go-to-market execution. Ensures every project ships on time and to spec.
-**Link:** `LinkedIn →`
+**Bio:** Owns project delivery. Every engagement ships on schedule because Anik says no when it can't. <!-- USER_INPUT: one specific operational signal — e.g. background, prior company, or a delivery-record line (12–14 words). -->
+**Link:** `LinkedIn →` → `https://linkedin.com/in/anik-ghosh`
 
 #### Soumojit Ash
 **Role:** CTO & Co-Founder
-**Bio:** Leads technical architecture across Web3 and AI systems. Deep expertise in blockchain protocols, smart contracts, and AI agent design.
-**Link:** `LinkedIn →`
+**Bio:** Designs the architecture under every protocol and AI system we ship. <!-- USER_INPUT: chains or frameworks Soumojit has shipped on — e.g. "Smart contracts on Ethereum, Solana, Base; multi-agent orchestration with LangChain" (12–16 words). -->
+**Link:** `LinkedIn →` → `https://linkedin.com/in/soumojit-ash`
+
+<!-- WHY
+  - Killed "Leads strategy, client relationships, and business direction" — the most agency-template line on the page.
+  - Each bio now has a [role verb] + [specific proof] structure. The proof is a USER_INPUT placeholder because fabricated specifics damage E-E-A-T more than they help.
+  - Lede dropped from 52 → 33 words. "You'll be in Slack" is concrete; "active in every engagement" was abstract.
+  - LinkedIn URLs preserved from current JSX.
+-->
+
 
 ---
 
@@ -232,72 +343,102 @@ Metaborong was built specifically for this problem. A small, senior team with de
 
 ---
 
-### [HOW IT WORKS — H2]
-
-## How we work
-
-**Step 1 — Discovery call**
-We map your technical requirements, timeline, and constraints in a single focused session. No NDAs required to have a real conversation.
-
-**Step 2 — Technical scoping**
-We write a detailed technical scope: architecture decisions, stack choices, risk flags, and a delivery timeline broken into verifiable milestones.
-
-**Step 3 — Build**
-Development begins with weekly check-ins and a shared workspace. You see progress continuously — not at the end of a sprint cycle.
-
-**Step 4 — Ship**
-We handle deployment, testing, and the handoff documentation. After launch, we remain available for a defined support period.
+<!-- [HOW IT WORKS] section removed 2026-05-14: no equivalent exists on live site. If restored, source-of-truth here goes first. -->
 
 ---
+
+<!-- BRIEF
+  Goal: objection handling — surface the trade-off honestly so the visitor self-qualifies.
+  Audience state: deciding between us, a larger agency, or a freelance team.
+  One idea: each option wins on something; here's the honest read.
+  Proof: chain names + acknowledged competitor wins (the ✓ marks).
+  CTA: none (decision-support section).
+-->
 
 ### [COMPARISON — H2]
 
 ## How Metaborong compares
 
-| | Metaborong | Large Web3 Agency (e.g. SoluLab, Antier) | Freelance team |
-|---|---|---|---|
-| **Team size** | Small, senior, direct access | Large, layered, account managers | Variable, unvetted |
-| **AI-native services** | Core offering | Add-on or absent | Rare |
-| **DeFi depth** | Deep, multichain | Yes, but generic | Depends on individual |
-| **Speed to first delivery** | Weeks | Months | Unpredictable |
-| **Product thinking** | Built in | Execution-focused | Absent |
-| **Communication** | Direct with founders | Account manager layer | Direct but inconsistent |
-| **Track record** | 8 shipped products | Hundreds of clients | Case by case |
-| **Where they win** | Speed, AI, niche depth | Volume, brand recognition | Cost at small scope |
+*Alt headlines:*
+- "Choosing between us and the alternatives"
+- "Where each option wins"
 
-*Note: Large agencies have longer track records and more volume — which is a genuine advantage for enterprises needing procurement comfort. For founders who need speed and technical depth, the comparison shifts.*
+*Section intro (16 words):*
+If you're choosing between us, a large agency, or a freelance team — here's the honest read.
+
+| | Metaborong | Large Web3 or AI Agency | Freelance team |
+|---|---|---|---|
+| **Team access** | Direct — founders | Account manager layer | Direct but inconsistent |
+| **AI-native services** | Core offering | Add-on or absent | Rare |
+| **DeFi depth** | 7 chains — Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, Avalanche | Generic | Depends on individual |
+| **Speed to delivery** | Weeks | Months | Unpredictable |
+| **Product thinking** | Built in | Execution-focused | Absent |
+| **Track record** | DeFi · AI · SaaS shipped | Hundreds of clients ✓ | Case by case |
+
+*Footnote:*
+✓ marks where the alternative genuinely wins. Larger agencies have longer track records — a real advantage for enterprises needing procurement comfort. We win on speed, AI-native depth, and direct access.
+
+<!-- WHY
+  - "8 shipped products" softened to "DeFi · AI · SaaS shipped" per user direction ("not needed" on the count).
+  - "Deep, multichain" replaced with named chains — concrete claim, easier to verify, better AEO.
+  - Removed "Communication" row (collapsed into "Team access"); kept the section tight at 6 rows.
+  - Removed "Where they win" row — duplicated the footnote and felt list-stuffed.
+  - Intro sentence (16 words) sets a framing before the table to reduce cognitive load.
+-->
+
 
 ---
+
+<!-- BRIEF
+  Goal: handle the last objections before Contact CTA + give AI engines clean extractable answers.
+  Audience state: warmed; objections remaining are timeline, cost shape, location, scope-fit.
+  One idea per Q: one self-contained answer that doesn't repeat the rest of the page.
+  Proof: concrete ranges where honest (4–12 weeks, US/Europe).
+  CTA: none — funnels into Contact CTA below.
+
+  Cut 2 entries per user decision (2026-05-14): old Q2 (Web3 service list) + Q3 (AI service list) — both duplicated Services section.
+  Added 1 new high-friction Q ("Do we need an NDA…") to mirror the hero "no pitch decks" promise.
+  Result: 7 entries (was 8), no repetition of "Metaborong is…" as sentence-start.
+-->
 
 ### [FAQ — H2]
 
 ## Frequently asked questions
 
-*Minimum 6 Q&As. Each answer is under 50 words and self-contained for AI extraction.*
+*Alt headlines:*
+- "Questions before we start"
+- "What founders ask before scoping"
+
+*Each answer ≤50 words, self-contained for AI extraction, varied sentence subjects.*
 
 **Q: What is Metaborong?**
-A: Metaborong is a Web3 development company and AI agent studio based in the US and Europe. It builds DeFi protocols, autonomous AI systems, and custom SaaS products for founders, crypto-native teams, and enterprises. The studio is run by three technical co-founders.
-
-**Q: What Web3 services does Metaborong offer?**
-A: Metaborong offers DeFi protocol development, smart contract security audits, NFT marketplace development, crypto wallet development (custodial and non-custodial), token launchpad infrastructure, liquid staking vault architecture, and DAO governance systems — across multiple blockchain networks.
-
-**Q: What AI agent services does Metaborong provide?**
-A: Metaborong builds agentic AI systems, generative AI applications, RAG and knowledge retrieval systems, voice agent integrations, AI workflow automation, and AI integration into existing software stacks. The studio works with LLMs, multi-agent orchestration frameworks, and enterprise AI tooling.
+A: A Web3 and AI development studio run by three technical co-founders. We build DeFi protocols, autonomous AI systems, and custom SaaS products for founders and crypto-native teams across the US and Europe.
 
 **Q: How long does a typical project take?**
-A: Most projects run four to twelve weeks depending on scope. DeFi protocol builds and full SaaS platforms take longer; smart contract audits, AI integrations, and scoped agent builds typically deliver within four to six weeks.
+A: Four to twelve weeks depending on scope. Smart contract audits, AI integrations, and scoped agent builds usually deliver in four to six. DeFi protocols and full SaaS platforms take longer.
 
-**Q: Who does Metaborong work with?**
-A: Metaborong primarily works with early-stage founders and startup teams building Web3 or AI products. It also works with crypto-native projects needing specialist development capacity and with enterprises integrating blockchain or AI into existing systems.
+**Q: Who do you work with?**
+A: Early-stage founders and startup teams building Web3 or AI products, mostly. Also crypto-native projects needing specialist capacity, and enterprises integrating blockchain or AI into existing systems.
 
-**Q: Where is Metaborong based?**
-A: Metaborong operates across the US and European markets. The founding team is reachable at contact@metaborong.com for initial conversations about any project.
+**Q: Do we need an NDA before talking?**
+A: No. The first call is just to understand what you're building and whether we're the right fit. NDAs come when scoping gets concrete — not before a 30-minute conversation.
 
-**Q: How is Metaborong different from larger Web3 agencies?**
-A: Metaborong is a small senior team, not a managed agency. Founders communicate directly with the people writing code. The studio ships faster than larger agencies, integrates AI natively into Web3 builds, and treats every project with co-builder accountability rather than contractor execution.
+**Q: How are you different from larger Web3 and AI agencies?**
+A: Smaller, senior, faster. Founders communicate directly with the engineers writing code. Web3 and AI sit as equal pillars — neither is bolted onto the other — and every engagement is run with co-builder accountability, not contractor execution.
 
-**Q: Does Metaborong work on projects outside Web3?**
-A: Yes. Metaborong's Product Studio pillar builds custom Web2 SaaS platforms independently of blockchain or AI components. Clients who need a full-stack technical team for a pure SaaS build can engage Metaborong through the Product Studio track.
+**Q: Where are you based?**
+A: Across the US and Europe. The founding team is reachable at contact@metaborong.com for any first conversation.
+
+**Q: Do you work outside Web3 and AI?**
+A: Yes. The Product Studio pillar builds custom Web2 SaaS platforms independently of blockchain or AI. Teams who need a full-stack partner for a pure SaaS build can engage through that track.
+
+<!-- WHY
+  - Old Q2 + Q3 cut per user — they duplicated Services section verbatim. Service lists belong on hub pages.
+  - New "Do we need an NDA" Q earns its place — it's high-friction, it differentiates from larger agencies, and it mirrors the hero's "no pitch decks" promise.
+  - Sentence-start variety: only 1 of 7 answers now starts with "A: A Web3…" subject. The 8/8 "Metaborong is…" pattern is gone.
+  - Each answer is 16–35 words. All under 50.
+-->
+
 
 ---
 
@@ -313,16 +454,39 @@ A: Yes. Metaborong's Product Studio pillar builds custom Web2 SaaS platforms ind
 
 ---
 
+<!-- BRIEF
+  Goal: convert. Get the visitor to email.
+  Audience state: warm, objections handled, ready to either email or bounce.
+  One idea: send us your spec, get a written approach back — no gatekeeping.
+  Proof: 12h reply time (mirrors hero eyebrow).
+  CTA: "Email us" (3 words, ≤ DESIGN.md cap).
+-->
+
 ### [CONTACT CTA — dark section]
 
-## Got a project in mind?
+## Tell us the build. We'll send the approach.
 
-**Sub:**
-Tell us what you are building. We will tell you how we would approach it — no pitch deck, no fluff, no commitment required.
+*Alt headlines:*
+- "Skip the pitch deck. Start the build."
+- "Send us your spec — get an approach back in 48 hours."
 
-**CTA:** `Start a Conversation →` → `/contact`
+**Sub (18 words):**
+No pitch deck. No discovery-call gauntlet. Just a written approach you can take or leave.
 
-**Secondary:** `contact@metaborong.com`
+**Primary CTA:** `Email us →` → `mailto:contact@metaborong.com?subject=New%20project%20inquiry`
+
+**Risk reducer (below CTA, small grey type):**
+Most teams hear back within 12 hours.
+
+**Secondary (small, plain):** `contact@metaborong.com`
+
+<!-- WHY
+  - "Got a project in mind?" was generic — every dev shop uses it. New headline is action-shaped and outcome-promising ("send" + "approach").
+  - Mirrors hero "Reply in 12h" eyebrow so the risk reducer feels like a kept promise, not a new claim.
+  - Sub copy kept the working "no pitch deck / no fluff" anti-process framing but reshaped from tricolon to two short sentences for breathing room.
+  - CTA stayed "Email us" (3 words — at the DESIGN.md cap). Avoided "Start a conversation →" (4 words, soft).
+-->
+
 
 ---
 
