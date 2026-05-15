@@ -22,12 +22,19 @@ import {
   updatePost,
   type UpdatePostFields,
 } from '../posts'
+import {
+  createImageFromBytes,
+  type CreateImageInput,
+} from '../images'
 import { markdownToBlocks } from '../markdown/markdown-to-blocks'
 import {
+  APP_BLOB_UPLOAD_FAILED,
   APP_INTERNAL,
   APP_INVALID_CONTENT,
   APP_NOT_FOUND,
   APP_SLUG_CONFLICT,
+  APP_UPLOAD_BAD_TYPE,
+  APP_UPLOAD_TOO_LARGE,
   APP_VALIDATION_FAILED,
   type ToolDescriptor,
   type ToolListEntry,
@@ -235,6 +242,147 @@ async function patchPostHandler(
   return { id: result.post.id }
 }
 
+// ── 5.3 cms_upload_image ─────────────────────────────────────────────────────
+
+const DATA_URL_RE = /^data:([a-z]+\/[a-z0-9+.-]+);base64,([A-Za-z0-9+/=]+)\s*$/i
+const FETCH_TIMEOUT_MS = 10_000
+const FETCH_MAX_BYTES  = 8 * 1024 * 1024
+
+const uploadImageInputSchema = z.object({
+  source: z.union([
+    z.object({ url: z.string().url() }).strict(),
+    z.object({
+      base64:       z.string().min(1),
+      content_type: z.string().min(1),
+    }).strict(),
+  ]),
+  alt:      z.string().min(1).max(500),
+  filename: z.string().min(1).max(200),
+  focal_x:  z.number().min(0).max(1).optional(),
+  focal_y:  z.number().min(0).max(1).optional(),
+}).strict()
+
+export type UploadImageInput = z.infer<typeof uploadImageInputSchema>
+export interface UploadImageOutput {
+  id:       string
+  blob_url: string
+  width:    number
+  height:   number
+}
+
+async function uploadImageHandler(
+  input: UploadImageInput,
+  dbHandle?: Db,
+): Promise<UploadImageOutput> {
+  let buffer: Buffer
+
+  if ('base64' in input.source) {
+    try {
+      buffer = Buffer.from(input.source.base64, 'base64')
+    } catch {
+      throw new ToolError(APP_VALIDATION_FAILED, 'VALIDATION_FAILED', 'malformed base64 payload', 'source.base64')
+    }
+    if (buffer.length === 0) {
+      throw new ToolError(APP_VALIDATION_FAILED, 'VALIDATION_FAILED', 'decoded payload is empty', 'source.base64')
+    }
+  } else {
+    buffer = await fetchImageBytes(input.source.url)
+  }
+
+  const helperInput: CreateImageInput = {
+    buffer,
+    alt:      input.alt,
+    filename: input.filename,
+    focal_x:  input.focal_x,
+    focal_y:  input.focal_y,
+  }
+
+  const result = await createImageFromBytes(helperInput, dbHandle)
+  if (!result.ok) {
+    switch (result.code) {
+      case 'UPLOAD_TOO_LARGE':
+        throw new ToolError(APP_UPLOAD_TOO_LARGE, result.code, result.message)
+      case 'UPLOAD_BAD_TYPE':
+        throw new ToolError(APP_UPLOAD_BAD_TYPE, result.code, result.message)
+      case 'BLOB_UPLOAD_FAILED':
+        throw new ToolError(APP_BLOB_UPLOAD_FAILED, 'INTERNAL', result.message)
+      case 'DB_INSERT_FAILED':
+        throw new ToolError(APP_INTERNAL, 'INTERNAL', result.message)
+    }
+  }
+
+  return {
+    id:       result.image.id,
+    blob_url: result.image.blob_url,
+    width:    result.image.width,
+    height:   result.image.height,
+  }
+}
+
+/**
+ * Fetch an image by URL with a 10s timeout and an 8 MB cap. data: URLs
+ * are decoded inline so callers don't need to construct an HTTP fetch
+ * for embedded base64. Plain http(s):// goes through fetch().
+ */
+async function fetchImageBytes(url: string): Promise<Buffer> {
+  const dataMatch = url.match(DATA_URL_RE)
+  if (dataMatch) {
+    let bytes: Buffer
+    try {
+      bytes = Buffer.from(dataMatch[2], 'base64')
+    } catch {
+      throw new ToolError(APP_VALIDATION_FAILED, 'VALIDATION_FAILED', 'malformed data: URL payload', 'source.url')
+    }
+    if (bytes.length === 0) {
+      throw new ToolError(APP_VALIDATION_FAILED, 'VALIDATION_FAILED', 'data: URL decoded to empty bytes', 'source.url')
+    }
+    if (bytes.length > FETCH_MAX_BYTES) {
+      throw new ToolError(APP_UPLOAD_TOO_LARGE, 'UPLOAD_TOO_LARGE', 'data: URL exceeds 8MB limit', 'source.url')
+    }
+    return bytes
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  let res: Response
+  try {
+    res = await fetch(url, { signal: controller.signal })
+  } catch (err) {
+    clearTimeout(timer)
+    const isAbort = err instanceof Error && err.name === 'AbortError'
+    throw new ToolError(
+      APP_INTERNAL,
+      'INTERNAL',
+      isAbort ? 'image fetch timed out' : 'image fetch failed',
+      'source.url',
+    )
+  } finally {
+    clearTimeout(timer)
+  }
+  if (!res.ok) {
+    throw new ToolError(
+      APP_INTERNAL,
+      'INTERNAL',
+      `image fetch returned ${res.status}`,
+      'source.url',
+    )
+  }
+  const contentType = res.headers.get('content-type') ?? ''
+  if (contentType && !contentType.toLowerCase().startsWith('image/')) {
+    throw new ToolError(
+      APP_UPLOAD_BAD_TYPE,
+      'UPLOAD_BAD_TYPE',
+      `unexpected content-type ${contentType}`,
+      'source.url',
+    )
+  }
+  const buf = Buffer.from(await res.arrayBuffer())
+  if (buf.length > FETCH_MAX_BYTES) {
+    throw new ToolError(APP_UPLOAD_TOO_LARGE, 'UPLOAD_TOO_LARGE', 'fetched image exceeds 8MB limit', 'source.url')
+  }
+  return buf
+}
+
 // ── registry ─────────────────────────────────────────────────────────────────
 //
 // Built lazily so tests that swap @/db/client between runs can still wire
@@ -273,6 +421,23 @@ export function buildToolRegistry(opts: RegistryOptions = {}): Record<string, To
         required: ['id'],
       },
       handler: (input) => patchPostHandler(input as PatchPostInput, opts.dbHandle),
+    },
+    cms_upload_image: {
+      name:        'cms_upload_image',
+      description:
+        'Upload an image from a URL or base64-encoded bytes. Returns the persisted image id which can be referenced from markdown as `![alt](<id>)`.',
+      inputSchema: uploadImageInputSchema,
+      outputJsonSchema: {
+        type: 'object',
+        properties: {
+          id:       { type: 'string', format: 'uuid' },
+          blob_url: { type: 'string', format: 'uri' },
+          width:    { type: 'integer' },
+          height:   { type: 'integer' },
+        },
+        required: ['id', 'blob_url', 'width', 'height'],
+      },
+      handler: (input) => uploadImageHandler(input as UploadImageInput, opts.dbHandle),
     },
   }
 }
