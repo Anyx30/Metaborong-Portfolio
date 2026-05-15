@@ -15,10 +15,14 @@ import {
   semanticRoleSchema,
   slugRegex,
   tagRegex,
+  type Post,
+  type PostSummary,
   type SemanticRole,
 } from '../blog-schema'
 import {
   createPost,
+  getDraftPostById,
+  listAllPostsForAdmin,
   updatePost,
   type UpdatePostFields,
 } from '../posts'
@@ -383,6 +387,73 @@ async function fetchImageBytes(url: string): Promise<Buffer> {
   return buf
 }
 
+// ── 5.4 cms_list_posts ───────────────────────────────────────────────────────
+
+const listPostsInputSchema = z.object({
+  status: z.enum(['draft', 'published']).optional(),
+  limit:  z.number().int().min(1).max(100).optional(),
+  offset: z.number().int().min(0).optional(),
+}).strict()
+
+export type ListPostsInput = z.infer<typeof listPostsInputSchema>
+export interface ListPostsOutput {
+  posts: Array<{
+    id:         string
+    slug:       string
+    title:      string
+    status:     'draft' | 'published'
+    updated_at: string
+    tags:       string[]
+  }>
+  total: number
+}
+
+async function listPostsHandler(input: ListPostsInput, dbHandle?: Db): Promise<ListPostsOutput> {
+  const limit  = input.limit  ?? 20
+  const offset = input.offset ?? 0
+  // listAllPostsForAdmin returns the full set ordered by updated_at DESC.
+  // For v1 the dashboard does the same and the catalog is small enough
+  // (low hundreds) that fetching all + slicing is cheaper than paging
+  // with a cursor — switch to a real Mongo-side paginated query if/when
+  // the post count grows past ~10k.
+  const all = await listAllPostsForAdmin(input.status ?? 'all', dbHandle)
+  const slice = all.slice(offset, offset + limit)
+  return {
+    posts: slice.map(toListEntry),
+    total: all.length,
+  }
+}
+
+function toListEntry(p: PostSummary): ListPostsOutput['posts'][number] {
+  return {
+    id:         p.id,
+    slug:       p.slug,
+    title:      p.title,
+    status:     p.status,
+    updated_at: p.updated_at,
+    tags:       p.tags,
+  }
+}
+
+// ── 5.5 cms_get_post ─────────────────────────────────────────────────────────
+
+const getPostInputSchema = z.object({
+  id: z.string().uuid(),
+}).strict()
+
+export type GetPostInput = z.infer<typeof getPostInputSchema>
+export interface GetPostOutput {
+  post: Post
+}
+
+async function getPostHandler(input: GetPostInput, dbHandle?: Db): Promise<GetPostOutput> {
+  const post = await getDraftPostById(input.id, dbHandle)
+  if (!post) {
+    throw new ToolError(APP_NOT_FOUND, 'NOT_FOUND', 'post not found')
+  }
+  return { post }
+}
+
 // ── registry ─────────────────────────────────────────────────────────────────
 //
 // Built lazily so tests that swap @/db/client between runs can still wire
@@ -438,6 +509,46 @@ export function buildToolRegistry(opts: RegistryOptions = {}): Record<string, To
         required: ['id', 'blob_url', 'width', 'height'],
       },
       handler: (input) => uploadImageHandler(input as UploadImageInput, opts.dbHandle),
+    },
+    cms_list_posts: {
+      name:        'cms_list_posts',
+      description:
+        'List posts, optionally filtered by status. Default page size 20, max 100. Ordered by updated_at DESC.',
+      inputSchema: listPostsInputSchema,
+      outputJsonSchema: {
+        type: 'object',
+        properties: {
+          posts: {
+            type:  'array',
+            items: {
+              type: 'object',
+              properties: {
+                id:         { type: 'string' },
+                slug:       { type: 'string' },
+                title:      { type: 'string' },
+                status:     { type: 'string', enum: ['draft', 'published'] },
+                updated_at: { type: 'string' },
+                tags:       { type: 'array', items: { type: 'string' } },
+              },
+            },
+          },
+          total: { type: 'integer' },
+        },
+        required: ['posts', 'total'],
+      },
+      handler: (input) => listPostsHandler(input as ListPostsInput, opts.dbHandle),
+    },
+    cms_get_post: {
+      name:        'cms_get_post',
+      description:
+        'Fetch a single post by id, including its full content_json. Use before patching so Claude can read the current content.',
+      inputSchema: getPostInputSchema,
+      outputJsonSchema: {
+        type: 'object',
+        properties: { post: { type: 'object' } },
+        required: ['post'],
+      },
+      handler: (input) => getPostHandler(input as GetPostInput, opts.dbHandle),
     },
   }
 }
