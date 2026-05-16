@@ -2,9 +2,10 @@
 
 Copy the relevant block at the start of a session. Tick items as you go.
 
-Four contexts:
+Five contexts:
 - **A1** — new homepage section, from scratch
 - **A2** — polish iteration on a shipped section (the Session 12 nav flow)
+- **A3** — copy-only change on a shipped section (the copy chain — fix or create)
 - **B** — net-new page (service hub or child service page)
 - **C** — site-wide / one-off (SEO audit, schema, llms.txt, internal linking, perf)
 
@@ -40,7 +41,9 @@ Skill names are slash-commands. Skip a step only when explicitly noted.
 | `seo-aeo-keyword-research` | Keywords + AEO questions per page | Once per net-new page |
 | `seo-aeo-content-cluster` | Pillar + cluster topical map | Once per pillar |
 | `seo-aeo-landing-page-writer` | Page or section copy generation | Per page; can scope to section |
-| `seo-content-auditor` | Scored audit + fix list | After content lock |
+| `seo-content-auditor` | Scored audit + fix list | After content lock; A3 steps 1 + 4 |
+| `copywriting` | Claim discipline · benefit/outcome · one-idea-per-section — copy gate | A3 step 6; any copy rewrite |
+| `writing-guardrails.md` (doc, not a skill) | Anti-AI-slop vet — banned words, significance inflation, -ing tails | A3 step 7; ALL copy, every context |
 | `seo-content` | E-E-A-T + AI citation deep diagnostic | Pre-launch / quarterly |
 | `seo-geo` | AI-citation readiness, llms.txt, AI crawler access | Site-scope once; per-page check |
 | `seo-authority-builder` | E-E-A-T audit | Trust-heavy pages (Founders, hubs) |
@@ -114,6 +117,57 @@ Preconditions: copy locked · spec exists · component shipped
 ```
 
 **Gating**: Steps 2 and 3 are conditional. If critique is clean and the ask is a pure behavior fix, jump 1 → 4. Don't run polish theatre on an already-clean component.
+
+---
+
+## Context A3 — Copy-only change on a shipped section (the copy chain)
+
+Words only — no visual, layout, or motion work. Covers a **fix** (audit a shipped section, then tighten) and a **create** (write copy for a section that has none). This is the canonical chain referenced anywhere by "Copy change → SEO chain".
+
+```
+Preconditions: component shipped · visual locked · change is copy-only
+
+[ ] 1. seo-content-auditor + copywriting   — AUDIT FIRST. Scored findings +
+       (audit pass)                           fix list → docs/superpowers/
+                                              specs/<date>-<scope>-copy-audit.md.
+                                              Skip ONLY for pure create
+                                              (no copy exists yet).
+[ ] 2. docs/content/homepage.md FIRST      — edit the source of truth before
+                                              JSX. Reconcile any doc↔JSX
+                                              drift in this section first.
+[ ] 3. seo-aeo-landing-page-writer (scoped)— rewrite/generate the section
+                                              copy against locked keywords,
+                                              AEO block, word counts.
+[ ] 4. seo-content-auditor                 — re-score the rewrite (E-E-A-T,
+                                              AEO, readability). Must beat
+                                              the step-1 baseline.
+[ ] 5. seo-authority-builder               — ONLY trust-heavy sections
+       (conditional)                         (Founders, Why-Us, hubs).
+                                              Skip for Hero / CTA / utility.
+[ ] 6. copywriting                         — GATE. Claim discipline,
+                                              benefit/outcome, one-idea-
+                                              per-section. Blocks on
+                                              unverifiable claims.
+[ ] 7. writing-guardrails.md               — anti-AI vet. ALL copy must
+       (doc gate, not a skill)               pass: banned words, significance
+                                              inflation, -ing tails, padded
+                                              tricolons.
+[ ] 8. Sync homepage.md → components/sections/*.tsx
+                                            — doc and JSX must match
+                                              verbatim after this step.
+[ ] 9. verification-before-completion      — pnpm dev (NOT a clean build),
+                                              confirm copy renders in static
+                                              markup (crawlable).
+[ ] 10. Graduate                            — CHANGELOG.md decision-log entry
+                                              + update the copy-audit
+                                              scorecard row for the section.
+```
+
+**Gating**:
+- **Fix vs create** — a *fix* starts at step 1. A *create* (no copy yet) skips step 1, starts at step 2.
+- **Step 5 conditional** — `seo-authority-builder` only earns its place on E-E-A-T-bearing sections. Running it on Hero/CTA copy is theatre.
+- **No spec/plan ceremony** — copy-only changes get no section spec and no `writing-plans` (that's A1/A2/B overhead). The audit doc + `homepage.md` are the only artifacts.
+- **Escalate** — if the change starts needing layout/motion, it is *not* A3. Switch to A2.
 
 ---
 
