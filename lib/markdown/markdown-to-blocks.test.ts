@@ -98,6 +98,22 @@ describe('markdownToBlocks — admonitions', () => {
     expect(w.type === 'callout' && w.data.tone).toBe('warn')
   })
 
+  it('admonition markers are case-insensitive (v2.2 N2 fix)', () => {
+    // GitHub's own admonition syntax tolerates mixed case; the v1
+    // converter required exactly [!tip]. After v2.2 [!TIP] / [!Tip] /
+    // [!tIp] all resolve the same way.
+    const [tipUpper, tipMixed, takeawayUpper, faqMixed] = blocks(
+      '> [!TIP] upper-case tip\n\n' +
+      '> [!Tip] title-case tip\n\n' +
+      '> [!TAKEAWAY] upper-case takeaway\n\n' +
+      '> [!Faq] What is X?\n> X is the answer.',
+    )
+    expect(tipUpper.type === 'callout' && tipUpper.data.tone).toBe('tip')
+    expect(tipMixed.type === 'callout' && tipMixed.data.tone).toBe('tip')
+    expect(takeawayUpper.type).toBe('key-takeaway')
+    expect(faqMixed.type === 'faq' && faqMixed.data.question).toBe('What is X?')
+  })
+
   it('converts [!takeaway] key-takeaway', () => {
     const [b] = blocks('> [!takeaway] ship draft-only via MCP')
     expect(b.type).toBe('key-takeaway')

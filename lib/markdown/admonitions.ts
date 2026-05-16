@@ -54,12 +54,16 @@ export type BlockquoteParse =
 
 // Markers must be at column 0 of the joined text and followed by either
 // whitespace or end-of-input. We're permissive on whether the user wrote
-// `[!tip]` followed by a space, two spaces, or a newline.
-const CALLOUT_MARKERS = {
-  '[!tip]':      'tip',
-  '[!note]':     'note',
-  '[!warn]':     'warn',
-} as const
+// `[!tip]` followed by a space, two spaces, or a newline. Match is
+// case-insensitive — `[!TIP]`, `[!Tip]`, and `[!tip]` are all valid
+// (Tester N2 from 2026-05-15 flagged the v1 case-sensitivity as a sharp
+// edge; GitHub's own admonition syntax accepts mixed case).
+const CALLOUT_MARKER_TO_TONE: Record<string, 'tip' | 'note' | 'warn'> = {
+  '[!tip]':  'tip',
+  '[!note]': 'note',
+  '[!warn]': 'warn',
+}
+const LEADING_MARKER_RE = /^\[![a-zA-Z]+\]/
 
 /**
  * Inspect the joined plain-text body of a blockquote (paragraphs joined
@@ -69,24 +73,25 @@ const CALLOUT_MARKERS = {
 export function parseBlockquoteBody(body: string): BlockquoteParse {
   const trimmedLeading = body.replace(/^\s+/, '')
 
-  for (const [marker, tone] of Object.entries(CALLOUT_MARKERS)) {
-    if (trimmedLeading.startsWith(marker)) {
-      const rest = trimmedLeading.slice(marker.length).replace(/^\s+/, '')
-      return { kind: 'callout', tone: tone as 'tip' | 'note' | 'warn', text: rest }
-    }
+  const markerMatch = trimmedLeading.match(LEADING_MARKER_RE)
+  const markerLc = markerMatch ? markerMatch[0].toLowerCase() : null
+
+  if (markerLc && markerLc in CALLOUT_MARKER_TO_TONE) {
+    const rest = trimmedLeading.slice(markerMatch![0].length).replace(/^\s+/, '')
+    return { kind: 'callout', tone: CALLOUT_MARKER_TO_TONE[markerLc], text: rest }
   }
 
-  if (trimmedLeading.startsWith('[!takeaway]')) {
-    const rest = trimmedLeading.slice('[!takeaway]'.length).replace(/^\s+/, '')
+  if (markerLc === '[!takeaway]') {
+    const rest = trimmedLeading.slice(markerMatch![0].length).replace(/^\s+/, '')
     return { kind: 'key-takeaway', text: rest }
   }
 
-  if (trimmedLeading.startsWith('[!faq]')) {
+  if (markerLc === '[!faq]') {
     // Question = remainder of the same logical line. Answer = everything
     // after the first separator (newline or paragraph break). A blockquote
     // body of just `[!faq] hello` with no answer is a parse error — FAQ
     // requires both a question and an answer.
-    const rest = trimmedLeading.slice('[!faq]'.length).replace(/^[ \t]+/, '')
+    const rest = trimmedLeading.slice(markerMatch![0].length).replace(/^[ \t]+/, '')
     const firstBreak = rest.search(/\r?\n/)
     if (firstBreak < 0) {
       return {
