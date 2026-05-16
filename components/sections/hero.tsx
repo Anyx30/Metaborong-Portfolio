@@ -75,9 +75,10 @@ export function HeroSection() {
             <p className="text-base text-gray leading-[1.6] tracking-[-0.005em] max-w-[560px]">
               Metaborong is a Web3 development company and AI agent studio. A
               remote-first team of senior engineers, globally distributed. We ship
-              DeFi protocols and smart contract audits, AI agents spanning agentic
-              workflows and generative systems, and full-stack SaaS for founders and
-              early-stage startups. Spec to production, fast.
+              DeFi protocols and smart contract audits across EVM chains and Solana,
+              AI agents spanning RAG, agentic workflows, and generative systems, and
+              full-stack SaaS for founders and early-stage startups. Spec to
+              production, fast.
             </p>
           </blockquote>
 

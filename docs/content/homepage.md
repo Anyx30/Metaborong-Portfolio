@@ -64,7 +64,7 @@ Services dropdown:
 # Web3 protocols. AI agents. Shipped.
 
 **AEO Extraction Block** *(blockquote — AI engines extract this; doubles as the de-facto subhead, no separate subheading ships)*:
-> Metaborong is a Web3 development company and AI agent studio. A remote-first team of senior engineers, globally distributed. We ship DeFi protocols and smart contract audits, AI agents spanning agentic workflows and generative systems, and full-stack SaaS for founders and early-stage startups. Spec to production, fast.
+> Metaborong is a Web3 development company and AI agent studio. A remote-first team of senior engineers, globally distributed. We ship DeFi protocols and smart contract audits across EVM chains and Solana, AI agents spanning RAG, agentic workflows, and generative systems, and full-stack SaaS for founders and early-stage startups. Spec to production, fast.
 
 **CTAs:**
 - Primary: `Get a scope →`
@@ -77,7 +77,7 @@ Services dropdown:
   - Doc was stale vs shipped JSX (old H1, eyebrow, CTAs, plus a subheading + trust line that never shipped). Reconciled doc → shipped reality.
   - H1 kept verbatim per user + keyword research: hub /services/web3/ owns "web3 development company"; homepage hard-targeting it too = cannibalization. H1 stays voice-led; primary keyword recovered in the blockquote's first 6 words + the title tag.
   - Geo unified to remote-first/global (user decision 2026-05-16) — replaces every "US and Europe" mention site-wide (FAQ ×2, llms.txt ×2, schema areaServed → Worldwide).
-  - Blockquote sentence 2 was a 29-word 7-item colon dump → first tightened to a parallel 3-pillar clause. Revised 2026-05-17 per user: em-dash removed (writing-guardrails AI tell, blockquote scope only); capability broadened to canonical pillar nouns from services-data.ts ("smart contract audits", "agentic workflows", "generative systems") because the prior "DeFi on Ethereum and Solana / AI agents with RAG" was the narrowest claim on the site; chains intentionally dropped from the hero (also sidesteps the site-wide 3-vs-7 chain inconsistency, deferred). 46 words, in the 40–60 AEO band.
+  - Blockquote sentence 2 was a 29-word 7-item colon dump → first tightened to a parallel 3-pillar clause, then iterated 2026-05-17 per user: em-dash removed (writing-guardrails AI tell, blockquote scope only); capability broadened to canonical services-data.ts nouns; RAG re-added (high-signal AI term, also in schema knowsAbout) and "across EVM chains and Solana" added back (canonical superordinate — makes no chain-count claim, so the site-wide 3-vs-7 inconsistency stays deferred, not reignited). 52 words, parallel structure (not a colon dump), in the 40–60 AEO band.
   - Trust line "No pitch decks. No retainers. Direct from founders." dropped — never shipped; read as poetic/unprofessional. Eyebrow carries the trust signal.
 -->
 
@@ -508,7 +508,7 @@ Most teams hear back within 12 hours.
 
 ## AEO / GEO Compliance Checklist
 
-- [x] AEO extraction sentence in blockquote after H1 (46 words, self-contained)
+- [x] AEO extraction sentence in blockquote after H1 (52 words, self-contained)
 - [x] Definition of Metaborong within first 60 words of page body
 - [x] 134+ word answer block in Services section (134 words)
 - [x] Question-based H2s present (FAQ section)

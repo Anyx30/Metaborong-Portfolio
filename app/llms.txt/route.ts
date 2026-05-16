@@ -26,7 +26,7 @@ export async function GET(): Promise<Response> {
 
   lines.push('# Metaborong')
   lines.push('')
-  lines.push('> Metaborong is a Web3 development company and AI agent studio. A remote-first team of senior engineers, globally distributed. We ship DeFi protocols and smart contract audits, AI agents spanning agentic workflows and generative systems, and full-stack SaaS for founders and early-stage startups. Spec to production, fast.')
+  lines.push('> Metaborong is a Web3 development company and AI agent studio. A remote-first team of senior engineers, globally distributed. We ship DeFi protocols and smart contract audits across EVM chains and Solana, AI agents spanning RAG, agentic workflows, and generative systems, and full-stack SaaS for founders and early-stage startups. Spec to production, fast.')
   lines.push('')
 
   lines.push('## Key facts')
