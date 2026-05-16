@@ -159,12 +159,14 @@ describe('blockquotes — edge cases', () => {
     }
   })
 
-  it('callout marker is case-sensitive — `[!TIP]` (uppercase) does NOT match', () => {
-    // The walker matches `[!tip]` literally. Document the case-sensitivity
-    // so AI authors know which casing to use. A wrong-cased marker falls
-    // through to the plain-quote path — verify and surface in the report.
-    const [b] = blocks('> [!TIP] this is not actually a callout')
-    expect(b.type).toBe('quote')
+  it('callout marker is case-insensitive — `[!TIP]` matches as tip (v2.2 N2 fix)', () => {
+    // v1 required `[!tip]` literally; v2.2 lowercases the marker before
+    // matching so AI authors don't trip over GitHub-style mixed-case
+    // admonitions. The plain-quote fallback only fires when the marker
+    // isn't a known admonition keyword (e.g. `[!something-else]`).
+    const [b] = blocks('> [!TIP] now this IS a callout')
+    expect(b.type).toBe('callout')
+    expect(b.type === 'callout' && b.data.tone).toBe('tip')
   })
 })
 
