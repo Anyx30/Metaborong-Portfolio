@@ -73,11 +73,11 @@ export function HeroSection() {
           {/* AEO extraction blockquote */}
           <blockquote cite="/#services" className="mb-6">
             <p className="text-base text-gray leading-[1.6] tracking-[-0.005em] max-w-[560px]">
-              Metaborong is a Web3 development company and AI agent studio — a
+              Metaborong is a Web3 development company and AI agent studio. A
               remote-first team of senior engineers, globally distributed. We ship
-              DeFi protocols on Ethereum and Solana, production AI agents with RAG,
-              and full-stack SaaS for founders and early-stage startups. Spec to
-              production, fast.
+              DeFi protocols and smart contract audits, AI agents spanning agentic
+              workflows and generative systems, and full-stack SaaS for founders and
+              early-stage startups. Spec to production, fast.
             </p>
           </blockquote>
 

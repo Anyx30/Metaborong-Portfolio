@@ -27,6 +27,13 @@ All major decisions, milestones, and changes to this project.
 - Pre-existing drift, flagged not fixed: `homepage.md` AEO checklist says "FAQ: 8 Q&As" but the doc body + `faq-data.ts` have 7 (post 2026-05-14 cut). Out of scope for this copy change.
 - The 2026-05-14 copy-audit spec scoped Hero out as "already optimised"; that statement is now superseded by this entry (audit doc annotated with a pointer, not rewritten — per the SESSIONS.md no-contradicting-versions rule).
 
+### Addendum (2026-05-17, same session) — Hero blockquote revision
+
+- **User flagged the A3 output under-sold capability + carried an em-dash.** An Explore pass confirmed the Session-14 blockquote ("DeFi protocols on Ethereum and Solana, production AI agents with RAG") was the *narrowest* capability claim on the site vs the canonical `services-data.ts` pillars (full AI suite incl. generative + agentic workflows; broader Web3 incl. smart-contract audits).
+- **Blockquote re-revised (A3, copy-only).** Final locked text: *"Metaborong is a Web3 development company and AI agent studio. A remote-first team of senior engineers, globally distributed. We ship DeFi protocols and smart contract audits, AI agents spanning agentic workflows and generative systems, and full-stack SaaS for founders and early-stage startups. Spec to production, fast."* — 46 words (AEO band), zero em-dashes, all claims traced to `services-data.ts`. Synced verbatim to `hero.tsx`, `llms.txt:29`, `homepage.md` (block + WHY + 43→46 checklist).
+- **Scope decisions (user):** em-dash removal is blockquote-only (no standing rule, no retro-sweep); chain naming dropped from the hero entirely, which also sidesteps the site-wide 3-vs-7 chain inconsistency.
+- **Deferred, not fixed:** site-wide chain inconsistency (`services-data.ts` 3 / Comparison + Why-Us 7 / hero now 0) — own follow-up session. `schema.ts` Org description (different string, no geo) left as-is.
+
 ---
 
 ## 2026-05-13 — Session 13: Parallel section redesigns + C1 SEO baseline (graduate)
