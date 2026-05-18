@@ -95,8 +95,8 @@ Create `components/sections/hero.test.tsx` (conventions copied from `components/
 ```tsx
 // @vitest-environment happy-dom
 
-import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 
 // next/image → plain <img> in happy-dom. Strip Next-only props (fill/priority/
@@ -113,6 +113,11 @@ vi.mock('next/image', () => ({
 import { HeroSection } from './hero'
 
 describe('HeroSection — full-bleed structure', () => {
+  // Repo convention (matches every components/**/*.test.tsx): explicit
+  // cleanup between cases. The vitest config does NOT set globals:true,
+  // so RTL auto-cleanup is not registered — do not add globals:true.
+  afterEach(() => cleanup())
+
   it('renders the SSR copy verbatim (A3-locked)', () => {
     render(<HeroSection />)
     // Eyebrow + blockquote are static text → verbatim A3 copy is pinned here.
@@ -167,6 +172,7 @@ Notes baked into the code below:
 - Scrim is two layers: a base veil (mobile legibility, fades out at `lg`) + the L1 left gradient (starting values; Task 3 tunes).
 - Eyebrow chip structure kept (respects last session's revert) — recolored for dark only.
 - Ghost CTA recolored on-dark via per-instance `!` overrides (the hero is the only on-dark surface; the Button primitive stays untouched).
+- **Do NOT modify `vitest.config.ts`.** It is backend-owned and intentionally has no `globals:true`; the hero test uses the repo's explicit `afterEach(() => cleanup())` convention. Only `components/sections/hero.tsx` changes in this task.
 
 - [ ] **Step 1: Replace the entire file with this content**
 
