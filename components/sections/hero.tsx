@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { HeroAsciiCanvas } from '@/components/sections/hero-ascii-canvas'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
@@ -41,6 +42,10 @@ export function HeroSection() {
           sizes="100vw"
           className="object-cover select-none"
         />
+
+        {/* Live ASCII render of the bg; covers the <Image> (kept as SSR/first-
+            paint fallback + sample source + structural-test anchor). */}
+        <HeroAsciiCanvas />
 
         {/* Scrim: base veil (mobile legibility, gone at lg) + L1 left gradient.
             Task 3 tuned: veil 0.62 (mobile), gradient 0.94/0.88/0.18/0 to pass WCAG-AA. */}
