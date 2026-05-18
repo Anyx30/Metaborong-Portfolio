@@ -1,7 +1,7 @@
 # Homepage Content
 **URL:** `/`
-**Last updated:** 2026-05-17
-**Status:** Hero copy reconciled to shipped JSX + geo unified to remote-first/global (A3 chain). Services + below-services copy refresh synced to JSX (live on `design-revamp`). Open placeholders: Clutch quotes/rating/count in testimonials.tsx; founder-bio specifics in founders.tsx.
+**Last updated:** 2026-05-18
+**Status:** Hero eyebrow → entity-category line + pulsing dot removed (premium static-hairline finish). Hero copy reconciled to shipped JSX + geo unified to remote-first/global (A3 chain). Services + below-services copy refresh synced to JSX (live on `design-revamp`). Open placeholders: Clutch quotes/rating/count in testimonials.tsx; founder-bio specifics in founders.tsx.
 
 ---
 
@@ -57,8 +57,8 @@ Services dropdown:
 
 ### [HERO — H1 + AEO block + CTAs]
 
-**Eyebrow chip (live availability signal):**
-`Accepting new work · Reply in 12h`
+**Eyebrow (category-identity line — original chip box, dot removed):**
+`Web3 & AI development studio`
 
 **H1 (typewriter, 3 beats — renders as static SSR text, crawlable):**
 # Web3 protocols. AI agents. Shipped.
@@ -79,6 +79,7 @@ Services dropdown:
   - Geo unified to remote-first/global (user decision 2026-05-16) — replaces every "US and Europe" mention site-wide (FAQ ×2, llms.txt ×2, schema areaServed → Worldwide).
   - Blockquote sentence 2 was a 29-word 7-item colon dump → first tightened to a parallel 3-pillar clause, then iterated 2026-05-17 per user: em-dash removed (writing-guardrails AI tell, blockquote scope only); capability broadened to canonical services-data.ts nouns; RAG re-added (high-signal AI term, also in schema knowsAbout) and "across EVM chains and Solana" added back (canonical superordinate — makes no chain-count claim, so the site-wide 3-vs-7 inconsistency stays deferred, not reignited). 52 words, parallel structure (not a colon dump), in the 40–60 AEO band.
   - Trust line "No pitch decks. No retainers. Direct from founders." dropped — never shipped; read as poetic/unprofessional. Eyebrow carries the trust signal.
+  - [2026-05-18] Eyebrow changed: availability line → entity-category "Web3 & AI development studio" (= title tag, so title/H1-context/blockquote/Org-schema all assert one entity — the only real SEO lever an eyebrow has; keyword-research-backed; no hub cannibalization). Pulsing green dot removed (undocumented infinite — net DESIGN.md motion-rule-#1 compliance gain). SUPERSEDES the "Eyebrow carries the trust signal" line above — the 12h/availability promise now lives only in Contact CTA + FAQ. NOTE: a same-session /impeccable layout+polish redesign (drop the pill, static brand hairline, flush-left) was **reverted at user direction** — the original bordered chip structure + 0.12em tracking are retained; only the dot was removed and the content updated. No structural/visual redesign shipped.
 -->
 
 **Pre-existing drift noted, not fixed (out of scope):** the AEO checklist below still says "FAQ: 8 Q&As" but the doc body has 7 (post 2026-05-14 cut). Flag only.

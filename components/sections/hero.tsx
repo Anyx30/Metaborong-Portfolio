@@ -53,7 +53,7 @@ export function HeroSection() {
               <span aria-hidden="true" className="hero-live-pulse absolute inset-0 bg-[#10b981] rounded-sm" />
             </span>
             <Eyebrow className="text-[12px]! tracking-[0.12em]!">
-              Accepting new work · Reply in 12h
+              Web3 &amp; AI development studio
             </Eyebrow>
           </div>
 
