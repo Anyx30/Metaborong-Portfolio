@@ -796,8 +796,8 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Confirm the old ASCII assets are unreferenced, then delete**
 
-Run: `grep -rn "hero-ascii" components app --include=*.tsx --include=*.ts --include=*.css; echo "exit: $?"`
-Expected: no matches (exit 1 from grep = clean). If any match remains, fix it before deleting. Then:
+Run: `grep -rn "hero-ascii\.mp4\|hero-ascii-poster" components app --include=*.tsx --include=*.ts --include=*.css; echo "exit: $?"`
+Expected: no matches (exit 1 = clean). NOTE: do NOT grep the bare string `hero-ascii` — it now legitimately matches the live `components/sections/hero-ascii-canvas.tsx` and its import. Only the old asset filenames (`hero-ascii.mp4`, `hero-ascii-poster`) must be unreferenced. If either asset name still matches, fix it before deleting. Then:
 
 ```bash
 git rm public/hero-ascii.mp4 public/hero-ascii-poster.png
@@ -839,7 +839,8 @@ Expected: typecheck PASS; all hero tests PASS.
 
 Run: `curl -s http://localhost:3000/ | grep -c "Web3 &amp; AI development studio"` → expect `1`.
 Run: `curl -s http://localhost:3000/ | grep -c "remote-first team of senior engineers"` → expect `1`.
-Run: `curl -s http://localhost:3000/ | grep -c "hero-ascii"` → expect `0`.
+Run: `curl -s http://localhost:3000/ | grep -c "hero-ascii\.mp4"` → expect `0` (old video asset gone).
+Run: `curl -s http://localhost:3000/ | grep -c "<video"` → expect `0`. (Do NOT grep bare `hero-ascii`: the live ASCII-canvas component chunk legitimately contains that substring.)
 
 - [ ] **Step 3: Reduced-motion check**
 
