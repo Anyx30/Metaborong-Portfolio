@@ -52,17 +52,17 @@ export function HeroSection() {
         <HeroOverlayCard
           loadingLabels={['Cogitating…', 'Reasoning…', 'Inferring…', 'Embedding…']}
           resultLabel="w₁ 0.83, ∑ 0.44"
-          style={{ left: '55%', top: '50%' }}
+          style={{ left: '65%', top: '42%' }}
         />
         <HeroOverlayCard
           loadingLabels={['Mining block…', 'Signing tx…', 'Validating…', 'Committing…']}
           resultLabel="0x4a7f..."
-          style={{ left: '70%', top: '16%' }}
+          style={{ left: '76%', top: '16%' }}
         />
         <HeroOverlayCard
           loadingLabels={['Deploying…', 'Building…', 'Migrating…', 'Scaling…']}
           resultLabel="/v1/deploy"
-          style={{ left: '80%', top: '62%' }}
+          style={{ left: '76%', top: '52%' }}
         />
       </div>
 
