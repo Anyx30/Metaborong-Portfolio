@@ -43,9 +43,9 @@ export function HeroSection() {
         />
 
         {/* Scrim: base veil (mobile legibility, gone at lg) + L1 left gradient.
-            Starting values — Task 3 tunes against the real pixels for AA. */}
-        <div className="absolute inset-0 bg-[rgba(8,12,24,0.50)] lg:bg-transparent" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,12,24,0.82)_0%,rgba(8,12,24,0.56)_30%,rgba(8,12,24,0.12)_52%,transparent_64%)]" />
+            Task 3 tuned: veil 0.62 (mobile), gradient 0.94/0.88/0.18/0 to pass WCAG-AA. */}
+        <div className="absolute inset-0 bg-[rgba(8,12,24,0.62)] lg:bg-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,12,24,0.94)_0%,rgba(8,12,24,0.88)_30%,rgba(8,12,24,0.18)_52%,transparent_66%)]" />
 
         {/* Three proof windows — over the right flower cluster, current
             low/high/low stagger. Stage-% coords; Task 4 tunes. */}
@@ -81,7 +81,7 @@ export function HeroSection() {
               lines={[
                 { text: 'Web3 protocols.' },
                 { text: 'AI agents.' },
-                { text: 'Shipped.', className: 'text-brand' },
+                { text: 'Shipped.', className: 'text-[#7fb3ff]' },
               ]}
               durationMs={650}
               startDelayMs={150}
