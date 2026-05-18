@@ -52,3 +52,6 @@ screenshots/
 /test-results/
 /playwright-report/
 .gstack/
+
+# hero background — 7.5MB source master kept locally only; ship the optimized JPEG
+docs/Gemini_Generated_Image_i6ni71i6ni71i6ni.png
