@@ -132,13 +132,13 @@ export function HeroAsciiCanvas() {
         cx.drawImage(base, 0, 0)
         const h = canvas!.height
         const band = (Math.sin(phase) * 0.5 + 0.5) * h
-        const g = cx.createLinearGradient(0, band - h * 0.16, 0, band + h * 0.16)
+        const g = cx.createLinearGradient(0, band - h * 0.07, 0, band + h * 0.07)
         g.addColorStop(0, 'rgba(150,190,255,0)')
-        g.addColorStop(0.5, 'rgba(150,190,255,0.05)')
+        g.addColorStop(0.5, 'rgba(150,190,255,0.2)')
         g.addColorStop(1, 'rgba(150,190,255,0)')
         cx.fillStyle = g
         cx.fillRect(0, 0, canvas!.width, canvas!.height)
-        phase += 0.012
+        phase += 0.016
       }
       raf = requestAnimationFrame(frame)
     }
