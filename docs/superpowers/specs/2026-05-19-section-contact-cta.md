@@ -105,12 +105,19 @@ Figma-faithful redesign / honor project grammar, logged per the override rule.
    generic copy this section already replaced* (and is itself corrupted —
    `"…Web3 protocols, ATell us…"`). Authoritative copy = `homepage.md` A3 block
    (Figma text ≠ source — project memory rule).
-4. **ASCII-hills raster = project-sourced static asset.** No reuse of the Figma
-   asset URL (short-lived, 7-day). Source a green/blue ASCII-hills raster in the
-   `hero-ascii` treatment family; **final asset chosen via labeled live-page
-   candidates at implementation** (project memory: subjective visual placement →
-   candidate-pick, never blind-iterate). Decorative `alt=""`, lazy, **static**
-   (no animation — DESIGN.md motion rule #1 untouched).
+4. **ASCII-hills raster = exported Figma asset, optimized (D1 → option A).**
+   Captured 2026-05-19 from Figma node `237:341` (4096×2305, 9.7 MB raw —
+   **local-only working file, NOT committed**; provenance = the Figma node id,
+   not a repo binary). MUST NOT ship as-is.
+   **Implementation hard requirement:** resize to a sensible max (~1600px wide
+   for retina at the ~1240px render box) + convert to **webp**, place in
+   `public/` (follow the `public/whyus/` precedent, e.g.
+   `public/contact/ascii-hills.webp`); target well under ~250 KB so it does not
+   regress LCP on the final CTA. Decorative `alt=""` `aria-hidden`,
+   `loading="lazy"`, **static** (no animation — DESIGN.md motion rule #1
+   untouched). Final crop/placement still chosen via labeled live-page
+   candidates at implementation (project memory: subjective placement →
+   candidate-pick, never blind-iterate).
 5. **Dark → light (grammar change).** `DESIGN.md` color table currently lists
    "contact CTA" under `--color-canvas` (`#0a0a0a`, surface.dark, line ~136).
    The redesign moves the section to `--color-bg`. Logged here; **DESIGN.md
@@ -137,9 +144,37 @@ Figma-faithful redesign / honor project grammar, logged per the override rule.
   offset (lands on the light section bg → visible ≥3:1; if the button overlaps
   the raster, verify ring contrast at implementation).
 
+## plan-design-review (2026-05-19) — spec gate
+
+Calibrated against `DESIGN.md` + the locked Figma frame `233:261`. **No mockups
+generated** — visual is locked to the user-provided Figma source of truth; AI
+variants would contradict the Figma-faithful workflow (legitimate skip, the
+Session-13/16 precedent). `REPO_MODE=collaborative`.
+
+| Pass | Dimension | Score | Outcome |
+|------|-----------|-------|---------|
+| 1 | Information architecture | 9/10 | Hierarchy explicit (H2→sub→split-arrow→risk reducer→secondary); anchor wiring documented. |
+| 2 | Interaction state coverage | 7→9/10 | Button 7-state spec'd. **Fixed inline:** (a) secondary `contact@metaborong.com` link gets the same hover (150ms `--duration-instant` color) + global focus-visible ring as any inline link; (b) **raster load-failure degrades gracefully** — `alt=""` + the section is fully functional/legible on `--color-bg` without it (no layout shift; no min-height reserved that would collapse). |
+| 3 | User journey / emotional arc | 9/10 | Final convert moment; A3 founder-reachability lowers risk exactly at the decision point. No issue. |
+| 4 | AI-slop risk | 8.5/10 | Centered layout is **not** slop here: terminal single-action CTA → centered is the convention (Krug), Figma-locked, and consistent with the existing contact-cta + the rest of the site's CTA treatment. Distinctive ASCII-hills raster + split-arrow Bauhaus button keep it off the generic-hero pattern. Logged so a future reviewer doesn't mis-flag. |
+| 5 | Design-system alignment | 9/10 | Full token map + 5 deviations per the override rule; split-arrow/radius-0/≤3-word-CTA all cite DESIGN.md; `<Section bg=default maxWidth=xwide>` **verified against `section.tsx:5,21`**. (DESIGN.md variant list omits `xwide` — stale; → graduation cleanup.) |
+| 6 | Responsive & accessibility | 8→9/10 | **Fixed inline:** raster at mobile = `object-cover object-bottom`, predictable bottom-anchored crop, **no `min-height`** that would blow out 375; content stack stays centered + ≥44px button; reduced-motion via `<Section>` Reveal (short-circuits) + static raster; SSR text crawlable. |
+| 7 | Unresolved decisions | resolved | **D1 RESOLVED (user, 2026-05-19): option A** — export the Figma raster, optimize to sized webp (Deviation 4). Asset captured. Bg-alternation is a stated deterministic conditional (verify FAQ bg at impl), not a haunting ambiguity. |
+
+**Initial 8.0/10 → 9.0/10** after inline fixes + D1 resolved; zero decisions
+deferred. Spec is design-complete; run `/design-review` after implementation
+for live visual QA.
+
 ---
 
 ## GRADUATION DRAFT — apply at end of session on `design-revamp` (single author)
+
+### → `DESIGN.md` doc-drift cleanup (at graduation)
+
+The `section.tsx` row/prose in DESIGN.md lists `mw: wide/narrow/prose` but the
+real component (`section.tsx:5`) also has **`xwide` (`max-w-[1280px]`)** — used
+by Why-Us, Founders, and now ContactCta. Add `xwide` to the documented variant
+list so the doc matches the shipped API.
 
 ### → `DESIGN.md` color table (line ~136) — edit at graduation
 

@@ -143,6 +143,25 @@ TRUST SIGNALS + Services-H2 lines (not new claims); offices user-verified
 - **Focus-visible:** every link/social control shows the global
   `2px --color-brand` ring @2px offset (lands on the light footer bg → visible).
 
+## plan-design-review (2026-05-19) — spec gate
+
+Calibrated against `DESIGN.md` + the locked Figma frame `237:359`. **No mockups
+generated** (visual locked to Figma source of truth — legitimate skip, the
+Session-13/16 precedent). `REPO_MODE=collaborative`.
+
+| Pass | Dimension | Score | Outcome |
+|------|-----------|-------|---------|
+| 1 | Information architecture | 9/10 | Layout order + 1/2/4-col responsive explicit; trunk test passes (Company/Services/Offices/Get-in-touch + copyright + social). |
+| 2 | Interaction state coverage | 7→9/10 | **Fixed inline:** footer is **all-static SSR chrome — no loading/empty/error states exist; the implementer must not invent any.** Every link/social control: hover = 150ms `--duration-instant` color, focus = global `2px --color-brand` ring; mailto + temp homepage-redirect links behave as ordinary links (temp links carry no `rel="me"`). |
+| 3 | User journey / emotional arc | 9/10 | Post-conversion wayfinding + trust (real NAP, real founders/social). Serves orientation, not mood. No issue. |
+| 4 | AI-slop risk | 9/10 | Functional bordered-cell sitemap + oversized wordmark + mono headings read as engineered (DESIGN.md posture, Founders-blueprint precedent) — not a decorative 3-col feature grid; cards-as-borders are structural, not ornamental. |
+| 5 | Design-system alignment | 9/10 | Edge grid matches `section.tsx`/nav exactly; Figma→token map; 7 deviations logged per the override rule; Deviation 6 honestly reconciles the "sections are IO-gated" rule (footer is chrome, SSR-visible). |
+| 6 | Responsive & accessibility | 8→9/10 | **Fixed inline:** the oversized `METABORONG` wordmark **scales via `clamp()` to always fit the viewport — never clipped (clipping would read as a bug, not a choice)**; dense link rows keep ≥44px touch targets via adequate per-row vertical padding at mobile (footer height accepted as the cost — the touch-target constraint wins). 1-col `<md`, no overflow @375. |
+| 7 | Unresolved decisions | 0 open | All resolved inline; offices/social/scope already user-locked in brainstorming. |
+
+**Initial 8.0/10 → 8.8/10** after inline fixes; zero genuine decisions
+deferred (the one open fork, D1 ASCII-hills asset, belongs to ContactCta).
+
 ---
 
 ## GRADUATION DRAFT — apply at end of session on `design-revamp` (single author)
