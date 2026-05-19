@@ -471,7 +471,7 @@ A: Yes. The Product Studio pillar builds custom Web2 SaaS platforms independentl
   CTA: "Email us" (3 words, ≤ DESIGN.md cap).
 -->
 
-### [CONTACT CTA — dark section]
+### [CONTACT CTA — light section]
 
 ## Tell us the build. We'll send the approach.
 
@@ -479,8 +479,8 @@ A: Yes. The Product Studio pillar builds custom Web2 SaaS platforms independentl
 - "Skip the pitch deck. Start the build."
 - "Send us your spec — get an approach back in 48 hours."
 
-**Sub (18 words):**
-No pitch deck. No discovery-call gauntlet. Just a written approach you can take or leave.
+**Sub (19 words):**
+No pitch deck, no discovery-call gauntlet — a written approach to your Web3 or AI build, straight from a founder.
 
 **Primary CTA:** `Email us →` → `mailto:contact@metaborong.com?subject=New%20project%20inquiry`
 
@@ -496,16 +496,71 @@ Most teams hear back within 12 hours.
   - CTA stayed "Email us" (3 words — at the DESIGN.md cap). Avoided "Start a conversation →" (4 words, soft).
 -->
 
+<!-- WHY (A3 re-run, 2026-05-19 — Session 17 Figma redesign)
+  - Section flips dark → light (Figma 233:261). "[dark section]" label + the
+    "Notes for Visual Design" #0a0a0a line reconciled to light.
+  - H2 + 3-word CTA unchanged — they scored highest and the Session-15 WHY
+    above still holds; the A3 audit (7.6 baseline) said preserve single-action.
+  - Sub rewritten to clear the audit gate: adds (a) founder-reachability E-E-A-T
+    — "straight from a founder" restates the existing TRUST SIGNALS claim
+    ("Founders reachable directly — no account manager layer"), not a new claim;
+    (b) a natural Web3/AI topical clause (equal weight, mirrors the hero's
+    two-pillar lead) for end-of-page relevance + AEO. Kept ≤20w, one idea.
+  - Risk reducer unchanged (keeps the hero-mirrored 12h proof).
+-->
+<!-- CLAIM PROVENANCE: "straight from a founder" — user confirmed 2026-05-19
+  this is literally true (a founder personally writes the approach reply), not
+  just a restatement of the published reachability claim. Copywriting gate
+  (A3 step 6): PASS (user-verified literal). -->
+
+
 
 ---
 
-### [FOOTER]
+### [FOOTER — light, expanded sitemap (redesigned 2026-05-19, Figma 237:359)]
 
-**Left:** [M-mark logo] metaborong™ · © 2026 Metaborong Technologies
+**Positioning line (near wordmark, 16w):**
+Metaborong builds and ships Web3 protocols, AI agents, and SaaS products — a small, senior, founder-led team.
 
-**Nav links:** Services · Work · About · Blog · Contact
+**Wordmark:** `METABORONG` — rendered as live text (not a raster; SSR/SEO-crawlable, crisp, responsive).
 
-**Social:** LinkedIn · X (Twitter) · Dribbble
+**Column — Company:** Work `/#work` · About `/#founders` · Blog `/blog` · FAQ `/#faq` · Contact `/#contact`
+
+**Column — Services:** Web3 / Blockchain · AI Agents · Product Studio — all → `/#services` (service pillar/leaf pages are `robots:noindex,nofollow`; the homepage anchor is the only indexable, SEO-valuable target)
+
+**Column — Offices (user-verified 2026-05-19, publish verbatim):**
+- **India** — 117, Rajyadharpur Govt Colony, Mallickpara, Serampore, West Bengal
+- **United Arab Emirates** — Sharjah Media City, Sharjah, UAE, Al Batayih, 000000
+- **USA** — 16192 Coastal Hwy, Lewes, DE 19958
+
+**Column — Get in touch:** `contact@metaborong.com` (mailto) · social row
+
+**Social:** LinkedIn `https://linkedin.com/company/metaborong-technologies` · X `https://x.com/Metaborong` · Behance, Medium, Discord → `/` (TEMPORARY homepage redirect — real URLs pending; follow-up to swap. No `rel="me"` on the temp links.)
+
+**Bottom bar:** `© {dynamic year} Metaborong Technologies` (left) · LinkedIn · X (right)
+
+**No legal row** — no Privacy/Terms pages exist (user-confirmed); omitting beats a dead link.
+
+<!-- WHY (A3 create, 2026-05-19 — Session 17 Figma redesign)
+  - Footer expands from a single compact row to the Figma sitemap structure
+    (237:359), placeholder "ARNAB RAY ×4" card grid DROPPED (user decision —
+    Founders section already carries the team; avoids publishing personal
+    mobiles).
+  - Only real prose is the 16-word positioning line: names all THREE pillars
+    (Web3, AI, SaaS) with equal weight (positioning rule: never Web3-first),
+    "small, senior team" mirrors the Services H2, "founder-led" restates the
+    published TRUST SIGNALS claim — no new/unverifiable claim. Guardrails PASS.
+  - Offices user-verified 2026-05-19 → copywriting claim-gate PASS (client is
+    the authority); publish verbatim incl. UAE "000000".
+  - Stale removed/reconciled: "Dribbble" dropped (not a real channel in code);
+    "metaborong™" → live "METABORONG" wordmark; static "© 2026" → dynamic year
+    (also fixes Figma's "@2026" bug).
+  - Services → /#services only (noindex,nofollow on service pages; see the
+    copy-audit SEO advisory §C — real lever is reindexing, out of scope here).
+-->
+<!-- CLAIM PROVENANCE: "founder-led" / "small, senior team" = restatements of
+  the existing published TRUST SIGNALS + Services-H2 lines, not new claims.
+  Office addresses = user-verified 2026-05-19. Copywriting gate: PASS. -->
 
 ---
 
@@ -534,4 +589,4 @@ Most teams hear back within 12 hours.
 - Trust bar should auto-scroll with no pause on hover — purely decorative, no SEO value
 - Comparison table: mobile-friendly (horizontal scroll or collapsed rows)
 - FAQ section: consider accordion expand/collapse for UX (content still in DOM for crawlers)
-- Dark contact CTA section: `#0a0a0a` background, white text, blue CTA button
+- Light contact CTA section (redesigned 2026-05-19, Figma 233:261): `--color-bg` background, dark text, brand-blue radius-0 CTA, full-width ASCII-hills raster anchored bottom
