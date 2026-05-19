@@ -162,6 +162,25 @@ Session-13/16 precedent). `REPO_MODE=collaborative`.
 **Initial 8.0/10 → 8.8/10** after inline fixes; zero genuine decisions
 deferred (the one open fork, D1 ASCII-hills asset, belongs to ContactCta).
 
+## Impeccable critique (2026-05-19, post-implementation)
+
+Critique against `DESIGN.md`. Correctness/a11y only → fixed inline, no
+`layout/polish` pass.
+
+- **P1 (a11y AA) FIXED:** bottom-bar copyright + LinkedIn/X links used
+  `text-gray-light` (#999 ≈ 2.85:1 on white — interactive text fails AA) →
+  `text-gray` (≈4.9:1), hover→`text-dark` kept. The giant `Metaborong`
+  wordmark **intentionally keeps `text-gray-light/40`**: it is `aria-hidden`
+  decorative text where contrast is not load-bearing — explicitly permitted by
+  the DESIGN.md accessibility rule.
+- **Checked, no change:** offices use `<address class="not-italic">`
+  semantics; link groups in `<nav aria-label>`; column labels are styled `<p>`
+  (not headings — spec hard constraint, no page-outline fight); all links bare
+  → global focus-visible ring; social hit areas 44×44. `target="_blank"` →
+  `/` temp links are the user's documented Deviation-5 decision (left as-is).
+
+tsc exit 0 after fixes.
+
 ---
 
 ## GRADUATION DRAFT — apply at end of session on `design-revamp` (single author)

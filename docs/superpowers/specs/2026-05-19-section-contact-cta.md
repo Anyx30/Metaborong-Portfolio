@@ -165,6 +165,36 @@ Session-13/16 precedent). `REPO_MODE=collaborative`.
 deferred. Spec is design-complete; run `/design-review` after implementation
 for live visual QA.
 
+## Impeccable critique (2026-05-19, post-implementation)
+
+Critique against `DESIGN.md` (no PRODUCT.md — same as Founders; not derailing
+into `teach`). Skill-vs-project conflict noted: impeccable's "no em dashes"
+shared law is **overridden by `DESIGN.md:37`** which explicitly endorses
+em-dashes; project instruction wins (em-dashes not flagged). All findings are
+correctness/a11y (not subjective polish) → fixed inline, **no `layout/polish`
+pass needed** (Founders precedent).
+
+- **P1 (DRY/spec + 2 bugs) FIXED:** hand-rolled split-arrow `<a>` → `<Button
+  variant="primary" size="lg" href arrow="→">`. The hand-roll had a hover-
+  direction bug (`bg-brand/90` lightens over white instead of darkening) and a
+  transition-on-wrong-element bug (transition on `<a>`, bg on child spans →
+  instant, violating DESIGN.md 150ms button discipline). Primitive fixes all
+  three; `min-h-[44px]` passed for the touch-target floor.
+- **P1 (a11y AA) FIXED:** risk reducer `text-gray-light` (#999 ≈ 2.85:1 on
+  white — fails AA; DESIGN.md forbids #999 for load-bearing copy) → `text-gray`
+  (#676767 ≈ 4.9:1). Founders-precedent fix.
+- **P2 (correctness) FIXED:** raster `bottom-[-48/-64/-72px]` bled below the
+  section into the Footer's top border → `bottom-0` + `max-h-[clamp(220px,
+  42vw,460px)]` so it stays a bottom band, never blankets the H2 (also removes
+  the text-over-raster contrast risk). Replaces the plan's deferred
+  live-candidate item with a principled on-grammar default; the clamp range can
+  still be tuned at QA #12.
+- **P3 (not changed — over-fixing avoided):** secondary
+  `contact@metaborong.com` has no underline, but an email string + hover→dark is
+  a strong-enough click affordance; left as-is.
+
+tsc exit 0 after fixes.
+
 ---
 
 ## GRADUATION DRAFT — apply at end of session on `design-revamp` (single author)
