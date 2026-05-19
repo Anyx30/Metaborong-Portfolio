@@ -1,5 +1,6 @@
 import { clutchProfileUrl } from '@/lib/links'
 import { Section } from '@/components/ui/section'
+import { ClutchWidget } from '@/components/sections/clutch-widget'
 import { Zap, CalendarDays } from 'lucide-react'
 
 const projectLinkStyle: React.CSSProperties = {
@@ -57,8 +58,8 @@ const chip =
   'inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] tracking-[-0.005em]'
 
 const stats = [
-  { Icon: Zap, label: 'Reply within 12h', offset: 'lg:translate-x-[-24px]' },
-  { Icon: CalendarDays, label: '4–12 weeks to ship', offset: 'lg:translate-x-[-12px]' },
+  { Icon: Zap, label: 'Reply within 12h' },
+  { Icon: CalendarDays, label: '4–12 weeks to ship' },
 ]
 
 export function WhyUsSection() {
@@ -77,23 +78,19 @@ export function WhyUsSection() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-[12px] sm:flex-row sm:flex-wrap lg:flex-col lg:items-end lg:gap-[16px]">
-          <a
-            href={clutchProfileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${chip} no-underline lg:translate-x-[-64px]`}
-          >
-            <span className="font-semibold text-dark tabular-nums">4.9</span>
-            <span aria-label="5 out of 5 stars" className="text-[12px] leading-none tracking-[1px] text-[#F6851B]">★★★★★</span>
-            <span className="font-medium text-gray">on Clutch</span>
+        <div className="flex flex-col gap-[16px] lg:items-end">
+          <a href={clutchProfileUrl} target="_blank" rel="noopener noreferrer" className="sr-only">
+            Metaborong is rated 4.9 out of 5 on Clutch
           </a>
-          {stats.map(({ Icon, label, offset }) => (
-            <span key={label} className={`${chip} font-semibold text-dark ${offset}`}>
-              <Icon aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
-              {label}
-            </span>
-          ))}
+          <ClutchWidget />
+          <div className="flex flex-wrap gap-[12px] lg:flex-nowrap lg:justify-end">
+            {stats.map(({ Icon, label }) => (
+              <span key={label} className={`${chip} shrink-0 font-semibold text-dark`}>
+                <Icon aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 

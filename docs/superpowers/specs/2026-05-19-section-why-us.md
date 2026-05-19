@@ -268,16 +268,65 @@ below are **NOT written here** — the coordinator session writes them once at m
    left verbatim per the preserve-`reasons` directive. Worth a separate
    token-cleanup pass project-wide.
 
+## Amendment 2026-05-19 (post-ship, user-directed — supersedes the Clutch parts above)
+
+The user explicitly directed two changes after ship; this **amends the FROZEN-copy
+contract for the Clutch element only** (user owns the constraint and relaxed it).
+Everything else stays frozen and unchanged.
+
+1. **Clutch badge → official Clutch widget.** The frozen `4.9 ★★★★★ on Clutch`
+   text + inline `clutchProfileUrl` link were **replaced** by the official Clutch
+   widget (`widget.clutch.co`, `data-clutchcompany-id="2433707"`,
+   `data-widget-type="2"`, `data-height="45"`) in a new `'use client'` component
+   `components/sections/clutch-widget.tsx`. Loaded via `next/script`
+   `strategy="afterInteractive"`; Clutch's auto-init misses a deferred script, so
+   `onReady` calls `window.CLUTCHCO.Init()` to scan the `.clutch-widget` div
+   (verified: iframe injects on fresh load with no manual step).
+   - **Decisions (user-confirmed):** layout = widget top-right beside the H2,
+     `Reply within 12h` + `4–12 weeks to ship` as one horizontal row beneath
+     (cascade offsets removed); **SSR fallback kept** — an `sr-only` static
+     `<a href={clutchProfileUrl}>Metaborong is rated 4.9 out of 5 on Clutch</a>`
+     preserves SEO/AEO + screen-reader proof (widget is `aria-hidden`); Clutch
+     script **loads always** (first third-party script on the site — no consent
+     gate, per user choice).
+   - **Frozen-copy contract update:** `4.9` / `★★★★★` / `on Clutch` /
+     `5 out of 5 stars` are **retired** from the why-us frozen set (user-directed);
+     replaced by the sr-only proof line. All other frozen strings (eyebrow, H2,
+     lede, `Reply within 12h`, `4–12 weeks to ship`, tags, titles, bodies, client
+     links) remain frozen and verified present in SSR.
+   - **P3 resolved (was an open item):** the old `aria-label="5 out of 5 stars"`
+     vs visible `4.9` inconsistency is **gone** — markup removed; the sr-only line
+     ("rated 4.9 out of 5") is internally consistent. No coordinator action needed.
+2. **Stat chips de-staggered** → horizontal row at `lg+` (`lg:flex-nowrap`),
+   graceful wrap below `lg` (no 375 overflow). The translate cascade (candidate B)
+   is removed.
+
+### Verification (amendment, via `/agent-browser` per user instruction + gstack browse for the 375 viewport, which agent-browser could not set in this sandbox)
+
+- `npx tsc --noEmit` → exit 0.
+- Clutch widget **iframe renders on fresh load** (onReady → `CLUTCHCO.Init()`),
+  desktop + 375; `window.CLUTCHCO` present; no console errors.
+- Layout: widget top-right of H2; chips one horizontal row at 1280/1440; wrap at
+  375. **No horizontal overflow at 375 or 1280.**
+- SSR raw HTML (no-JS) contains the sr-only Clutch proof + profile link + the
+  `.clutch-widget` mount div + all remaining frozen copy.
+
 ### Suggested canonical entries (coordinator writes these at merge — do NOT write here)
 
 - **`CHANGELOG.md`** (fold into the consolidated Session-16 entry):
   > Why-Us redesigned to Figma `112:1787` — canonical Section grid, bordered
-  > eyebrow chip, UPPERCASE headings, brand-blue `Metaborong`, staggered Clutch
-  > stat-chip cascade, 3 flush bordered isometric-illustration columns. Copy
-  > frozen (zero text changes, SSR-verified). Illustrations 800px WebP.
+  > eyebrow chip, UPPERCASE headings, brand-blue `Metaborong`, 3 flush bordered
+  > isometric-illustration columns (800px WebP). Header proof = official Clutch
+  > widget (first third-party script; sr-only static fallback for SEO/a11y) +
+  > `Reply within 12h` / `4–12 weeks to ship` horizontal chip row. Body copy
+  > frozen (SSR-verified); Clutch text deliberately swapped for the live widget.
 - **`DESIGN.md` Decisions Log** row:
-  > `2026-05-19` | Why-Us adopts the canonical `<Section>` grid + 6 logged
-  > section deviations (raster illustrations + gradient fade, UPPERCASE
-  > headings, bordered eyebrow chip, flush zero-radius card grid, staggered
-  > stat-chip cascade, mono kicker = frozen tag). | Figma-faithful redesign,
-  > copy frozen; deviations sanctioned via the per-section override rule.
+  > `2026-05-19` | Why-Us adopts the canonical `<Section>` grid + logged section
+  > deviations (raster illustrations + gradient fade, UPPERCASE headings, bordered
+  > eyebrow chip, flush zero-radius card grid, mono kicker = frozen tag) + the
+  > site's first third-party embed (official Clutch widget, always-on, sr-only
+  > SEO/a11y fallback, `aria-hidden` visual). | Figma-faithful redesign; Clutch
+  > text→widget user-directed; deviations sanctioned via the override rule.
+- **Coordinator note:** P3 (Clutch `aria`/`4.9` inconsistency) is **resolved** by
+  the amendment — no copy-owner action needed. The pre-existing `projectLinkStyle`
+  raw-hex item still stands.
