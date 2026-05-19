@@ -211,3 +211,73 @@ hard constraint above is honored regardless.
   (intrinsic `width`/`height` + aspect box present).
 - **`npm run build` is expected to FAIL at `/blog/rss.xml`** (pre-existing PR-#26 env
   hold) — **not** a regression, not chased. Posture stays `tsc` + dev QA.
+
+## Implementation note (DRAFT — graduate at merge, coordinator session only)
+
+**Status: COMPLETE on `section/why-us-redesign`** (8 commits, branched off
+`design-revamp`). The canonical `DESIGN.md` Decisions-Log + `CHANGELOG.md` entries
+below are **NOT written here** — the coordinator session writes them once at merge
+(single author of the shared files → zero conflict, per the master plan).
+
+### What shipped
+
+- `components/sections/why-us.tsx` rebuilt to Figma node `112:1787`: canonical
+  `<Section bg="subtle" maxWidth="xwide">` grid, bordered eyebrow chip, UPPERCASE
+  H2 with brand-blue `Metaborong` span, frozen lede, 3-chip stat cascade, 3 flush
+  bordered illustration columns (gradient fade → `--color-bg`, mono kicker = frozen
+  `tag`, UPPERCASE H3, frozen body + client links).
+- `public/whyus/{speed,product-thinking,niche-depth}.webp` — 800px WebP
+  (~2 MB PNG → 142 KB total; speed 940 KB → 64 KB).
+- Diff scope: only `why-us.tsx` + 3 webp + this spec + the plan. No
+  `app/page.tsx`, `nav.tsx`, `DESIGN.md`, or `CHANGELOG.md` touched.
+
+### Decisions resolved
+
+- Brainstorm (user-confirmed): mono kicker for frozen tags; adopt Figma raster
+  assets; adopt Figma type/chrome wholesale.
+- `/plan-design-review` D1: illustrations → 800px WebP, plain `<img>`.
+- Cascade offsets: **user picked candidate B** (deep stagger,
+  Clutch `-64` / Reply `-24` / weeks `-12`, `lg+` only).
+
+### Verification (final, fresh)
+
+- `npx tsc --noEmit` → exit 0.
+- FROZEN copy: 26/26 strings + all 5 link hrefs present in **SSR raw HTML**
+  (no-JS); H2 rendered `textContent` === `"Why founders choose Metaborong"`
+  (span split is presentational only). **Zero copy drift.**
+- Edge alignment matches the canonical grid + nav/every section: 1440 → 128/128,
+  1280 → 128/128, 375 → 16/16; no horizontal overflow at 375.
+- focus-visible = `2px solid rgb(41,111,240)` offset `2px` (DESIGN.md token);
+  reduced-motion honored via inherited `<Reveal>`.
+- `/impeccable critique`: deterministic detector **0/27**; design director
+  **Nielsen 36/40**; AI-slop **PASS** (3-col reflex escaped).
+- `/design-review` (diff-aware, live): **Design A / AI-slop A**, 0 fixes.
+- `/simplify`: 3 copy-safe simplifications applied; no visual regression.
+- `npm run build`: compiles clean; **only** failure = pre-existing
+  `/blog/rss.xml` `MONGODB_URI` (PR-#26 hold) — not a regression.
+
+### Open items for the coordinator at merge
+
+1. **P3 (copy owner):** the FROZEN Clutch badge has an internal inconsistency —
+   visible `4.9` vs `aria-label="5 out of 5 stars"` (both inherited verbatim from
+   the original component; a screen reader hears "4.9 … 5 out of 5 stars"). Not
+   fixable under the FROZEN-copy constraint; route to the copy owner.
+2. **Pre-existing raw-hex (flagged, not fixed):** `projectLinkStyle` (`#296ff0`,
+   `rgba(41,111,240,.4)`) and `reasons[].color` (`#296ff0`, now unused after the
+   redesign) bypass the `--color-brand` token. Pre-existing + frozen-adjacent;
+   left verbatim per the preserve-`reasons` directive. Worth a separate
+   token-cleanup pass project-wide.
+
+### Suggested canonical entries (coordinator writes these at merge — do NOT write here)
+
+- **`CHANGELOG.md`** (fold into the consolidated Session-16 entry):
+  > Why-Us redesigned to Figma `112:1787` — canonical Section grid, bordered
+  > eyebrow chip, UPPERCASE headings, brand-blue `Metaborong`, staggered Clutch
+  > stat-chip cascade, 3 flush bordered isometric-illustration columns. Copy
+  > frozen (zero text changes, SSR-verified). Illustrations 800px WebP.
+- **`DESIGN.md` Decisions Log** row:
+  > `2026-05-19` | Why-Us adopts the canonical `<Section>` grid + 6 logged
+  > section deviations (raster illustrations + gradient fade, UPPERCASE
+  > headings, bordered eyebrow chip, flush zero-radius card grid, staggered
+  > stat-chip cascade, mono kicker = frozen tag). | Figma-faithful redesign,
+  > copy frozen; deviations sanctioned via the per-section override rule.
