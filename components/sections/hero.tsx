@@ -13,6 +13,11 @@ export function HeroSection() {
   // Until then we hold the poster image on top so Safari's giant ▶
   // overlay (shown when autoplay is refused) is never visible.
   const [videoPlaying, setVideoPlaying] = useState(false)
+  // Defer the <video> mount until the browser is idle. The MP4 is 432 KB
+  // and competes with the LCP poster for bandwidth on initial paint.
+  // Once idle (or window 'load' fires), we mount the video and let it
+  // autoplay over the visible poster.
+  const [mountVideo, setMountVideo] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 100)
@@ -20,11 +25,33 @@ export function HeroSection() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    // Wait for window load OR requestIdleCallback before requesting the MP4.
+    // Whichever fires first wins so we don't sit idle on slow connections
+    // that never fire idleCallback for ages.
+    let didMount = false
+    const mount = () => {
+      if (didMount) return
+      didMount = true
+      setMountVideo(true)
+    }
+    const ric = typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback : null
+    const cic = typeof window.cancelIdleCallback === 'function' ? window.cancelIdleCallback : null
+    const idleId = ric ? ric(mount, { timeout: 1500 }) : window.setTimeout(mount, 800)
+    window.addEventListener('load', mount, { once: true })
+    return () => {
+      window.removeEventListener('load', mount)
+      if (ric && cic) cic(idleId)
+      else window.clearTimeout(idleId)
+    }
+  }, [])
+
   // Pause the ASCII video when the hero scrolls out of view.
   // Frees the decoder + saves battery on mobile while in-section visuals stay live.
   const asciiBoxRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   useEffect(() => {
+    if (!mountVideo) return
     const box = asciiBoxRef.current
     const video = videoRef.current
     if (!box || !video) return
@@ -42,9 +69,6 @@ export function HeroSection() {
       video.pause()
       return
     }
-    // Kick playback immediately on mount — don't wait for the observer's
-    // first callback (which fires async and lets Safari paint the paused
-    // poster + giant play-button overlay before our play() lands).
     video.play().catch(() => {})
     const obs = new IntersectionObserver(
       ([entry]) => {
@@ -59,10 +83,20 @@ export function HeroSection() {
     )
     obs.observe(box)
     return () => obs.disconnect()
-  }, [])
+  }, [mountVideo])
 
   return (
     <section className="relative min-h-screen bg-bg-subtle px-[16px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+      {/* Preload the AVIF poster — React 19 hoists this to <head> so it
+          races ahead of the bundle and wins the LCP slot. fetchPriority high
+          marks it as critical-path. */}
+      <link
+        rel="preload"
+        as="image"
+        href="/hero-ascii-poster.avif"
+        type="image/avif"
+        fetchPriority="high"
+      />
       <div className="max-w-[1280px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[57fr_43fr]">
         {/* Left: copy */}
         <Reveal className="flex flex-col justify-center pt-[80px] pb-[36px] lg:pt-[96px] lg:pb-[48px]">
@@ -109,38 +143,45 @@ export function HeroSection() {
         <div className="relative overflow-hidden h-[52vh] min-h-[360px] sm:h-[58vh] lg:h-auto lg:min-h-screen flex items-center justify-center lg:justify-end">
           {/* Inner box constrains the ASCII-art to a sensible size on tall viewports. */}
           <div ref={asciiBoxRef} className="relative w-[92%] h-[82%] max-w-[520px] max-h-[700px] sm:w-[86%] sm:h-[80%]">
-            <video
-              ref={videoRef}
-              src="/hero-ascii.mp4"
-              poster="/hero-ascii-poster.png"
-              autoPlay
-              loop
-              muted
-              playsInline
-              disablePictureInPicture
-              controls={false}
-              preload="auto"
-              aria-hidden="true"
-              onPlaying={() => setVideoPlaying(true)}
-              className="hero-ascii-image absolute inset-0 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none"
-            />
-            {/* Poster overlay — covers Safari's giant ▶ overlay-play-button
-                that appears while the video is in the paused/loading state
-                (and stays visible if autoplay is refused, e.g. Low Power Mode).
-                Fades out once the first real frame paints. The video sits
-                underneath so playback is still happening — we're only masking
-                the chrome Safari renders on top. */}
-            <img
-              src="/hero-ascii-poster.png"
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              className={`absolute inset-0 z-10 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none transition-opacity duration-300 ${
-                videoPlaying ? 'opacity-0' : 'opacity-100'
-              }`}
-            />
-            {/* Inset vignette anchored to the image edges — matches Figma's
-               tight inset shadow (20px blur + 20px spread on a ~531px frame). */}
+            {mountVideo && (
+              <video
+                ref={videoRef}
+                src="/hero-ascii.mp4"
+                poster="/hero-ascii-poster.opt.png"
+                autoPlay
+                loop
+                muted
+                playsInline
+                disablePictureInPicture
+                controls={false}
+                preload="auto"
+                aria-hidden="true"
+                onPlaying={() => setVideoPlaying(true)}
+                className="hero-ascii-image absolute inset-0 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none"
+              />
+            )}
+            {/* Poster overlay — the LCP element. <picture> negotiates the
+                smallest format the browser can decode (AVIF 49KB → WebP 75KB
+                → PNG 176KB). Also masks Safari's autoplay-refused ▶ overlay
+                that would otherwise sit on the paused video. Fades out once
+                the first real frame paints. */}
+            <picture>
+              <source srcSet="/hero-ascii-poster.avif" type="image/avif" />
+              <source srcSet="/hero-ascii-poster.webp" type="image/webp" />
+              <img
+                src="/hero-ascii-poster.opt.png"
+                alt=""
+                width={720}
+                height={960}
+                aria-hidden="true"
+                draggable={false}
+                fetchPriority="high"
+                decoding="async"
+                className={`absolute inset-0 z-10 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none transition-opacity duration-300 ${
+                  videoPlaying ? 'opacity-0' : 'opacity-100'
+                }`}
+              />
+            </picture>
             {/* Glassmorphic overlay "windows" — three pillar proofs, anchored to the image frame */}
             <HeroOverlayCard
               loadingLabels={['Cogitating…', 'Reasoning…', 'Inferring…', 'Embedding…']}
