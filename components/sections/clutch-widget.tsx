@@ -14,7 +14,7 @@ declare global {
 // / screen-reader proof is an sr-only static line in why-us.tsx; this is aria-hidden.
 export function ClutchWidget() {
   return (
-    <div aria-hidden="true" className="min-h-[45px]">
+    <div aria-hidden="true" inert className="min-h-[45px] w-[300px] max-w-full">
       <Script
         src="https://widget.clutch.co/static/js/widget.js"
         strategy="afterInteractive"

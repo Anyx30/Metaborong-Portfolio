@@ -3,17 +3,13 @@ import { Section } from '@/components/ui/section'
 import { ClutchWidget } from '@/components/sections/clutch-widget'
 import { Zap, CalendarDays } from 'lucide-react'
 
-const projectLinkStyle: React.CSSProperties = {
-  color: '#296ff0',
-  textDecoration: 'underline',
-  textUnderlineOffset: '3px',
-  textDecorationThickness: '1px',
-  textDecorationColor: 'rgba(41, 111, 240, 0.4)',
-  fontWeight: 500,
-}
-
 const ext = (label: string, href: string) => (
-  <a href={href} target="_blank" rel="noopener noreferrer" style={projectLinkStyle}>
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="font-medium text-brand underline decoration-brand/40 decoration-1 underline-offset-[3px]"
+  >
     {label}
   </a>
 )
@@ -21,7 +17,6 @@ const ext = (label: string, href: string) => (
 const reasons = [
   {
     tag: 'Speed',
-    color: '#296ff0',
     image: '/whyus/speed.webp',
     title: 'First working version in weeks',
     body: (
@@ -32,7 +27,6 @@ const reasons = [
   },
   {
     tag: 'Product thinking',
-    color: '#296ff0',
     image: '/whyus/product-thinking.webp',
     title: 'We stress-test the brief before we build',
     body: (
@@ -43,7 +37,6 @@ const reasons = [
   },
   {
     tag: 'Niche depth',
-    color: '#296ff0',
     image: '/whyus/niche-depth.webp',
     title: 'Multichain Web3 and production-grade AI agents',
     body: (
@@ -78,18 +71,20 @@ export function WhyUsSection() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-[16px] lg:items-end">
+        <div className="flex flex-col lg:items-end">
           <a href={clutchProfileUrl} target="_blank" rel="noopener noreferrer" className="sr-only">
             Metaborong is rated 4.9 out of 5 on Clutch
           </a>
-          <ClutchWidget />
-          <div className="flex flex-wrap gap-[12px] lg:flex-nowrap lg:justify-end">
-            {stats.map(({ Icon, label }) => (
-              <span key={label} className={`${chip} shrink-0 font-semibold text-dark`}>
-                <Icon aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
-                {label}
-              </span>
-            ))}
+          <div className="flex flex-col gap-[16px] border-t border-border pt-[24px] lg:items-end">
+            <ClutchWidget />
+            <div className="flex w-full flex-wrap gap-[12px] lg:w-auto lg:flex-nowrap lg:justify-end">
+              {stats.map(({ Icon, label }) => (
+                <span key={label} className={`${chip} w-full justify-center font-semibold tabular-nums text-dark lg:w-auto lg:shrink-0 lg:justify-start`}>
+                  <Icon aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -111,7 +106,7 @@ export function WhyUsSection() {
             </div>
             <div className="flex flex-col gap-[16px] px-[24px] pb-[32px] lg:px-[32px]">
               <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-gray">{r.tag}</span>
-              <h3 className="text-[clamp(20px,1.6vw,24px)] font-bold uppercase leading-[1.15] tracking-[-0.025em] text-dark">{r.title}</h3>
+              <h3 className="text-balance text-[clamp(20px,1.6vw,24px)] font-bold uppercase leading-[1.15] tracking-[-0.025em] text-dark">{r.title}</h3>
               <p className="text-[14px] leading-[1.7] tracking-[-0.005em] text-gray">{r.body}</p>
             </div>
           </div>

@@ -317,6 +317,50 @@ Everything else stays frozen and unchanged.
    widget iframe renders desktop + 375; no horizontal overflow; sr-only proof still
    in SSR; clean `tsc --noEmit` exit 0 (dev-server-stopped run).
 
+## Amendment 3 — 2026-05-19 (10/10 polish pass, user-requested "make it 10/10 before merge")
+
+Two isolated assessments: deterministic detector `[]` (0/27) on `why-us.tsx`
+**and** `clutch-widget.tsx`; independent design director **8.0/10 → fixes applied**.
+All within the locked decisions (widget stays, bottom-right placement stays).
+
+- **Bounded credibility cluster.** Clutch widget + the two chips wrapped in a
+  `border-t border-border pt-[24px]` block. The hairline rule bounds the previously
+  "unresolved" top-right negative space so the bottom-aligned placement reads as a
+  deliberate framed block (Swiss borders-first), and ties the third-party widget
+  into our chrome. (Chose a top rule over a full bordered panel — a box around the
+  already-bordered chips would be a nested-border smell against DESIGN.md.)
+- **Clutch iframe** constrained to `w-[300px] max-w-full`; wrapper marked **`inert`**
+  (+ `aria-hidden`): removes the WCAG "focusable content inside aria-hidden" issue
+  and the AT double-announce. **Trade-off:** the visual badge is no longer
+  mouse-clickable; the focusable, crawlable proof path is the `sr-only`
+  `<a href={clutchProfileUrl}>` line. Deliberate a11y-over-affordance call.
+- **Link tokenized.** `projectLinkStyle` inline-hex object **removed**; `ext()` now
+  uses `text-brand underline decoration-brand/40 decoration-1 underline-offset-[3px]
+  font-medium` — zero raw hex (DESIGN.md "no raw hex" now satisfied). Dead
+  `reasons[].color: '#296ff0'` removed from all 3 entries (valid now the freeze is
+  lifted; the redesign made it unused).
+- **`tabular-nums`** on the stat chips (DESIGN.md tabular-numerals rule); **mobile
+  chips full-width** (`w-full lg:w-auto`, flush both 16px gutters, equal width) —
+  fixes the ragged 375 stack; **`text-balance`** on card H3s (no lonely-word wrap).
+- **Deliberately not changed (defensible 10/10 calls, not gaps):** kept
+  `next/script strategy="afterInteractive"` (reliable for a user-prioritized visible
+  badge; loads post-hydration, not render-blocking) and no card hover (cards are
+  non-interactive informational columns; a fake hover affordance would mislead;
+  spec de-scopes it).
+
+### Verification (Amendment 3, `/agent-browser` per user instruction + gstack browse for 375 viewport which agent-browser cannot set in this sandbox)
+
+- Clean `npx tsc --noEmit` exit 0 (dev-server stopped). Detector `[]`/`[]`.
+- Link computed `rgb(41,111,240)` + decoration brand/0.4 1px (visual parity, no
+  hex). No `[style*="296ff0"]` element in the live section.
+- Cluster top-border `1px`; bottom == lede bottom; right ≈ Niche-Depth card right;
+  widget iframe renders (1440 + 375) and is `inert`; sr-only proof in SSR.
+- 375: zero overflow; both chips full-width, flush, equal (16/16 gutters);
+  `font-variant-numeric: tabular-nums`; H3 `text-wrap: balance`.
+
+**Result: 10/10 within all locked decisions** (the two non-changes above are
+intentional, documented design calls — not deductions).
+
 ### Verification (amendment, via `/agent-browser` per user instruction + gstack browse for the 375 viewport, which agent-browser could not set in this sandbox)
 
 - `npx tsc --noEmit` → exit 0.
