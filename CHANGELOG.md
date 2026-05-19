@@ -4,6 +4,28 @@ All major decisions, milestones, and changes to this project.
 
 ---
 
+## 2026-05-19 — Session 16: Why-Us + Founders Figma redesigns (parallel worktrees)
+
+### Decision log
+- **Parallel-worktree execution model.** Why-Us and Founders were redesigned simultaneously in two isolated git worktrees (`section/why-us-redesign`, `section/founders-redesign`) off `design-revamp`, one Claude session each, this session coordinating. Zero file overlap by construction (`why-us.tsx` vs `founders.tsx`); both merged `--no-ff` with zero conflicts (Why-Us first, Founders rebased then merged). Reconfirms the Session-13 worktree pattern for taste-driven section work.
+- **Why-Us — Figma `112:1787`, copy-frozen.** Redesigned onto the canonical `<Section>` grid; every visible copy string preserved (SSR-verified diff). New `clutch-widget.tsx` introduces the site's **first third-party embed** (official Clutch widget) replacing the static 4.9 badge; an `sr-only` link ("Metaborong is rated 4.9 out of 5 on Clutch") + `.clutch-widget` mount keep the trust signal crawlable/a11y without altering visible prose. Isometric illustrations as 800px WebP (`public/whyus/`). Section deviations logged in its spec.
+- **Founders — Figma `142:516`, A3 copy chain.** Black placeholder → light team E-E-A-T anchor on the canonical grid. Copy rewritten via the full A3 chain (audit → `homepage.md` → writer → re-score → authority-builder → copywriting gate → guardrails): **2.7 → 8.0 / 10**, claim-gate PASS, guardrails PASS. DiceBear avatars dropped for portrait/monogram blueprint-frame cards + role chips + brand-blue square LinkedIn/X buttons (X re-added at user request 2026-05-19; Figma was LinkedIn-only). `#founders` anchor + nav "Team" label preserved. Deviations 1–7 logged in its spec.
+- **Coordinator verification.** Both branches `tsc` clean (integrated tree too), all 3 illustrations + founder media load (lazy — verified scrolled-in), all 3 co-founders represented, A3 artifacts present. Two interim "defects" were coordinator verification errors (below-the-fold lazy-image false negatives), not real regressions — nothing broken was merged.
+
+### Build state changes
+- **NEW:** `components/sections/clutch-widget.tsx`; `public/whyus/{speed,product-thinking,niche-depth}.webp`.
+- **UPDATED:** `components/sections/why-us.tsx` (Figma redesign, copy-frozen); `components/sections/founders.tsx` (Figma redesign + A3 copy); `docs/content/homepage.md` (Founders block, A3-synced).
+- **NEW:** `docs/superpowers/specs/2026-05-19-section-why-us.md`, `…/2026-05-19-section-founders.md`, `…/2026-05-19-founders-copy-audit.md`; `docs/superpowers/plans/2026-05-19-section-{why-us,founders}.md`; `docs/superpowers/assets/2026-05-19-founders-figma.png`.
+- **UPDATED:** `DESIGN.md` — two Decisions Log rows (this session); `CHANGELOG.md` — this entry.
+
+### Known follow-ups
+- Founders bios are generic-but-true placeholders — real per-founder proof specifics pending USER_INPUT.
+- `lib/schema.ts` per-founder `sameAs` deferred (no JSON-LD change this session).
+- Branches `section/{why-us,founders}-redesign` left intact; worktrees removed; **not pushed** (push on explicit request only).
+- Carried, still open: build env (`/blog/rss.xml` MONGODB_URI / PR-#26 hold; posture = `tsc` + dev QA); DESIGN.md approved-infinite-count inconsistency; `2026-05-10-section-hero.md` §1a stale; site-wide chain-count inconsistency (Why-Us copy now frozen at its existing chain figure).
+
+---
+
 ## 2026-05-19 — Session 15: Hero + Nav grid alignment, eyebrow dot, card reseat, cleanup
 
 ### Decision log
