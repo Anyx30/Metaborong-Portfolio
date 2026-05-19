@@ -1,32 +1,53 @@
+import { Section } from '@/components/ui/section'
+
 export function ContactCtaSection() {
   return (
-    <section className="bg-canvas px-[16px] py-[56px] text-center sm:px-[24px] md:px-[48px] md:py-[72px] lg:px-[96px] lg:py-[80px] xl:px-[128px]">
-      <div className="mx-auto max-w-[600px]">
-        <h2 className="mb-[18px] text-[clamp(34px,5vw,64px)] font-bold leading-[1.03] tracking-[-0.04em] text-white">
-          Tell us the build. We&apos;ll send the approach.
-        </h2>
-        <p className="mx-auto mb-[28px] max-w-[460px] text-[16px] leading-[1.65] tracking-[-0.01em] text-white/55 md:mb-[36px] md:text-[17px]">
-          No pitch deck. No discovery-call gauntlet. Just a written approach you can take or leave.
-        </p>
-        <div className="flex flex-col items-stretch justify-center gap-[12px] sm:flex-row sm:items-center">
-          <a
-            href="mailto:contact@metaborong.com?subject=New%20project%20inquiry"
-            className="inline-flex min-h-[44px] items-stretch justify-center bg-brand text-[15px] font-semibold tracking-[-0.01em] text-white no-underline [font-feature-settings:'tnum']"
-          >
-            <span className="px-[22px] py-[12px]">Email us</span>
-            <span aria-hidden="true" className="border-l border-white/15 bg-white/10 px-[16px] py-[12px]">→</span>
-          </a>
+    <Section bg="default" maxWidth="xwide">
+      <div className="relative isolate text-center">
+        {/* Decorative ASCII-hills raster, anchored to the content-box bottom.
+            Figma 233:261 (frame ≈ content width, not viewport-bleed). Static,
+            aria-hidden; section is fully legible on bg-bg without it. */}
+        <img
+          src="/contact/ascii-hills.webp"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className="pointer-events-none absolute inset-x-0 bottom-[-48px] -z-10 mx-auto w-full select-none object-cover object-bottom md:bottom-[-64px] lg:bottom-[-72px]"
+        />
+        <div className="mx-auto max-w-[640px]">
+          <h2 className="text-[clamp(34px,5vw,56px)] font-black uppercase leading-[1.03] tracking-[-0.03em] text-dark">
+            Tell us the build. We&apos;ll send the approach.
+          </h2>
+          <p className="mx-auto mt-[20px] max-w-[560px] text-[16px] leading-[1.6] tracking-[-0.01em] text-gray">
+            No pitch deck, no discovery-call gauntlet — a written approach to your Web3 or AI build, straight from a founder.
+          </p>
+          <div className="mt-[32px] flex flex-col items-center gap-[16px]">
+            <a
+              href="mailto:contact@metaborong.com?subject=New%20project%20inquiry"
+              className="group inline-flex min-h-[44px] items-stretch justify-center text-[15px] font-semibold tracking-[-0.01em] text-white no-underline [font-feature-settings:'tnum'] transition-[background-color] duration-[var(--duration-instant)]"
+            >
+              <span className="flex items-center bg-brand px-[22px] py-[12px] group-hover:bg-brand/90 group-active:bg-brand/85">
+                Email us
+              </span>
+              <span
+                aria-hidden="true"
+                className="flex items-center border-l border-white/15 bg-white/10 px-[16px] py-[12px] group-hover:bg-white/15"
+              >
+                →
+              </span>
+            </a>
+            <p className="text-[13px] tracking-[-0.005em] text-gray-light">
+              Most teams hear back within 12 hours.
+            </p>
+          </div>
           <a
             href="mailto:contact@metaborong.com"
-            className="inline-flex min-h-[44px] items-center justify-center px-[8px] py-[10px] text-[15px] tracking-[-0.01em] text-white/55 no-underline transition-colors duration-[var(--duration-instant)] hover:text-white"
+            className="mt-[20px] inline-block text-[14px] tracking-[-0.01em] text-gray no-underline transition-[color] duration-[var(--duration-instant)] hover:text-dark"
           >
             contact@metaborong.com
           </a>
         </div>
-        <p className="mt-[24px] text-[13px] tracking-[-0.005em] text-white/35">
-          Most teams hear back within 12 hours.
-        </p>
       </div>
-    </section>
+    </Section>
   )
 }
