@@ -195,6 +195,28 @@ pass needed** (Founders precedent).
 
 tsc exit 0 after fixes.
 
+## Design-review (2026-05-19, live-site QA on :3099)
+
+Diff-aware live QA via gstack browse, desktop 1440 + mobile 375 (full
+11-phase site audit + config/test-bootstrap/outside-voices ceremony skipped
+— out of scope for a 2-component diff, per the lean Founders precedent +
+user concision).
+
+- **FINDING-001 (P1) FIXED + verified:** at desktop the absolute `-z-10`
+  raster + `max-h` clamp ≈ the short section's full height → H2/sub rendered
+  dark-on-green, failed legibility (the exact contrast risk this spec
+  flagged). Fix: raster is now a **normal-flow bottom band below the
+  content** — structurally cannot overlap the headline at any width.
+  Re-shot @1440 + @375: headline/copy clean on white, hills a deliberate
+  bottom band (Figma poster composition). Commit `acd243c`.
+- **AI-slop: PASS.** Terminal single-action CTA → centered is the
+  convention (Krug) + Figma-locked + site-consistent; distinctive ASCII
+  signature, not a generic blob/3-col/gradient.
+- **Flag-only (pre-existing, NOT fixed — REPO_MODE collaborative):** the
+  site-global privacy/consent banner is a fixed overlay covering bottom
+  content at both widths. Site chrome, not this redesign — same item the
+  Founders design-review handed to the main session.
+
 ---
 
 ## GRADUATION DRAFT — apply at end of session on `design-revamp` (single author)

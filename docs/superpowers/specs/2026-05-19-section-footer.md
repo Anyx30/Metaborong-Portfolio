@@ -181,6 +181,21 @@ Critique against `DESIGN.md`. Correctness/a11y only → fixed inline, no
 
 tsc exit 0 after fixes.
 
+## Design-review (2026-05-19, live-site QA on :3099)
+
+Diff-aware live QA, desktop 1440 + mobile 375.
+
+- **Zero defects.** 4-col sitemap @1440 / 1-col @375, bordered cells clean,
+  positioning line + addresses legible (AA, post-impeccable), giant
+  `METABORONG` wordmark scales via `clamp()` to exactly one line at both
+  widths (never clipped — Pass-6 fix verified live), bottom bar present,
+  no horizontal overflow at 375.
+- **AI-slop: PASS.** Functional sitemap with structural bordered cells —
+  not a decorative 3-col feature grid; left-aligned; real content.
+- **Flag-only (pre-existing, NOT fixed — collaborative):** the site-global
+  consent banner overlays the footer bottom. Site chrome, handed to the
+  main session (Founders precedent). No footer code change.
+
 ---
 
 ## GRADUATION DRAFT — apply at end of session on `design-revamp` (single author)
