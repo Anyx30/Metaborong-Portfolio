@@ -306,31 +306,33 @@ Live products across DeFi, AI, gaming, and SaaS — each shipped with founders w
 - "Three founders. No account managers."
 - "Who you'll actually work with"
 
-*Section intro (33 words — tightened from 52):*
-Three founders, hands-on in every engagement. The portfolio above was built by us — not by a contracting layer we manage. You'll be in Slack with the people writing your code.
+*Section intro (38 words — AEO-scoped 2026-05-19: standalone-extractable sentence 1, Web3+AI entity-anchored, em-dash removed):*
+Metaborong's three co-founders are hands-on in every Web3 and AI engagement. The work in our portfolio was built by us, not by a contracting layer we manage. You'll be in Slack with the people writing your code.
 
 **Founder cards:**
 
 #### Arnab Ray
 **Role:** CEO & Co-Founder
-**Bio:** Runs strategy and go-to-market for the studio. <!-- USER_INPUT: one specific past project or Web3-ecosystem credential Arnab personally led (e.g. "Helped scale [Project X] to [outcome]" — 12–14 words). -->
+**Bio:** Co-founded Metaborong and sets its direction across Web3 and AI engagements. <!-- USER_INPUT (pending — generic-but-true placeholder shipped 2026-05-19): swap in one specific Web3-ecosystem credential or project Arnab personally led (12–14 words). -->
 **Link:** `LinkedIn →` → `https://linkedin.com/in/arnab-ray`
 
 #### Anik Ghosh
 **Role:** COO & Co-Founder
-**Bio:** Owns project delivery. Every engagement ships on schedule because Anik says no when it can't. <!-- USER_INPUT: one specific operational signal — e.g. background, prior company, or a delivery-record line (12–14 words). -->
-**Link:** `LinkedIn →` → `https://linkedin.com/in/anik-ghosh`
+**Bio:** Co-founded the studio; owns delivery and the scope discipline that keeps timelines honest. <!-- USER_INPUT (pending — generic-but-true placeholder shipped 2026-05-19): swap in one specific operational signal — background, prior company, or a delivery-record line (12–14 words). -->
+**Link:** `LinkedIn →` → `https://www.linkedin.com/in/anik-ghosh-01a985208/`
 
 #### Soumojit Ash
 **Role:** CTO & Co-Founder
-**Bio:** Designs the architecture under every protocol and AI system we ship. <!-- USER_INPUT: chains or frameworks Soumojit has shipped on — e.g. "Smart contracts on Ethereum, Solana, Base; multi-agent orchestration with LangChain" (12–16 words). -->
-**Link:** `LinkedIn →` → `https://linkedin.com/in/soumojit-ash`
+**Bio:** Co-founded the studio and owns the architecture under every Web3 protocol and AI system it ships. <!-- USER_INPUT (pending — generic-but-true placeholder shipped 2026-05-19): swap in chains or frameworks Soumojit has shipped on (12–16 words). LinkedIn URL also pending — JSX currently has none. -->
+**Link:** `LinkedIn →` → `https://linkedin.com/in/soumojit-ash` <!-- USER_INPUT (pending): verify Soumojit's real LinkedIn URL; JSX previously had no link. -->
 
 <!-- WHY
-  - Killed "Leads strategy, client relationships, and business direction" — the most agency-template line on the page.
-  - Each bio now has a [role verb] + [specific proof] structure. The proof is a USER_INPUT placeholder because fabricated specifics damage E-E-A-T more than they help.
-  - Lede dropped from 52 → 33 words. "You'll be in Slack" is concrete; "active in every engagement" was abstract.
-  - LinkedIn URLs preserved from current JSX.
+  - Killed "Leads strategy, client relationships, and business direction" — the most agency-template line on the page (still banned).
+  - [2026-05-19, Founders redesign] Figma-driven visual redesign (node mQsbMuw0spVgIu7jXirr3o / 142:516). Copy comes from THIS A3 chain, NOT the Figma frame — the Figma text reuses the pre-banned "Leads strategy, client relationships, and business direction" agency line; Figma anchors visual only.
+  - Bios: [role verb] + generic-but-true proof. User chose "build with generic data now, supply real specifics later" — proof clauses assert only verifiable facts (co-founder status, role ownership): no numbers, no named projects, no fabricated chains. USER_INPUT markers retained for the real-specifics swap.
+  - Each bio carries Web3 AND AI with equal weight (positioning lock — never Web3-first).
+  - Lede kept (33 words, user decision 2026-05-19) — Figma has no lede, but Founders is the E-E-A-T anchor and this is its strongest trust statement. Logged as a deviation in the section spec.
+  - LinkedIn: Anik = verified full URL from JSX. Arnab = JSX URL. Soumojit = pending (JSX had no link; placeholder URL unverified — must not ship a broken/guessed profile link).
 -->
 
 
