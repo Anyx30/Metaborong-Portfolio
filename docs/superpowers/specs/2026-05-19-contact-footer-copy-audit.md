@@ -105,3 +105,12 @@ office labels. Everything else is links/addresses, not prose.
 - **Footer:** *create* — write the new blocks; claim-gate already cleared by
   user-verified offices.
 - **Advisory C** handed to follow-up; not implemented in this redesign.
+
+---
+
+## A3 Scorecard (graduated 2026-05-19, Session 17)
+
+| Date | Section | Score | Gates |
+|------|---------|-------|-------|
+| 2026-05-19 | ContactCta | 7.6 → 8.1 / 10 | claim-gate PASS · guardrails PASS · authority-builder skipped (CTA, per A3 gating) |
+| 2026-05-19 | Footer | create (was 3.0) → complete IA | claim-gate PASS · guardrails PASS · authority-builder skipped (utility, per A3 gating) · schema NAP deferred |
