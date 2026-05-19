@@ -1,18 +1,14 @@
 import type { ReactNode } from 'react'
-import { Eyebrow } from '@/components/ui/eyebrow'
 
+// Figma 237:359 merges Company + Services into one COMPANY column.
 const companyLinks = [
   { label: 'Work', href: '/#work' },
-  { label: 'About', href: '/#founders' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'FAQ', href: '/#faq' },
-  { label: 'Contact', href: '/#contact' },
-]
-
-const serviceLinks = [
   { label: 'Web3 / Blockchain', href: '/#services' },
   { label: 'AI Agents', href: '/#services' },
   { label: 'Product Studio', href: '/#services' },
+  { label: 'About', href: '/#founders' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'Contact', href: '/#contact' },
 ]
 
 const offices = [
@@ -37,34 +33,30 @@ const socials: { label: string; href: string; me: boolean; icon: ReactNode }[] =
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4.4A19 19 0 0 0 15.3 3l-.3.5a14 14 0 0 0-6 0L8.7 3A19 19 0 0 0 4 4.4 19.7 19.7 0 0 0 .5 17.8a19 19 0 0 0 5.8 2.9l.8-1.3c-.6-.2-1.2-.5-1.7-.8l.4-.3a13.6 13.6 0 0 0 11.6 0l.4.3c-.5.3-1.1.6-1.7.8l.8 1.3a19 19 0 0 0 5.8-2.9A19.7 19.7 0 0 0 20 4.4zM8.7 14.7c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3zm6.6 0c-1.1 0-2-1-2-2.3s.9-2.3 2-2.3 2 1 2 2.3-.9 2.3-2 2.3z"/></svg> },
 ]
 
-// Repeated 4x (3 nav columns + the contact email). Constant, not abstraction —
-// one string to keep the columns in lockstep.
+// COMPANY links + the contact email share one class so the column stays in lockstep.
 const linkCls =
-  'inline-flex min-h-[44px] items-center text-[15px] tracking-[-0.01em] text-gray no-underline transition-[color] duration-[var(--duration-instant)] hover:text-dark'
+  'inline-flex min-h-[40px] items-center text-[15px] tracking-[-0.01em] text-gray no-underline transition-[color] duration-[var(--duration-instant)] hover:text-dark'
 
 export function Footer() {
   const year = new Date().getFullYear()
   return (
-    <footer className="border-t border-border bg-bg px-[16px] py-[64px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
-      <div className="mx-auto max-w-[1280px]">
-        {/* Row 1 — positioning + giant wordmark */}
-        <div className="mb-[48px]">
-          <p className="max-w-[560px] text-[16px] leading-[1.5] tracking-[-0.01em] text-gray">
-            Metaborong builds and ships Web3 protocols, AI agents, and SaaS products — a small, senior, founder-led team.
-          </p>
-          <p
-            aria-hidden="true"
-            className="mt-[24px] select-none whitespace-nowrap text-[clamp(40px,15vw,200px)] font-black uppercase leading-none tracking-[-0.04em] text-gray-light/40"
-          >
-            Metaborong
-          </p>
-        </div>
+    <footer className="border-t border-border bg-bg pb-[40px] pt-[64px] lg:pt-[80px]">
+      <div className="mx-auto max-w-[1280px] px-[16px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+        {/* A3 positioning line — short footer intro above the grid */}
+        <p className="mb-[40px] max-w-[560px] text-[16px] leading-[1.5] tracking-[-0.01em] text-gray">
+          Metaborong builds and ships Web3 protocols, AI agents, and SaaS products — a small, senior, founder-led team.
+        </p>
 
-        {/* Row 2 — sitemap grid */}
-        <div className="grid grid-cols-1 gap-[1px] border border-border bg-border md:grid-cols-2 lg:grid-cols-4">
-          <nav aria-label="Company" className="bg-bg p-[24px]">
-            <Eyebrow as="p" className="mb-[16px] font-mono text-[12px]! text-dark!">Company</Eyebrow>
-            <ul className="space-y-[12px]">
+        {/* Figma 237:359 bordered grid: COMPANY column + stacked office cells */}
+        <div className="grid grid-cols-1 border border-border md:grid-cols-[220px_1fr]">
+          <nav
+            aria-label="Company"
+            className="border-b border-border p-[24px] md:border-b-0 md:border-r"
+          >
+            <p className="mb-[24px] text-[18px] font-bold uppercase leading-none tracking-[-0.01em] text-dark">
+              Company
+            </p>
+            <ul>
               {companyLinks.map(({ label, href }) => (
                 <li key={label}>
                   <a href={href} className={linkCls}>{label}</a>
@@ -72,56 +64,55 @@ export function Footer() {
               ))}
             </ul>
           </nav>
-          <nav aria-label="Services" className="bg-bg p-[24px]">
-            <Eyebrow as="p" className="mb-[16px] font-mono text-[12px]! text-dark!">Services</Eyebrow>
-            <ul className="space-y-[12px]">
-              {serviceLinks.map(({ label, href }) => (
-                <li key={label}>
-                  <a href={href} className={linkCls}>{label}</a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="bg-bg p-[24px]">
-            <Eyebrow as="p" className="mb-[16px] font-mono text-[12px]! text-dark!">Offices</Eyebrow>
-            <div className="space-y-[16px]">
-              {offices.map(({ country, address }) => (
-                <address key={country} className="not-italic">
-                  <span className="block text-[14px] font-bold uppercase tracking-[-0.01em] text-dark">{country}</span>
-                  <span className="mt-[4px] block text-[14px] leading-[1.5] tracking-[-0.01em] text-gray">{address}</span>
-                </address>
-              ))}
-            </div>
-          </div>
-          <nav aria-label="Contact and social" className="bg-bg p-[24px]">
-            <Eyebrow as="p" className="mb-[16px] font-mono text-[12px]! text-dark!">Get in touch</Eyebrow>
-            <a href="mailto:contact@metaborong.com" className={linkCls}>contact@metaborong.com</a>
-            <div className="mt-[16px] flex flex-wrap gap-[12px]">
-              {socials.map(({ label, href, me, icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  target="_blank"
-                  rel={me ? 'me noopener noreferrer' : 'noopener noreferrer'}
-                  className="inline-flex h-[44px] w-[44px] items-center justify-center text-gray transition-[color] duration-[var(--duration-instant)] hover:text-dark"
-                >
-                  {icon}
-                </a>
-              ))}
-            </div>
-          </nav>
-        </div>
 
-        {/* Row 3 — bottom bar */}
-        <div className="mt-[32px] flex flex-col gap-[12px] text-[13px] tracking-[-0.01em] text-gray sm:flex-row sm:items-center sm:justify-between">
-          <span>© {year} Metaborong Technologies</span>
-          <div className="flex gap-[20px]">
-            <a href="https://linkedin.com/company/metaborong-technologies" target="_blank" rel="me noopener noreferrer" className="no-underline text-gray transition-[color] duration-[var(--duration-instant)] hover:text-dark">LinkedIn</a>
-            <a href="https://x.com/Metaborong" target="_blank" rel="me noopener noreferrer" className="no-underline text-gray transition-[color] duration-[var(--duration-instant)] hover:text-dark">X</a>
+          <div className="grid grid-cols-1">
+            {offices.map(({ country, address }, i) => (
+              <address
+                key={country}
+                className={`not-italic p-[24px] ${i > 0 ? 'border-t border-border' : ''}`}
+              >
+                <span className="block text-[18px] font-bold uppercase leading-none tracking-[-0.01em] text-dark">
+                  {country}
+                </span>
+                <span className="mt-[12px] block max-w-[440px] text-[15px] leading-[1.5] tracking-[-0.01em] text-gray">
+                  {address}
+                </span>
+              </address>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Giant faint wordmark — full-bleed, centered, clipped both edges
+          (Figma 237:383). Text, not a raster — keeps a crawlable brand
+          token at the page tail (approved SEO deviation). */}
+      <div className="mt-[48px] overflow-hidden">
+        <p
+          aria-hidden="true"
+          className="select-none whitespace-nowrap text-center text-[clamp(54px,16.5vw,210px)] font-black uppercase leading-[0.82] tracking-[-0.05em] text-gray-light/30"
+        >
+          Metaborong
+        </p>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="mx-auto mt-[24px] flex max-w-[1280px] flex-col gap-[16px] border-t border-border px-[16px] pt-[24px] text-[13px] tracking-[-0.01em] text-gray sm:flex-row sm:items-center sm:justify-between sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+          <span>© {year} Metaborong Technologies</span>
+          <div className="flex gap-[6px]">
+            {socials.map(({ label, href, me, icon }) => (
+              <a
+                key={label}
+                href={href}
+                aria-label={label}
+                target="_blank"
+                rel={me ? 'me noopener noreferrer' : 'noopener noreferrer'}
+                className="inline-flex h-[40px] w-[40px] items-center justify-center text-gray transition-[color] duration-[var(--duration-instant)] hover:text-dark"
+              >
+                {icon}
+              </a>
+            ))}
+          </div>
+        </div>
     </footer>
   )
 }
