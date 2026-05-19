@@ -173,63 +173,65 @@ export function Nav() {
           Polish pass: cell-grid hairlines (desktop) slice the bar into measured
           regions. Top frame is solid + 1px (structural); bottom toggles dashed→solid
           on scroll (feedback). Two different strokes = blueprint-y. */}
-      <nav className="flex h-14 w-full items-center px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
-        <Logo size="sm" />
+      <nav className="w-full px-[16px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+        <div className="flex h-14 items-center max-w-[1280px] mx-auto">
+          <Logo size="sm" />
 
-        {/* Desktop cluster (lg+): every item is its own cell, separated by a 1px hairline.
-            Reads left-to-right as Logo │ Services │ Work │ Team │ FAQ │ Let's Talk.
-            ml-auto right-anchors the cluster; logo holds the left edge. */}
-        <div className="hidden lg:flex items-center gap-[24px] ml-auto">
-          <Divider />
+          {/* Desktop cluster (lg+): every item is its own cell, separated by a 1px hairline.
+              Reads left-to-right as Logo │ Services │ Work │ Team │ FAQ │ Let's Talk.
+              ml-auto right-anchors the cluster; logo holds the left edge. */}
+          <div className="hidden lg:flex items-center gap-[24px] ml-auto">
+            <Divider />
 
+            <button
+              ref={triggerRef}
+              type="button"
+              aria-expanded={megaOpen}
+              aria-haspopup="menu"
+              aria-controls="mega-services"
+              data-active={megaOpen}
+              onMouseEnter={openMega}
+              onMouseDown={() => { keyboardOpenRef.current = false }}
+              onClick={() => setMegaOpen(v => !v)}
+              onKeyDown={onTriggerKeyDown}
+              className="relative flex cursor-pointer items-center gap-[4px] border-0 bg-transparent p-0 text-sm tracking-[-0.01em] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark data-[active=true]:text-dark after:absolute after:-bottom-[6px] after:left-0 after:right-0 after:h-[2px] after:bg-brand after:origin-left after:scale-x-0 after:transition-transform after:duration-[var(--duration-instant)] hover:after:scale-x-100 data-[active=true]:after:scale-x-100 [touch-action:manipulation]"
+            >
+              Services
+              <ChevronDown
+                size={14}
+                aria-hidden="true"
+                className={`transition-transform duration-[var(--duration-instant)] ${megaOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {navLinks.map(link => (
+              <Fragment key={link.label}>
+                <Divider />
+                <a
+                  href={link.href}
+                  className="relative text-sm tracking-[-0.01em] text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark after:absolute after:-bottom-[6px] after:left-0 after:right-0 after:h-[2px] after:bg-dark after:origin-left after:scale-x-0 after:transition-transform after:duration-[var(--duration-instant)] hover:after:scale-x-100 [touch-action:manipulation]"
+                >
+                  {link.label}
+                </a>
+              </Fragment>
+            ))}
+
+            <Divider />
+
+            <Button href="/#contact" size="sm" arrow="→">Let&apos;s Talk</Button>
+          </div>
+
+          {/* Mobile hamburger (<lg) */}
           <button
-            ref={triggerRef}
             type="button"
-            aria-expanded={megaOpen}
-            aria-haspopup="menu"
-            aria-controls="mega-services"
-            data-active={megaOpen}
-            onMouseEnter={openMega}
-            onMouseDown={() => { keyboardOpenRef.current = false }}
-            onClick={() => setMegaOpen(v => !v)}
-            onKeyDown={onTriggerKeyDown}
-            className="relative flex cursor-pointer items-center gap-[4px] border-0 bg-transparent p-0 text-sm tracking-[-0.01em] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark data-[active=true]:text-dark after:absolute after:-bottom-[6px] after:left-0 after:right-0 after:h-[2px] after:bg-brand after:origin-left after:scale-x-0 after:transition-transform after:duration-[var(--duration-instant)] hover:after:scale-x-100 data-[active=true]:after:scale-x-100 [touch-action:manipulation]"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen(v => !v)}
+            className="ml-auto cursor-pointer border-0 bg-transparent p-[4px] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark lg:hidden [touch-action:manipulation]"
           >
-            Services
-            <ChevronDown
-              size={14}
-              aria-hidden="true"
-              className={`transition-transform duration-[var(--duration-instant)] ${megaOpen ? 'rotate-180' : ''}`}
-            />
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-
-          {navLinks.map(link => (
-            <Fragment key={link.label}>
-              <Divider />
-              <a
-                href={link.href}
-                className="relative text-sm tracking-[-0.01em] text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark after:absolute after:-bottom-[6px] after:left-0 after:right-0 after:h-[2px] after:bg-dark after:origin-left after:scale-x-0 after:transition-transform after:duration-[var(--duration-instant)] hover:after:scale-x-100 [touch-action:manipulation]"
-              >
-                {link.label}
-              </a>
-            </Fragment>
-          ))}
-
-          <Divider />
-
-          <Button href="/#contact" size="sm" arrow="→">Let&apos;s Talk</Button>
         </div>
-
-        {/* Mobile hamburger (<lg) */}
-        <button
-          type="button"
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen(v => !v)}
-          className="ml-auto cursor-pointer border-0 bg-transparent p-[4px] text-gray transition-colors duration-[var(--duration-instant)] hover:text-dark lg:hidden [touch-action:manipulation]"
-        >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
       </nav>
 
       {/* Desktop mega-menu strip (full-width, lg+) */}
@@ -243,68 +245,70 @@ export function Nav() {
         >
           {/* L4: asymmetric padding. Top edge is contained by the nav bar above;
               bottom edge needs more breath before the dashed border. */}
-          <div className="grid grid-cols-3 gap-[48px] px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px] pt-[32px] pb-[40px]">
-            {pillars.map((p, colIdx) => {
-              const childCount = p.children.slice(0, 5).length
-              return (
-                <div key={p.id} className={colIdx < 2 ? 'pr-[24px] border-r border-border' : ''}>
-                  <div className="flex items-center gap-[10px]">
-                    <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
-                    <span
-                      aria-hidden="true"
-                      className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
-                      style={{ background: p.color, outlineColor: p.color }}
-                    />
-                  </div>
-                  <h3 className="mt-[12px] text-[20px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
-                    {p.label}
-                  </h3>
-                  <p className="mt-[6px] text-sm leading-[1.5] text-gray">{p.headline}</p>
+          <div className="px-[16px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px] pt-[32px] pb-[40px]">
+            <div className="grid grid-cols-3 gap-[48px] max-w-[1280px] mx-auto">
+              {pillars.map((p, colIdx) => {
+                const childCount = p.children.slice(0, 5).length
+                return (
+                  <div key={p.id} className={colIdx < 2 ? 'pr-[24px] border-r border-border' : ''}>
+                    <div className="flex items-center gap-[10px]">
+                      <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
+                      <span
+                        aria-hidden="true"
+                        className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
+                        style={{ background: p.color, outlineColor: p.color }}
+                      />
+                    </div>
+                    <h3 className="mt-[12px] text-[20px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
+                      {p.label}
+                    </h3>
+                    <p className="mt-[6px] text-sm leading-[1.5] text-gray">{p.headline}</p>
 
-                  {/* L2: ul-to-hub gap promoted from 20→32 so hub CTA reads as a separate group, not the next list item. */}
-                  <ul className="mt-[20px] flex flex-col gap-[10px]">
-                    {p.children.slice(0, 5).map((c, rowIdx) => {
-                      const isActive = activeIdx[0] === colIdx && activeIdx[1] === rowIdx
+                    {/* L2: ul-to-hub gap promoted from 20→32 so hub CTA reads as a separate group, not the next list item. */}
+                    <ul className="mt-[20px] flex flex-col gap-[10px]">
+                      {p.children.slice(0, 5).map((c, rowIdx) => {
+                        const isActive = activeIdx[0] === colIdx && activeIdx[1] === rowIdx
+                        return (
+                          <li key={c.slug}>
+                            <a
+                              ref={setItemRef(colIdx, rowIdx)}
+                              href={`/services/${p.id}/${c.slug}/`}
+                              role="menuitem"
+                              tabIndex={isActive ? 0 : -1}
+                              onClick={() => setMegaOpen(false)}
+                              onFocus={() => setActiveIdx([colIdx, rowIdx])}
+                              className="text-sm text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark focus:text-dark"
+                            >
+                              {c.name}
+                            </a>
+                          </li>
+                        )
+                      })}
+                    </ul>
+
+                    {(() => {
+                      const hubRow = childCount
+                      const isActive = activeIdx[0] === colIdx && activeIdx[1] === hubRow
                       return (
-                        <li key={c.slug}>
-                          <a
-                            ref={setItemRef(colIdx, rowIdx)}
-                            href={`/services/${p.id}/${c.slug}/`}
-                            role="menuitem"
-                            tabIndex={isActive ? 0 : -1}
-                            onClick={() => setMegaOpen(false)}
-                            onFocus={() => setActiveIdx([colIdx, rowIdx])}
-                            className="text-sm text-gray no-underline transition-colors duration-[var(--duration-instant)] hover:text-dark focus:text-dark"
-                          >
-                            {c.name}
-                          </a>
-                        </li>
+                        <a
+                          ref={setItemRef(colIdx, hubRow)}
+                          href={p.hubHref}
+                          role="menuitem"
+                          tabIndex={isActive ? 0 : -1}
+                          onClick={() => setMegaOpen(false)}
+                          onFocus={() => setActiveIdx([colIdx, hubRow])}
+                          style={{ color: p.color }}
+                          className="mt-[32px] inline-flex items-center gap-[4px] font-mono text-[11px] uppercase tracking-[0.1em] no-underline group"
+                        >
+                          All {p.hubCta}
+                          <ArrowRight size={12} className="transition-transform duration-[var(--duration-fast)] group-hover:translate-x-[2px]" />
+                        </a>
                       )
-                    })}
-                  </ul>
-
-                  {(() => {
-                    const hubRow = childCount
-                    const isActive = activeIdx[0] === colIdx && activeIdx[1] === hubRow
-                    return (
-                      <a
-                        ref={setItemRef(colIdx, hubRow)}
-                        href={p.hubHref}
-                        role="menuitem"
-                        tabIndex={isActive ? 0 : -1}
-                        onClick={() => setMegaOpen(false)}
-                        onFocus={() => setActiveIdx([colIdx, hubRow])}
-                        style={{ color: p.color }}
-                        className="mt-[32px] inline-flex items-center gap-[4px] font-mono text-[11px] uppercase tracking-[0.1em] no-underline group"
-                      >
-                        All {p.hubCta}
-                        <ArrowRight size={12} className="transition-transform duration-[var(--duration-fast)] group-hover:translate-x-[2px]" />
-                      </a>
-                    )
-                  })()}
-                </div>
-              )
-            })}
+                    })()}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -313,7 +317,7 @@ export function Nav() {
       {mobileOpen && (
         <div
           id="mobile-menu"
-          className="lg:hidden bg-bg-subtle border-t border-border px-[24px] md:px-[48px] py-[24px] flex flex-col gap-[8px]"
+          className="lg:hidden bg-bg-subtle border-t border-border px-[16px] sm:px-[24px] md:px-[48px] py-[24px] flex flex-col gap-[8px]"
         >
           {/* Pillar blocks — collapsed by default. Children stay in DOM for SEO. */}
           {pillars.map((p, i) => (
