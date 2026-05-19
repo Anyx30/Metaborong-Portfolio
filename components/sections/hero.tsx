@@ -9,6 +9,10 @@ import { Typewriter } from '@/components/ui/typewriter'
 
 export function HeroSection() {
   const [scrolled, setScrolled] = useState(false)
+  // Tracks whether the ASCII video has actually started painting frames.
+  // Until then we hold the poster image on top so Safari's giant ▶
+  // overlay (shown when autoplay is refused) is never visible.
+  const [videoPlaying, setVideoPlaying] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 100)
@@ -24,16 +28,32 @@ export function HeroSection() {
     const box = asciiBoxRef.current
     const video = videoRef.current
     if (!box || !video) return
+    // Safari's autoplay gate inspects the muted property at the moment
+    // play() is called. React's declarative `muted` prop occasionally
+    // lands a tick late, so enforce it on the DOM node before kicking
+    // playback. defaultMuted persists the state across reloads/back-forward
+    // cache, which Safari also honors.
+    video.muted = true
+    video.defaultMuted = true
+    video.playsInline = true
     video.playbackRate = 0.3
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reducedMotion) {
       video.pause()
       return
     }
+    // Kick playback immediately on mount — don't wait for the observer's
+    // first callback (which fires async and lets Safari paint the paused
+    // poster + giant play-button overlay before our play() lands).
+    video.play().catch(() => {})
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) video.play().catch(() => {})
-        else video.pause()
+        if (entry.isIntersecting) {
+          video.muted = true
+          video.play().catch(() => {})
+        } else {
+          video.pause()
+        }
       },
       { threshold: 0 },
     )
@@ -101,9 +121,27 @@ export function HeroSection() {
               loop
               muted
               playsInline
+              disablePictureInPicture
+              controls={false}
               preload="auto"
               aria-hidden="true"
+              onPlaying={() => setVideoPlaying(true)}
               className="hero-ascii-image absolute inset-0 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none"
+            />
+            {/* Poster overlay — covers Safari's giant ▶ overlay-play-button
+                that appears while the video is in the paused/loading state
+                (and stays visible if autoplay is refused, e.g. Low Power Mode).
+                Fades out once the first real frame paints. The video sits
+                underneath so playback is still happening — we're only masking
+                the chrome Safari renders on top. */}
+            <img
+              src="/hero-ascii-poster.png"
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className={`absolute inset-0 z-10 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none transition-opacity duration-300 ${
+                videoPlaying ? 'opacity-0' : 'opacity-100'
+              }`}
             />
             {/* Inset vignette anchored to the image edges — matches Figma's
                tight inset shadow (20px blur + 20px spread on a ~531px frame). */}
