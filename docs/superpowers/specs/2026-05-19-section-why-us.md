@@ -47,6 +47,12 @@ text node are unchanged, so it does **not** constitute a copy change.
    - `product-thinking.png` (magnifier+doc) → card "Product thinking / We stress-test…"
    - `niche-depth.png` (robot+chain) → card "Niche depth / Multichain Web3…"
    1254×1254 transparent PNG, isometric line-art with green accents.
+   **Serving (review D1 decision):** resize each to ~800px longest edge (2× retina
+   headroom over the ~400px render) and convert to **WebP**, replacing the files in
+   `public/whyus/` (extensions become `.webp`). Keep the project's plain `<img>`
+   convention (no `next/image`). Visually identical at render size; cuts ~2MB of
+   homepage weight (speed.png 940KB → ~tens of KB). Conversion is an implementation
+   action (Step 6), verified at Step 8.
 3. **Type/chrome fidelity** → adopt Figma wholesale: UPPERCASE headings (CSS transform),
    bordered eyebrow chip, staggered stat-chip cascade. Logged as deviations below.
 
@@ -74,15 +80,26 @@ Adopt the **canonical `<Section>` grid** (DESIGN.md Decisions Log 2026-05-19):
     - `Zap` icon + `Reply within 12h` (icon additive, no string change).
     - `CalendarDays` icon + `4–12 weeks to ship` (icon additive).
     - Icons from `lucide-react` (project convention, see `nav.tsx`).
+    - **DOM order = source order = tab order** (Clutch → Reply → weeks). The cascade
+      is achieved with margin/`translate` offsets only — never absolute positioning
+      that reorders the visual sequence away from DOM/tab order, and never CSS that
+      moves Reply/weeks ahead of Clutch visually.
     - Staggered offset cascade per Figma; exact x/y offsets are subjective → **render
       labeled candidates on the live page, user picks** (memory rule). Below `lg`
       the chips wrap to a simple row/stack (no SEO content hidden, no `display:none`).
 - **Cards row** — 3 flush full-bleed bordered columns (`grid-cols-1 md:grid-cols-3`,
-  **no gap, no radius**, shared 1px `border-border`, Figma grammar). Each column:
+  **no gap, no radius**, shared 1px `border-border`, Figma grammar). These are a
+  **bespoke section treatment, NOT the `<Card>` primitive** — do not force
+  `components/ui/card.tsx` (its radius/hover/shadow grammar does not apply here).
+  Each column:
   - Isometric illustration (`<img>`, `public/whyus/*.png`, `alt=""` decorative,
-    `loading="lazy"`, `object-contain`), centered near top.
+    `loading="lazy"`, `object-contain`), centered near top. **Intrinsic `width`/
+    `height` attrs + a fixed aspect-ratio box** so there is zero layout shift (CLS)
+    while the image loads; if the image 404s the card still reads fully (title + body
+    are real content, not in the image). At `375` the image is `max-w-full`,
+    contained, never overflows the gutter.
   - Bottom **gradient fade** from the card surface to transparent over the lower image
-    band (Figma `from-[#fffffc]` → adapt to the card bg token).
+    band — fades to `--color-bg` (the card surface token; Figma `#fffffc` → `--color-bg`).
   - Text block anchored toward the lower third:
     - Mono kicker = frozen `tag` (uppercase, `text-gray`, JetBrains Mono).
     - H3 = frozen `title`, `font-brand` bold ~`clamp(20px,1.6vw,24px)` uppercase
@@ -125,6 +142,24 @@ animation.** Optional: card image/border `hover` at `motion.duration.fast` only 
 - `prefers-reduced-motion: reduce` honored via `<Reveal>`.
 - Static SSR markup contains every frozen string + links (no `display:none` on SEO
   content; mobile fallbacks render server-side).
+- **Responsive breakpoints (explicit):**
+  - `lg+` (≥1024): header two-column (`max-w-[720px]` left + stat-chip cascade right);
+    cards 3-up.
+  - `md` (768–1023): header collapses to single column — left block then chips as a
+    wrapped row beneath the lede; cards stay 3-up (`md:grid-cols-3`).
+  - `<md` (≤767, incl. 375): single column throughout; chips stack as a simple
+    row/wrap; cards stack 1-up; illustrations scale within the gutter, no overflow.
+- **Touch targets ≥44×44px** on the Clutch chip and every client link on touch
+  surfaces (pad the hit area; visible text may be smaller).
+
+## Approved visual reference (no speculative mockups)
+
+The locked visual reference for implementation is **Figma node `112:1787`**
+(screenshot pulled 2026-05-19) + the 3 committed PNGs in `public/whyus/`. The design
+direction was user-approved in brainstorming (3 decisions above). Per the project
+candidate-pick rule, the **only** open visual sub-decision is the stat-chip cascade
+offsets, resolved live at implementation (labeled candidates, user picks). No gstack
+mockup variants are generated — they would compete with the locked Figma source.
 
 ## Deviations from master plan
 
@@ -165,5 +200,8 @@ hard constraint above is honored regardless.
 - **Copy-diff assertion:** the rendered text content of `WhyUsSection` (all frozen
   strings + link hrefs above) is byte-identical to pre-change; `git diff` shows no
   changed/removed string literal in the `reasons`/header/chip copy.
+- **Image weight:** `public/whyus/*.webp` each ≪ original PNG (target ≤ ~80KB,
+  ≤ ~800px longest edge); no `<img>` renders an oversized intrinsic; zero CLS
+  (intrinsic `width`/`height` + aspect box present).
 - **`npm run build` is expected to FAIL at `/blog/rss.xml`** (pre-existing PR-#26 env
   hold) — **not** a regression, not chased. Posture stays `tsc` + dev QA.
