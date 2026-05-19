@@ -53,6 +53,14 @@ const reasons = [
   },
 ]
 
+const chip =
+  'inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] tracking-[-0.005em]'
+
+const stats = [
+  { Icon: Zap, label: 'Reply within 12h', offset: 'lg:translate-x-[-24px]' },
+  { Icon: CalendarDays, label: '4–12 weeks to ship', offset: 'lg:translate-x-[-12px]' },
+]
+
 export function WhyUsSection() {
   return (
     <Section bg="subtle" maxWidth="xwide">
@@ -74,34 +82,30 @@ export function WhyUsSection() {
             href={clutchProfileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] tracking-[-0.005em] no-underline lg:translate-x-[-64px]"
+            className={`${chip} no-underline lg:translate-x-[-64px]`}
           >
             <span className="font-semibold text-dark tabular-nums">4.9</span>
             <span aria-label="5 out of 5 stars" className="text-[12px] leading-none tracking-[1px] text-[#F6851B]">★★★★★</span>
             <span className="font-medium text-gray">on Clutch</span>
           </a>
-          <span className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] font-semibold tracking-[-0.005em] text-dark lg:translate-x-[-24px]">
-            <Zap aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
-            Reply within 12h
-          </span>
-          <span className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] font-semibold tracking-[-0.005em] text-dark lg:translate-x-[-12px]">
-            <CalendarDays aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
-            4–12 weeks to ship
-          </span>
+          {stats.map(({ Icon, label, offset }) => (
+            <span key={label} className={`${chip} font-semibold text-dark ${offset}`}>
+              <Icon aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
+              {label}
+            </span>
+          ))}
         </div>
       </div>
 
-      <div className="mt-[48px] grid grid-cols-1 border border-border md:mt-[64px] md:grid-cols-3">
-        {reasons.map((r, i) => (
-          <div
-            key={r.tag}
-            className={`relative flex flex-col bg-bg ${i > 0 ? 'border-t border-border md:border-l md:border-t-0' : ''}`}
-          >
+      <div className="mt-[48px] grid grid-cols-1 border border-border divide-y divide-border md:mt-[64px] md:grid-cols-3 md:divide-x md:divide-y-0">
+        {reasons.map(r => (
+          <div key={r.tag} className="relative flex flex-col bg-bg">
             <div className="relative aspect-square w-full">
               <img
                 src={r.image}
                 alt=""
                 loading="lazy"
+                decoding="async"
                 width={800}
                 height={800}
                 className="absolute inset-0 size-full object-contain p-[32px]"
