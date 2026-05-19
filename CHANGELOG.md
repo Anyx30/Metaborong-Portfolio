@@ -4,6 +4,24 @@ All major decisions, milestones, and changes to this project.
 
 ---
 
+## 2026-05-19 — Session 17: ContactCta + Footer Figma redesigns (sequential, direct on design-revamp)
+
+### Decision log
+- **Execution model.** ContactCta then Footer redesigned sequentially in one session directly on `design-revamp` (two adjacent, non-overlapping components — no parallel worktrees needed). Both copy treatments = full A3 chain (user choice).
+- **ContactCta — Figma `233:261`, dark → light.** Rebuilt on the canonical `<Section bg=default maxWidth=xwide>` grid. H2 + 3-word "Email us" CTA kept (Figma's generic "Got a project in mind?" / 4-word "Start a conversation" rejected — DESIGN.md ≤3-word cap + the Session-15 WHY). Brand-blue **split-arrow `<Button>` primitive** (replaced a hand-rolled split-arrow that had a hover-direction + transition bug). A3 copy re-run **7.6 → 8.1 / 10** (added founder-reachability E-E-A-T + Web3/AI topical; "straight from a founder" user-verified literally true 2026-05-19); claim-gate + guardrails PASS. ASCII-hills signature = Figma raster exported → 204KB webp; rendered as a **normal-flow bottom band** after a live-QA P1 (an absolute backdrop blanketed the H2 at desktop → dark-on-green, failed AA). `homepage.md` "[dark section]"/`#0a0a0a` notes + `DESIGN.md` surface.dark table reconciled to light; `section.tsx` doc gains `xwide`.
+- **Footer — Figma `237:359`, single row → expanded sitemap.** Light footer on the site edge grid: Company / Services / Offices / Get-in-touch columns (canonical `<Eyebrow>` headings, `linkCls` const), 16-word positioning line, giant `METABORONG` as live text (not raster), dynamic-year bottom bar. Figma placeholder "ARNAB RAY ×4" card grid **dropped** (user — Founders already carries the team; avoids personal-mobile exposure); Dribbble dropped; offices = user-verified NAP (verbatim); LinkedIn/X real (`rel=me`), Behance/Medium/Discord → `/` temp redirect (no `rel=me`, follow-up to swap). Footer copy = A3 *create*; claim-gate + guardrails PASS. Small `<Logo>` M-mark dropped (Figma frame has only the text wordmark).
+- **Review chain.** plan-design-review **9.0 (ContactCta) / 8.8 (Footer)**; impeccable critique fixed a11y (#999 → text-gray on load-bearing copy) + the `<Button>` primitive + raster bleed; design-review live QA found+fixed FINDING-001 (desktop raster contrast) and confirmed the footer clean at 1440/375; simplify adopted the `Eyebrow` primitive + `linkCls` const + `decoding=async`. Verification posture: `tsc` exit 0 + dev QA (no Vitest for presentational sections); `npm run build` still expected to fail at `/blog/rss.xml` (PR-#26 env hold, not a regression).
+- **Deferred follow-ups.** `lib/schema.ts` Organization `PostalAddress` ×3 (NAP consistency — shared surface, mirrors Founders `sameAs` deferral); real Behance/Medium/Discord URLs. SEO advisory (noindex service pages are the real lever, not footer links) recorded in the copy-audit doc.
+- **Pre-existing flag (not fixed, REPO_MODE collaborative).** The site-global privacy/consent banner is a fixed overlay covering bottom content — same item the Session-16 design-review handed to the main session; not introduced by this redesign.
+
+### Build state changes
+- **NEW:** `public/contact/ascii-hills.webp` (1600×900, 204KB; raw 9.7MB Figma capture kept local-only, not committed).
+- **UPDATED:** `components/sections/contact-cta.tsx` (Figma redesign + A3 + `<Button>` primitive + normal-flow raster); `components/layout/footer.tsx` (expanded sitemap, `Eyebrow`/`linkCls`); `docs/content/homepage.md` (ContactCta + Footer blocks, A3-synced; dark→light notes reconciled).
+- **NEW:** `docs/superpowers/specs/2026-05-19-section-{contact-cta,footer}.md`, `…/2026-05-19-contact-footer-copy-audit.md`; `docs/superpowers/plans/2026-05-19-section-{contact-cta,footer}.md`.
+- **UPDATED:** `DESIGN.md` — two Decisions Log rows + `section.tsx` `xwide` doc + `--color-canvas` surface usage (contact CTA removed); `CHANGELOG.md` — this entry.
+
+---
+
 ## 2026-05-19 — Session 16: Why-Us + Founders Figma redesigns (parallel worktrees)
 
 ### Decision log
