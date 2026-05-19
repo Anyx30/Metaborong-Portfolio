@@ -56,9 +56,9 @@ const reasons = [
 export function WhyUsSection() {
   return (
     <Section bg="subtle" maxWidth="xwide">
-      <div className="flex flex-col gap-[40px] lg:flex-row lg:items-start lg:justify-between lg:gap-[48px]">
-        <div className="flex max-w-[720px] flex-col gap-[20px]">
-          <span className="inline-flex w-fit items-center border border-border bg-bg px-[10px] py-[7px] font-mono text-[12px] font-medium uppercase leading-none tracking-[0.1em] text-gray">
+      <div className="flex flex-col gap-[48px] lg:flex-row lg:items-start lg:justify-between lg:gap-[48px]">
+        <div className="flex max-w-[720px] flex-col gap-[24px]">
+          <span className="inline-flex w-fit items-center border border-border bg-bg px-[12px] py-[8px] font-mono text-[12px] font-medium uppercase leading-none tracking-[0.1em] text-gray">
             Why us
           </span>
           <h2 className="text-[clamp(32px,4vw,52px)] font-bold uppercase leading-[1.05] tracking-[-0.035em] text-dark">
@@ -69,29 +69,29 @@ export function WhyUsSection() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-[12px] sm:flex-row sm:flex-wrap lg:flex-col lg:items-end lg:gap-[14px]">
+        <div className="flex flex-col gap-[12px] sm:flex-row sm:flex-wrap lg:flex-col lg:items-end lg:gap-[16px]">
           <a
             href={clutchProfileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center gap-[6px] border border-border bg-bg px-[14px] text-[14px] tracking-[-0.005em] no-underline lg:translate-x-[-64px]"
+            className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] tracking-[-0.005em] no-underline lg:translate-x-[-64px]"
           >
             <span className="font-semibold text-dark tabular-nums">4.9</span>
             <span aria-label="5 out of 5 stars" className="text-[12px] leading-none tracking-[1px] text-[#F6851B]">★★★★★</span>
             <span className="font-medium text-gray">on Clutch</span>
           </a>
-          <span className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[14px] text-[14px] font-semibold tracking-[-0.005em] text-dark lg:translate-x-[-24px]">
+          <span className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] font-semibold tracking-[-0.005em] text-dark lg:translate-x-[-24px]">
             <Zap aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
             Reply within 12h
           </span>
-          <span className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[14px] text-[14px] font-semibold tracking-[-0.005em] text-dark lg:translate-x-[-12px]">
+          <span className="inline-flex min-h-[44px] items-center gap-[8px] border border-border bg-bg px-[16px] text-[14px] font-semibold tracking-[-0.005em] text-dark lg:translate-x-[-12px]">
             <CalendarDays aria-hidden="true" className="size-[16px] shrink-0 text-gray" strokeWidth={2} />
             4–12 weeks to ship
           </span>
         </div>
       </div>
 
-      <div className="mt-[40px] grid grid-cols-1 border border-border md:mt-[56px] md:grid-cols-3">
+      <div className="mt-[48px] grid grid-cols-1 border border-border md:mt-[64px] md:grid-cols-3">
         {reasons.map((r, i) => (
           <div
             key={r.tag}
@@ -104,11 +104,11 @@ export function WhyUsSection() {
                 loading="lazy"
                 width={800}
                 height={800}
-                className="absolute inset-0 size-full object-contain p-[28px]"
+                className="absolute inset-0 size-full object-contain p-[32px]"
               />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-bg to-transparent" />
             </div>
-            <div className="flex flex-col gap-[14px] px-[24px] pb-[36px] sm:px-[28px] lg:px-[32px]">
+            <div className="flex flex-col gap-[16px] px-[24px] pb-[32px] lg:px-[32px]">
               <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-gray">{r.tag}</span>
               <h3 className="text-[clamp(20px,1.6vw,24px)] font-bold uppercase leading-[1.15] tracking-[-0.025em] text-dark">{r.title}</h3>
               <p className="text-[14px] leading-[1.7] tracking-[-0.005em] text-gray">{r.body}</p>

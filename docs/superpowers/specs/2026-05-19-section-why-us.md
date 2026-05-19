@@ -149,8 +149,14 @@ animation.** Optional: card image/border `hover` at `motion.duration.fast` only 
     wrapped row beneath the lede; cards stay 3-up (`md:grid-cols-3`).
   - `<md` (≤767, incl. 375): single column throughout; chips stack as a simple
     row/wrap; cards stack 1-up; illustrations scale within the gutter, no overflow.
-- **Touch targets ≥44×44px** on the Clutch chip and every client link on touch
-  surfaces (pad the hit area; visible text may be smaller).
+- **Touch targets:** the Clutch chip and the two meta chips are block targets at
+  `min-h-[44px]` (≥44px, WCAG 2.5.5/2.5.8 met). The inline `ext()` client links
+  inside body prose fall under the **WCAG 2.5.8 inline exception** ("the target is
+  in a sentence") — they are intentionally left at the frozen `projectLinkStyle`.
+  Forcing a 44px tap area on inline prose links would create overlapping adjacent-
+  line targets (worse a11y) and alter the FROZEN link rendering; not done.
+  *(Refined post-`/impeccable critique` P1 — supersedes the earlier blanket
+  "every client link ≥44px" wording, which over-specified vs. WCAG.)*
 
 ## Approved visual reference (no speculative mockups)
 
