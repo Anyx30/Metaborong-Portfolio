@@ -20,7 +20,7 @@ export function TestimonialsSection() {
   // left edge with no dead right-side whitespace.
   return (
     <Section bg="subtle" maxWidth="wide">
-      <div className="mb-[24px] flex flex-col items-center text-center md:mb-[32px]">
+      <div className="mb-[24px] md:mb-[32px]">
         <Eyebrow as="p" className="mb-[12px]">Social proof</Eyebrow>
         <h2 className="text-[clamp(28px,3.5vw,44px)] font-bold tracking-[-0.035em] text-dark">Reviewed and verified on Clutch</h2>
         <p className="mt-[16px] max-w-[640px] text-[16px] leading-[1.65] tracking-[-0.01em] text-gray">
@@ -50,7 +50,7 @@ export function TestimonialsSection() {
           </span>
           <span className="text-[14px] leading-[1.5] text-gray">Based on {reviewCount} verified Clutch reviews</span>
         </a>
-        <ClutchWidget widgetType="8" height={220} reviews={clutchReviewIds} className="relative mx-auto w-full" />
+        <ClutchWidget widgetType="8" height={220} reviews={clutchReviewIds} className="relative mx-auto w-full max-w-[900px]" />
       </div>
 
       <div className="mt-[24px] text-center">
