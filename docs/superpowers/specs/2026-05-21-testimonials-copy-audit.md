@@ -116,6 +116,22 @@ Scope: lede + section-CTA + card eyebrow. Quotes are external Metaborong-voice c
 
 ## Deviations (logged here, not in DESIGN.md — section-local)
 
-1. **Per-review Clutch deep-links not used.** Clutch's URL surface does not expose per-review permalinks (tested `?review_id=<id>` and `#review-<id>` — both redirect to the profile root). All 3 cards + section CTA + sr-only link target `clutchProfileUrl` (profile root). The official type-8 widget (`data-reviews="457842,454740,453781,439014,438481,437747"`) surfaces the live per-review carousel client-side, satisfying the per-review affordance dynamically.
-2. **Clutch-foreign brand colors retained.** Inside cards: `text-[#F6851B]` for stars (Clutch brand orange). Not a `--color-brand` bypass per memory `feedback-brand-color-caveats` — these are intentional third-party brand colors flagging the reviewing platform's identity (not the agency's). Acceptable.
-3. **Reviewer personal names absent.** Clutch publishes role + company ("Executive at Sedax Data Solutions") rather than personal names by default reviewer-anonymity policy. Cards mirror Clutch's canonical attribution; this is not a placeholder-leak.
+1. **~~Per-review Clutch deep-links not used~~** — moot after user-directed card removal 2026-05-21. The widget surfaces per-review content client-side.
+2. **~~Clutch-foreign brand colors retained~~** — moot after card removal. Stars now render inside the iframe by Clutch's own assets.
+3. **~~Reviewer personal names absent~~** — moot after card removal. Widget surfaces attribution per Clutch's policy directly.
+4. **Section narrows to `maxWidth="wide"` (1120 vs page-wide xwide 1280).** Clutch type-8 iframe self-caps internal grid at ~1100; matching Section content width to that cap keeps H2 / lede / widget / CTA aligned on a single left edge with no dead right-side whitespace.
+
+## Final state (2026-05-21)
+
+After user-directed simplification, the section contains: H2 + 1-sentence lede + `sr-only` SEO/a11y outbound rating line + widget card (Clutch type 8, h=420, 6 curated IDs in a white card with neutral border + 12px radius) + section CTA ("View all reviews on Clutch →"). No hand-rolled review cards. Drag-scroll lane removed. `'use client'` retained because `<ClutchWidget>` is a client component; the parent section no longer hosts state.
+
+| Category | Baseline | A2+A3 rewrite | Final (widget-only) | Δ vs baseline |
+|---|---:|---:|---:|---:|
+| E-E-A-T | 2 | 8 | 8 | +6 (the widget IS the trust signal; sr-only carries the SSR fallback) |
+| Specificity | 1 | 7 | 7 | +6 (widget surfaces concrete quotes dynamically; lede names "Nine verified clients") |
+| AEO | 3 | 8 | 7 | +4 (lede + sr-only stay extractable; quote text moves into the iframe, so AI extractors that skip iframes lose those — partly offset by the named Clutch source) |
+| Readability | 6 | 8 | 9 | +3 (no content duplication; single trust marker reads cleaner) |
+| Authority | 5 | 9 | 9 | +4 (outbound to Clutch in sr-only + section CTA + widget itself; widget IS the authority) |
+| **Composite** | **3.4** | **8.0** | **8.0** | **+4.6** |
+
+Beats baseline by +4.6. AEO dipped slightly (8 → 7) when quote text moved into the iframe, but the lede + sr-only outbound link keep the section extractable at the section-level. Composite still 8.0.

@@ -1,61 +1,65 @@
 # Section spec — Testimonials (2026-05-21)
 
 **Worktree:** `../mb-website-testimonials` · **Branch:** `section/testimonials-redesign` · **Dev port:** `:3097`
-**Component:** `components/sections/testimonials.tsx` (was 131 lines, now 138 lines; `'use client'` preserved)
-**Chain:** A2 (visual prep + padding-chain migration) + A3 (content fill from Clutch profile)
+**Component:** `components/sections/testimonials.tsx` (was 131 lines → 152 lines after A2/A3 → 51 lines after user-directed simplification 2026-05-21; `'use client'` preserved)
+**Chain:** A2 (visual prep + padding-chain migration) + A3 (content fill from Clutch profile) + user-directed simplification (cards removed, widget-only)
 **Predecessor:** Session 17 graduations (`design-revamp` @ `3fa4e68`); padding chain canonical per PR #33 (2026-05-20).
 
 ---
 
 ## 1. Design intent
 
-Replace a placeholder-laden static badge strip + 3 stub cards with a section that earns its trust marker by SSR-ing the same verifiable signal the official Clutch widget renders dynamically. The 3 cards become the no-JS / SSR-crawlable fallback; the official Clutch widget (type 8, h=300, 6 curated review IDs) is the always-on visual surface. Section follows the canonical `<Section bg="subtle" maxWidth="xwide">` grammar (matches Why-Us / Services / Comparison alternation).
+Replace a placeholder-laden static badge strip + 3 stub cards with the official Clutch type-8 reviews widget as the sole review surface. SSR-crawlable trust content is satisfied by an `sr-only` outbound link carrying the rating + count + profile target — same Why-Us pattern, widget-only application.
 
-The section reads: H2 (verb-led, names the source) → 1-sentence lede ("Nine verified clients have rated our work on Clutch. Three of them, in their own words.") → official widget container → 3 SSR-fallback cards (horizontal-snap carousel below `lg`, 3-up grid above) → section-level "View all reviews on Clutch →".
+The section reads: H2 (verb-led, names the source) → 1-sentence lede ("Nine verified clients have rated our work on Clutch.") → `sr-only` SEO/a11y outbound link → official Clutch widget framed in a white card with neutral border + 12px radius → section-level "View all reviews on Clutch →".
+
+**Section primitive:** `<Section bg="subtle" maxWidth="wide">` — narrows to 1120 from the page-wide 1280 because the Clutch type-8 iframe self-caps internal grid at ~1100. Matching the Section content width to that cap keeps H2 / lede / widget / CTA aligned on a single left edge with no dead right-side whitespace inside the widget.
+
+**User-directed simplification (2026-05-21):** the earlier A2+A3 iteration kept 3 hand-rolled SSR-fallback quote cards beneath the widget. User dropped them because (a) they repeated the same content the widget already surfaces, and (b) the per-card "Read on Clutch →" affordance was the original visual idiom we're moving away from. The widget is now the only review surface; SEO/a11y coverage moves to the `sr-only` outbound text.
 
 ---
 
-## 2. Anatomy
+## 2. Anatomy (final, post-simplification)
 
 | Region | Element | Source |
 |---|---|---|
-| Section shell | `<Section bg="subtle" maxWidth="xwide">` | `components/ui/section.tsx:36` (canonical 6-step padding chain) |
+| Section shell | `<Section bg="subtle" maxWidth="wide">` | `components/ui/section.tsx:36` (canonical 6-step padding chain) |
 | Eyebrow | `<Eyebrow as="p">Social proof</Eyebrow>` | `components/ui/eyebrow.tsx` |
 | H2 | `text-[clamp(28px,3.5vw,44px)] font-bold tracking-[-0.035em]` | matches site H2 grammar (Why-Us, Founders, Comparison) |
 | Lede | `text-[16px] leading-[1.65] tracking-[-0.01em] text-gray` | matches Why-Us lede |
 | SR-only outbound | `<a className="sr-only">Metaborong is rated 4.9 out of 5 on Clutch, based on 9 verified reviews.</a>` | Why-Us pattern (DESIGN.md Decisions Log 2026-05-19) |
-| Clutch widget | `<ClutchWidget widgetType="8" height={300} reviews="…" />` | `components/sections/clutch-widget.tsx` (parameterised; defaults preserve Why-Us behavior) |
-| Card carousel container | `role="region" aria-label="Client reviews" tabIndex={0}` with `snap-x snap-mandatory` (mobile) / `lg:grid lg:grid-cols-3` | local |
-| Card | `<a>` whole-link to `clutchProfileUrl`; flex column with stars row + verified-eyebrow + italic quote + role-company-project block + decorative "Read on Clutch →" affordance | local |
+| Widget card container | `rounded-[12px] border border-border bg-white` (no inner padding — widget has its own internal spacing) | local |
+| Clutch widget | `<ClutchWidget widgetType="8" height={420} reviews="…" />` | `components/sections/clutch-widget.tsx` (parameterised; defaults preserve Why-Us behavior) |
 | Section CTA | `inline-block py-[8px]` (AAA tap-target) "View all reviews on Clutch →" | local |
-| Swipe-hint chevrons | `aria-hidden="true"`, `pointer-events: none`, `motion-safe:animate-pulse` | local |
+
+**Removed in user-directed simplification (2026-05-21):** drag-scroll card carousel (`'use client'` + `useRef`), 3 SSR-fallback quote cards, swipe-hint chevrons, `<Stars>` helper, `'use client'` is preserved only because the `<ClutchWidget>` child is a client component (the widget shell itself uses `next/script` `afterInteractive`); the parent section no longer hosts client state.
 
 ---
 
-## 3. Token map
+## 3. Token map (final)
 
 | Visual primitive | DESIGN.md token | Notes |
 |---|---|---|
 | Section bg | `bg-bg-subtle` (via `<Section bg="subtle">`) | alternation pattern: Testimonials = subtle, Founders = default |
-| Section max-width | `1280px` (via `maxWidth="xwide"`) | matches every other section |
+| Section max-width | `1120px` (via `maxWidth="wide"`) | narrower than xwide (1280) — matches Clutch type-8 iframe natural content width; Deviation 4 |
 | Section padding | `px-[16px] sm:px-[24px] md:px-[40px] lg:px-[48px] xl:px-[80px] 2xl:px-[128px]` | canonical chain from `<Section>` |
 | Body text | `text-dark` (`#0a0a0a`), `text-gray` (`#4a4a4a`) | WCAG AA on subtle bg |
-| Card border | `border border-border` | canonical neutral border |
-| Card bg | `bg-white` | on subtle section, white card pops |
-| Card radius | `rounded-[12px]` | matches Why-Us reasons cards |
-| Brand color | `text-brand` (var `--color-brand`) on per-card "Read on Clutch →" + section CTA | tokenised |
-| Clutch wordmark / stars | `#17313E` (Clutch ink) intentionally absent now (widget renders its own); `#F6851B` (Clutch orange) on hand-rolled card stars | Deviation 2 |
+| Widget card border | `border border-border` | canonical neutral border |
+| Widget card bg | `bg-white` | on subtle section, white card pops |
+| Widget card radius | `rounded-[12px]` | matches Why-Us reasons cards |
+| Brand color | `text-brand` (var `--color-brand`) on section CTA | tokenised |
+| Clutch wordmark / stars | rendered inside the iframe by Clutch's own assets — not Metaborong's tokens to set | external |
 | Eyebrow primitive | `<Eyebrow>` with `tone="default"` (`text-gray-light`) | canonical |
-| Focus ring | `focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2` | both on carousel container and each card link |
 
 ---
 
 ## 4. Deviations
 
-1. **Per-review Clutch deep-links not used.** Clutch's URL surface does not expose per-review permalinks (`?review_id=<id>` and `#review-<id>` both redirect to profile root, tested via WebFetch). All 3 cards + section CTA + sr-only link target `clutchProfileUrl`; the official type-8 widget surfaces the live per-review carousel client-side. Brief's per-review affordance is satisfied dynamically by the widget.
-2. **Clutch-foreign brand colors retained.** `text-[#F6851B]` on card stars. Not a `--color-brand` bypass; intentional third-party brand identity per memory `feedback-brand-color-caveats`.
-3. **Reviewer personal names absent.** Clutch policy publishes role + company only ("Executive at Sedax Data Solutions"). Mirrors Clutch's canonical attribution; not a placeholder leak.
+1. **~~Per-review Clutch deep-links not used~~** ~~(was relevant when 3 fallback cards existed)~~ — moot after card removal. The widget surfaces the per-review carousel client-side; no per-review affordance exposed by Metaborong's DOM.
+2. **~~Clutch-foreign brand colors retained~~** ~~(was relevant when hand-rolled card stars were `text-[#F6851B]`)~~ — moot after card removal. Stars are now rendered inside the iframe by Clutch's own assets.
+3. **~~Reviewer personal names absent~~** ~~(was relevant when hand-rolled cards displayed attribution)~~ — moot after card removal. The widget shows whatever attribution Clutch surfaces (role + company, per their anonymity policy).
 4. **Padding chain migrated from hand-rolled 4-step to canonical 6-step via `<Section>`.** Resolves handoff §2.3 drift. Vertical padding tightens from `py-[56/72/80]` to `py-[48/64/72]` to match neighbor sections.
+5. **Section narrows to `maxWidth="wide"` (1120) instead of page-wide `xwide` (1280).** The Clutch type-8 iframe self-caps its internal grid at ~1100. Matching the Section content width to that cap keeps H2 / lede / widget / CTA aligned on a single left edge with no dead right-side whitespace inside the widget. Trade-off: testimonials' content left-edge sits 80px further right than neighbors' (Why-Us, Founders) at ≥xl viewports — accepted as a focused trust-marker block.
 
 ---
 
@@ -122,9 +126,9 @@ Live QA via headless Chromium against `:3097`, captured at 1440, 1280, 375. Scre
 
 ### 8.2 Trade-offs noted (intentional, not regressions)
 
-- **Visible content redundancy between widget and fallback cards.** The Clutch widget surfaces the same review pull-quotes that the 3 SSR cards render statically. This is by design: the widget is the live dynamic surface (authority signal + always-current); the cards are the SSR-crawlable / no-JS fallback (E-E-A-T + AEO extractability for visitors and crawlers with JS disabled / for AI extractors that don't render iframes). Mirrors the Why-Us pattern (widget + `sr-only` text). Future polish could consider visually hiding the cards once the widget loads (CSS `:has(iframe)` or hydration-driven `data-` attribute) — out of Session 18 scope.
+- **~~Visible content redundancy between widget and fallback cards.~~** Resolved 2026-05-21 — cards removed by user direction. Widget is now the only review surface; SSR/a11y coverage moves to the `sr-only` outbound text + lede.
+- **Section narrows from xwide to wide (1120 vs 1280) at testimonials only.** Trade-off: testimonials' content left-edge sits 80px further right than Why-Us / Founders / Comparison neighbors at ≥xl viewports. Accepted as a focused trust-marker block; the widget reads as a clean integrated primitive rather than a centered island in a wider container.
 - **Privacy-preferences popup overlaps the widget on mobile.** The geo-consent UI ("PRIVACY PREFERENCES" with Accept/Reject buttons) lives at the page level (proxy.ts geo consent flow) and is unrelated to the testimonials section. Not a section regression.
-- **H2 ducks under the nav on `scrollIntoView` test.** Cosmetic artifact of `block: 'start'` against the fixed nav — H2 is in the SSR HTML and visible when the user lands on the section naturally (via `scroll-mt` accommodations elsewhere on the page). No section-level change needed.
 
 ### 8.3 Verdict
 
@@ -136,8 +140,8 @@ Live QA via headless Chromium against `:3097`, captured at 1440, 1280, 375. Scre
 
 > **DESIGN.md Decisions Log row (proposed):**
 >
-> | 2026-05-21 | **Testimonials migrated to canonical `<Section bg=subtle maxWidth=xwide>` grid; static placeholder strip replaced by the official Clutch widget (type 8, h=300, 6 curated review IDs) on the Why-Us-pattern always-on / `sr-only` SEO-fallback / `aria-hidden` visual triplet (DESIGN.md Decisions Log 2026-05-19); 3 SSR-crawlable verbatim quote cards from `clutch.co/profile/metaborong-technologies-private` (4.9 / 5, 9 reviews; Executive at Sedax Data Solutions / President at Digital Financial Aid Corp / Executive at SBS Construction). `<ClutchWidget>` parameterised (`widgetType`, `height`, `reviews`, `className`) — Why-Us defaults preserved. Drag-scroll lane (PR #33) gained `role=region` + `aria-label` + `tabIndex` + focus ring. Section CTA tap-target raised to AAA. Deviations 1–4 in `docs/superpowers/specs/2026-05-21-section-testimonials.md`. A3 baseline 3.4 → rewrite 8.0 in `docs/superpowers/specs/2026-05-21-testimonials-copy-audit.md`. | Replaces seven `[TODO:]` placeholders with real verifiable trust content; mirrors the agency's full work spread (Web3 / Web app / AI) per `positioning-web3-and-ai-equal`; satisfies a11y/SEO without depending on client-side JS; consolidates with the Why-Us Clutch widget pattern. |
+> | 2026-05-21 | **Testimonials rebuilt as a widget-only trust block on `<Section bg="subtle" maxWidth="wide">`** — the official Clutch type-8 reviews widget (h=420, 6 curated review IDs from data-reviews="457842,454740,453781,439014,438481,437747") in a white card with neutral border + 12px radius is the only review surface; an `sr-only` outbound link carries the SSR-crawlable rating/count fallback (Why-Us pattern, DESIGN.md Decisions Log 2026-05-19). `<ClutchWidget>` parameterised (`widgetType`, `height`, `reviews`, `className`) — Why-Us defaults preserved. **Section narrowed to `wide` (1120)** to match the Clutch type-8 iframe's natural ~1100 content cap and avoid dead right-side whitespace at ≥xl viewports. Earlier A2+A3 iteration kept 3 SSR-fallback quote cards + drag-scroll lane — dropped by user 2026-05-21 because they duplicated the widget's content and reintroduced the per-card "Read on Clutch →" idiom we're moving away from. Padding chain migrated from hand-rolled 4-step to canonical 6-step. Deviations 4–5 in `docs/superpowers/specs/2026-05-21-section-testimonials.md`. A3 audit baseline 3.4 → rewrite 8.0 in `docs/superpowers/specs/2026-05-21-testimonials-copy-audit.md`. | Replaces seven `[TODO:]` placeholders with a single verifiable live trust marker; eliminates content duplication between SSR cards and the widget; consolidates with the Why-Us Clutch widget pattern; the narrower Section is a deliberate cost paid to keep the widget reading as a clean integrated primitive instead of a centered island. |
 >
 > **CHANGELOG.md entry (proposed sub-bullet under Session 18):**
 >
-> - **testimonials**: Migrated to canonical `<Section>` grid; replaced placeholder strip with official Clutch widget (type 8) + 3 verbatim quote cards sourced from Clutch profile; drag-scroll lane gained keyboard + ARIA parity; A3 baseline 3.4 → 8.0.
+> - **testimonials**: Rebuilt as widget-only trust block on `<Section bg="subtle" maxWidth="wide">` — official Clutch type-8 reviews widget (h=420, 6 curated review IDs) is the only review surface; `sr-only` outbound carries the SSR rating/count fallback; padding chain migrated to canonical 6-step. Earlier hand-rolled fallback cards + drag-scroll lane dropped per user direction. A3 baseline 3.4 → 8.0.

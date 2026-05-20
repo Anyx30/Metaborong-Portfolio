@@ -239,7 +239,7 @@ Live products across DeFi, AI, gaming, and SaaS — each shipped with founders w
   CTA: per-card "Read on Clutch →" + section-level "View all reviews on Clutch →".
 -->
 
-### [TESTIMONIALS — H2 → Clutch verified strip + cards]
+### [TESTIMONIALS — H2 → Clutch official widget only]
 
 ## Reviewed and verified on Clutch
 
@@ -247,9 +247,9 @@ Live products across DeFi, AI, gaming, and SaaS — each shipped with founders w
 - "What clients say after shipping"
 - "Verified by clients on Clutch"
 
-**Lede (between H2 and widget):** Nine verified clients have rated our work on Clutch. Three of them, in their own words.
+**Lede (between H2 and widget):** Nine verified clients have rated our work on Clutch.
 
-**Official Clutch widget (type 8, h=300, curated review IDs surfaced in the widget):**
+**Official Clutch widget (type 8, h=420, curated review IDs surfaced in the widget):**
 
 ```
 data-clutchcompany-id="2433707"
@@ -262,42 +262,15 @@ data-reviews="457842,454740,453781,439014,438481,437747"
 - **Review count:** `9`
 - **SSR / a11y fallback (sr-only outbound link):** "Metaborong is rated 4.9 out of 5 on Clutch, based on 9 verified reviews."
 
-**Three quote cards (SSR-crawlable static fallback; each card whole-links to the Clutch profile — per-review deep-links not exposed by Clutch URL surface, so target = profile root):**
-
-#### Quote 1 — Sedax Data Solutions
-> "Their implementation and prompt product delivery stood out."
-
-**Reviewer:** Executive at Sedax Data Solutions Private Limited
-**Project:** Blockchain & IT Support for ID Authentication Software Co
-**Rating:** ★★★★★
-**CTA:** `Read on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
-
-#### Quote 2 — Digital Financial Aid Corporation
-> "They had great teamwork and the ability to understand and adapt to the business problems."
-
-**Reviewer:** President at Digital Financial Aid Corporation
-**Project:** Web App Development for Gamified Learning Platform
-**Rating:** ★★★★★
-**CTA:** `Read on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
-
-#### Quote 3 — SBS Construction
-> "All works were delivered within the promised deadlines with proper deliverables."
-
-**Reviewer:** Executive at SBS Construction
-**Project:** AI Development for Construction & Consulting Firm
-**Rating:** ★★★★★
-**CTA:** `Read on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
-
-**Section CTA (below grid):** `View all reviews on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
+**Section CTA (below widget):** `View all reviews on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
 
 <!-- WHY
+  - The widget is the only review surface in the section. Earlier iteration kept 3 hand-rolled SSR-fallback cards beneath the widget — user dropped them 2026-05-21 because they repeated the same content the widget already surfaces and the per-card "Read on Clutch →" affordance was the original design we're moving away from.
   - "Voices of trust" was the worst agency-speak on the page — replaced with a verb-led headline that names the source ("Clutch").
-  - Verbatim quotes from existing site (Siddharth, Dr. Josh, Abhishek, Girish) are NOT carried over — three Clutch reviews picked instead. The two anonymous "Client" attributions die here.
   - Outbound links to Clutch give the section measurable SEO value (Clutch profile traffic = reciprocal trust signal) and let visitors verify independently.
-  - All link attributes on the JSX should be: rel="noopener" target="_blank" — Clutch is a third-party domain.
-  - Quote selection rule: 3 picked for spread across the work mix (Web3 / Web app / AI) so the section reads as Web3 AND AI equally per memory positioning-web3-and-ai-equal — not Web3-only or AI-only.
-  - Reviewer names withheld by Clutch policy ("Executive at X" / "President at Y"); company + role + project type carry the attribution. Equivalent to peer-reviewed double-blind — adds credibility, not removes it.
-  - **Deviation 1 (2026-05-21):** per-review deep-link URLs are not exposed by Clutch's URL surface (tested: `?review_id=<id>` and `#review-<id>` both redirect to profile root). Cards link to `clutchProfileUrl` instead; the official widget (type 8) surfaces the live per-review carousel client-side.
+  - All outbound link attributes: rel="noopener noreferrer" target="_blank" — Clutch is a third-party domain.
+  - **Section narrows to maxWidth="wide" (1120)** instead of the page-wide "xwide" (1280) because the Clutch type-8 iframe self-caps its internal grid at ~1100 — matching the Section content width to that cap keeps H2 / lede / widget / CTA aligned on a single left edge with no dead right-side whitespace. Logged as Deviation 4 in the spec.
+  - SEO/a11y coverage retained without the hand-rolled cards via the sr-only outbound text "Metaborong is rated 4.9 out of 5 on Clutch, based on 9 verified reviews" — crawlable, screen-reader-announced, links to the profile. Mirrors the Why-Us pattern.
 -->
 
 
