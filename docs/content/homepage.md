@@ -473,45 +473,30 @@ A: Yes. The Product Studio pillar builds custom Web2 SaaS platforms independentl
 
 ### [CONTACT CTA — light section]
 
-## Tell us the build. We'll send the approach.
+## Got a project in mind?
 
-*Alt headlines:*
-- "Skip the pitch deck. Start the build."
-- "Send us your spec — get an approach back in 48 hours."
+**Sub:**
+We build what large agencies under-deliver and freelancers can't architect, across Web3 protocols, AI agents, and SaaS products. Tell us what you are building. We will tell you how we would approach it — no pitch deck, no fluff, no commitment required.
 
-**Sub (19 words):**
-No pitch deck, no discovery-call gauntlet — a written approach to your Web3 or AI build, straight from a founder.
+**Primary CTA:** `Start a conversation →` → `mailto:contact@metaborong.com?subject=New%20project%20inquiry`
 
-**Primary CTA:** `Email us →` → `mailto:contact@metaborong.com?subject=New%20project%20inquiry`
-
-**Risk reducer (below CTA, small grey type):**
-Most teams hear back within 12 hours.
-
-**Secondary (small, plain):** `contact@metaborong.com`
-
-<!-- WHY
-  - "Got a project in mind?" was generic — every dev shop uses it. New headline is action-shaped and outcome-promising ("send" + "approach").
-  - Mirrors hero "Reply in 12h" eyebrow so the risk reducer feels like a kept promise, not a new claim.
-  - Sub copy kept the working "no pitch deck / no fluff" anti-process framing but reshaped from tricolon to two short sentences for breathing room.
-  - CTA stayed "Email us" (3 words — at the DESIGN.md cap). Avoided "Start a conversation →" (4 words, soft).
+<!-- WHY (2026-05-20 — Figma sync, supersedes the Session-17 A3 rewrite below)
+  - User reverted to the Figma 233:261 copy verbatim ("Got a project in mind?" /
+    "Start a conversation"). The Session-17 A3 rewrite ("Tell us the build…" +
+    "straight from a founder" + 12h risk reducer + secondary email) is
+    superseded by explicit user instruction "make the ux-copy same as in figma".
+  - Figma sub had a mid-word edit accident ("…Web3 protocols, ATell us…");
+    reconstructed to "AI agents, and SaaS products. Tell us…" per user
+    confirmation 2026-05-20 (matches site-wide Web3 + AI + SaaS positioning).
+  - Risk reducer + secondary email removed (not in Figma).
 -->
 
-<!-- WHY (A3 re-run, 2026-05-19 — Session 17 Figma redesign)
-  - Section flips dark → light (Figma 233:261). "[dark section]" label + the
-    "Notes for Visual Design" #0a0a0a line reconciled to light.
-  - H2 + 3-word CTA unchanged — they scored highest and the Session-15 WHY
-    above still holds; the A3 audit (7.6 baseline) said preserve single-action.
-  - Sub rewritten to clear the audit gate: adds (a) founder-reachability E-E-A-T
-    — "straight from a founder" restates the existing TRUST SIGNALS claim
-    ("Founders reachable directly — no account manager layer"), not a new claim;
-    (b) a natural Web3/AI topical clause (equal weight, mirrors the hero's
-    two-pillar lead) for end-of-page relevance + AEO. Kept ≤20w, one idea.
-  - Risk reducer unchanged (keeps the hero-mirrored 12h proof).
+<!-- SUPERSEDED — Session-17 A3 rewrite (kept for provenance)
+  H2: "Tell us the build. We'll send the approach."
+  Sub: "No pitch deck, no discovery-call gauntlet — a written approach to your Web3 or AI build, straight from a founder."
+  CTA: "Email us →" + risk reducer "Most teams hear back within 12 hours." + secondary "contact@metaborong.com".
+  Audit score 7.6 → 8.1, claim-gate PASS. Reverted 2026-05-20 to match Figma.
 -->
-<!-- CLAIM PROVENANCE: "straight from a founder" — user confirmed 2026-05-19
-  this is literally true (a founder personally writes the approach reply), not
-  just a restatement of the published reachability claim. Copywriting gate
-  (A3 step 6): PASS (user-verified literal). -->
 
 
 
