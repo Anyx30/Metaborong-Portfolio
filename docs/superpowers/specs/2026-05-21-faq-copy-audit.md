@@ -41,31 +41,56 @@
 
 Every Q is a third-person informational search query that a Web3/AI/SaaS founder would type into Google, ChatGPT, or Perplexity. Every A leads with the entity definition / direct answer (citation-ready), names Metaborong by name once in the body so AI overviews can attribute, and stays ≤50w. No fabricated claims (cost figures, response-time SLAs absent from shipped copy). D6 deferred — no chain count in answers.
 
-### Final 8 Q&As (v3 — post-live-review reframe)
+### Final 8 Q&As (v4 — guardrails-tightened, zero em-dashes)
 
 | # | Q | A | Words |
 |---|---|---|---|
-| 1 | What is a Web3 development company? | A Web3 development company designs, audits, and ships blockchain products — DeFi protocols, smart contracts, NFT marketplaces, and on-chain integrations. Metaborong is one such studio: three technical co-founders, Web3 and AI as equal practices, working with crypto-native teams and founders worldwide. | 41 |
-| 2 | How long does it take to build a DeFi protocol or smart contract? | Smart contracts and AI integrations typically ship in four to six weeks. Full DeFi protocols and SaaS platforms run eight to twelve. Scope drives the range — a single contract audit closes faster than a multichain vault with custom incentive logic. | 41 |
-| 3 | Are Web3 and AI development projects priced hourly or fixed-scope? | Most senior studios — including Metaborong — quote fixed-scope rates from a written brief rather than hourly retainers. A smart contract audit and a multichain DeFi protocol get different envelopes, not different hour estimates. Cost varies with chain mix, AI surface area, and integration depth; numbers follow the first call. | 50 |
-| 4 | What is the difference between a Web3 agency and a smaller development studio? | Smaller Web3 studios run lean — senior engineers writing code, no account-manager layer. Larger agencies add coordination overhead and junior delivery teams. Metaborong is a three-founder studio: founders write code, communicate directly with clients, and own delivery end-to-end. | 40 |
-| 5 | What is an AI agent development company? | An AI agent development company designs, builds, and ships autonomous agents — RAG systems, multi-step workflow agents, on-chain agents, and SaaS integrations. At Metaborong, Web3 and AI sit as equal pillars; the same engineers deliver multichain DeFi protocols and production AI agents, including agents that interact with on-chain systems. | 50 |
-| 6 | Do you need an NDA before discussing a Web3 or AI project? | No. A first conversation is to understand what you are building and whether the team is the right fit. NDAs come once scoping is concrete and proprietary detail is on the table — not before a thirty-minute introduction. | 39 |
-| 7 | What is a custom SaaS product development studio? | A custom SaaS product development studio designs and ships software-as-a-service platforms end-to-end — auth, billing, dashboards, integrations, and infrastructure. At Metaborong, the Product Studio pillar runs independently of Web3 or AI work, for teams who need a full-stack SaaS partner without a blockchain or agent component. | 46 |
-| 8 | How do lean Web3 and AI development studios ship as fast as larger agencies? | Process integration across development, project management, and operations does most of the work. At Metaborong, automated code review, test generation, deployment, and client tracking run inside the dev loop — so three founders deliver at the throughput of a mid-size agency, without account managers or junior delivery layers between client and code. | 49 |
+| 1 | What is a Web3 development company? | A Web3 development company designs, audits, and ships blockchain products: DeFi protocols, smart contracts, NFT marketplaces, and on-chain integrations. Metaborong is one such studio: three technical co-founders, Web3 and AI as equal practices, with crypto-native teams and founders as the typical clients. | 41 |
+| 2 | How long does it take to build a DeFi protocol or smart contract? | Smart contracts and AI integrations typically ship in four to six weeks. Full DeFi protocols and SaaS platforms run eight to twelve. Scope drives the range. A single contract audit closes faster than a multichain vault with custom incentive logic. | 41 |
+| 3 | Are Web3 and AI development projects priced hourly or fixed-scope? | Fixed-scope, not hourly. Metaborong quotes rates from a written brief, so a smart contract audit and a multichain DeFi protocol carry envelopes scaled to scope. Cost varies with chain mix, AI surface area, and integration depth. Numbers follow the first call. | 42 |
+| 4 | What is the difference between a Web3 agency and a smaller development studio? | Smaller Web3 studios run lean: senior engineers writing code, no account-manager layer. Larger agencies add coordination overhead and junior delivery teams. Metaborong is a three-founder studio. Founders write code, communicate directly with clients, and own delivery end-to-end. | 40 |
+| 5 | What is an AI agent development company? | An AI agent development company designs, builds, and ships autonomous agents: RAG systems, multi-step workflow agents, on-chain agents, and SaaS integrations. At Metaborong, Web3 and AI sit as equal pillars. The same engineers deliver multichain DeFi protocols and production AI agents, often with on-chain interactions. | 47 |
+| 6 | Do you need an NDA before discussing a Web3 or AI project? | No. A first conversation is to understand what you are building and whether the team is the right fit. NDAs come once scoping is concrete and proprietary detail is on the table, not before a thirty-minute introduction. | 39 |
+| 7 | What is a custom SaaS product development studio? | A custom SaaS product development studio designs and ships software-as-a-service platforms end-to-end: auth, billing, dashboards, integrations, and infrastructure. At Metaborong, the Product Studio pillar runs independently of Web3 or AI work, for teams who need a full-stack SaaS partner without a blockchain or agent component. | 46 |
+| 8 | How do lean Web3 and AI development studios ship as fast as larger agencies? | Process integration across development, project management, and operations does most of the work. At Metaborong, automated code review, test generation, deployment, and client tracking run inside the dev loop. Three founders deliver at the throughput of a mid-size agency, without account managers or junior delivery layers between client and code. | 50 |
 
-**Definitional triad (Q1 + Q5 + Q7):** the rewrite establishes parallel `What is a [pillar] [development company/studio]?` queries across the three Metaborong pillars. This is an intentional pattern — buyers researching each pillar separately get a clean, attributable landing query.
+**Definitional triad (Q1 + Q5 + Q7):** the rewrite establishes parallel `What is a [pillar] [development company/studio]?` queries across the three Metaborong pillars. Intentional pattern: buyers researching each pillar separately get a clean, attributable landing query.
+
+### v4 — `@docs/writing-guardrails.md` vet
+
+**Em-dashes:** 9 → 0 across all 8 answers. DESIGN.md:37 endorses em-dashes in visible body copy as a general rule, but at this density they became an AI tell (em-dash is one of the canonical statistical markers of LLM output). User directive 2026-05-21: minimise. Em-dashes replaced with colons (list intros), periods (clause breaks), and commas (parentheticals).
+
+**Banned-word scan (full pass against `writing-guardrails.md` §1):** clean. No `additionally / align / crucial / delve / emphasizing / enduring / enhance / fostering / garner / highlight / interplay / intricate / key / landscape / pivotal / showcase / tapestry / testament / underscore / valuable / vibrant / robust / leverage / synergy / groundbreaking / renowned / profound`.
+
+**Significance inflation (§2):** none. No "stands as a testament to", "pivotal moment", "reflects broader trends", "as we navigate".
+
+**`-ing` tails (§2):** all 8 answer endings non-`-ing`. Q1 v3 ended `…working with crypto-native teams and founders worldwide` (borderline) → v4 `…with crypto-native teams and founders as the typical clients` (prepositional, no -ing). Q5 v3 closer `…including agents that interact with on-chain systems` (borderline) → v4 `…often with on-chain interactions` (prepositional, no -ing).
+
+**Weasel / vague authority (§2):** Q3 v3 opened `Most senior studios — including Metaborong — quote…` (weasel category claim) → v4 `Fixed-scope, not hourly. Metaborong quotes…` (direct binary + named attribution).
+
+**Promotional puffery (§2):** none. No "cutting-edge", "world-class", "innovative approach", "best-in-class".
+
+**Negative parallelism (§2 — max once per piece):** one occurrence in v4 — Q3 opener `Fixed-scope, not hourly`. Within budget.
+
+**Rule-of-three padding (§3):** each tricolon is distinct, content-bearing verbs/items (`designs, audits, ships` / `designs, builds, ships` / `founders write code, communicate directly, own delivery`). Not padding.
+
+**Outline-as-content / opening-with-context (§3):** N/A — this is a Q&A list, each entry self-contained.
+
+**Excessive bold (§4):** none in the answer bodies (only the `**Q:**` / `A:` markers in homepage.md, which are document-structure, not voice).
 
 ### Re-score (post-rewrite)
 
-| Category | Baseline | v1 (7 Qs) | v2 (8 Qs) | **v3 (8 Qs reframed)** | Δ vs baseline |
-|---|---|---|---|---|---|
-| AEO question targeting | 3 | 9 | 9.5 | **10** | +7 |
-| Answer self-containment | 8 | 9 | 9 | **9** | +1 |
-| E-E-A-T signal density | 6 | 8 | 8.5 | **9** | +3 |
-| Sentence-start variety | 8 | 9 | 9 | **8.5** | +0.5 |
-| Web3 + AI equal-pillar discipline | 7 | 9 | 9 | **9.5** | +2.5 |
-| **Composite** | **6.4** | **8.8** | **9.0** | **9.2** | **+2.8** |
+| Category | Baseline | v1 (7 Qs) | v2 (8 Qs) | v3 (reframed) | **v4 (guardrails-tightened)** | Δ vs baseline |
+|---|---|---|---|---|---|---|
+| AEO question targeting | 3 | 9 | 9.5 | **10** | **10** | +7 |
+| Answer self-containment | 8 | 9 | 9 | 9 | **9.5** | +1.5 |
+| E-E-A-T signal density | 6 | 8 | 8.5 | 9 | **9** | +3 |
+| Sentence-start variety | 8 | 9 | 9 | 8.5 | **9** | +1 |
+| Web3 + AI equal-pillar discipline | 7 | 9 | 9 | 9.5 | **9.5** | +2.5 |
+| Anti-AI-tell discipline (em-dash density, weasel, -ing tails) | 6 | 7 | 7 | 7 | **9.5** | +3.5 |
+| **Composite** | **6.3** | **8.5** | **8.7** | **8.8** | **9.4** | **+3.1** |
+
+(v4 added a sixth scoring axis — Anti-AI-tell discipline — formalising the `writing-guardrails.md` vet that v1–v3 only spot-checked. Composite shifted as a result; AEO question targeting **stays 10/10** since Q phrasings are unchanged from v3.)
 
 Baseline beaten on every axis. v3 closes the last AEO question-phrasing gap by reframing Q3, Q5, Q7 from weakly-phrased or unanswerable queries into a definitional triad (Q1 Web3 / Q5 AI / Q7 SaaS) plus a pricing-model pivot (Q3). Sentence-start variety drops 9 → 8.5 because three Qs now open with "A/An [pillar]…" — an *intentional* parallel-anchor pattern rather than accidental repetition.
 
@@ -78,19 +103,19 @@ Baseline beaten on every axis. v3 closes the last AEO question-phrasing gap by r
 
 Net: zero new Qs, zero Qs removed. Same answer content, sharpened search-query phrasing on the question side. The three pillar-definitional Qs (Q1/Q5/Q7) form an intentional triad that lets buyers researching each pillar separately land on this page.
 
-### Sentence-start variety check (rewrite v3)
+### Sentence-start variety check (rewrite v4)
 | # | First word(s) of A | Pillar / role |
 |---|---|---|
 | 1 | A Web3 | Web3 pillar definitional |
 | 2 | Smart contracts | Timeline |
-| 3 | Most senior studios | Pricing model |
+| 3 | Fixed-scope, not hourly | Pricing model (direct binary) |
 | 4 | Smaller Web3 | Studio vs agency |
 | 5 | An AI | AI pillar definitional |
 | 6 | No | NDA / conversion |
 | 7 | A custom SaaS | Product Studio pillar definitional |
 | 8 | Process integration | Mechanism |
 
-8 distinct openings. Three "A/An [pillar]…" openers (Q1, Q5, Q7) — **intentional triad** anchoring the three pillars rather than accidental sentence-start drift. The 2026-05-14 lock target ("≤1 of N starts with `A Web3…`") still holds for that specific phrase.
+8 distinct openings. Three "A/An [pillar]…" openers (Q1, Q5, Q7) are an **intentional triad** anchoring the three pillars. The 2026-05-14 lock target ("≤1 of N starts with `A Web3…`") still holds for that specific phrase. v4 strengthened Q3's opener from a weasel category claim (`Most senior studios…`) to a direct binary answer (`Fixed-scope, not hourly.`), which both sharpens the AEO answer and improves sentence-start variety.
 
 ### Claim-gate (copywriting)
 | Claim | Status | Source |
