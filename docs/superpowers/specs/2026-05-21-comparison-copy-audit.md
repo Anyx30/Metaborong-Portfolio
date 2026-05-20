@@ -298,3 +298,53 @@ Without those, **8.4 is the honest ceiling** for this section after the Web3/AI 
 ### 10.5 Verdict
 
 **SHIP at honest 8.4.** writing-guardrails 100% clean. Web3/AI specifics relocated to dedicated service-page targets per user direction. Section now compares HOW Metaborong delivers (operational dimensions) rather than WHAT it builds (vertical capabilities). 10/10 strings live in SSR on `PORT=3099`; `npx tsc --noEmit` exit 0; visual QA clean at 1440.
+
+---
+
+## 11. Fourth pass — AI-native operations row + concise H2 (2026-05-21, user-direction)
+
+User direction: *"Concise the Comparison H2, maintaining its strong signal. I still don't see a row that gives us edge how we are an AI workflows native agency. Where many of our process are handled by Agentic AIs that gives us quick turnaround time. Integrate this making choosing words that will be strong for SEO."*
+
+### 11.1 Changes
+
+| Change | From → To | Why |
+|---|---|---|
+| H2 (concision) | `How Metaborong's integrated Web3 and AI delivery compares to large agencies and freelance teams` (14w) → `Metaborong vs. large Web3/AI agencies and freelancers` (7w) | `X vs. Y` is the canonical AEO comparison-query format; `Web3/AI` slash compresses the entity-pair 4w → 2w. All four required signals preserved (brand + comparison-intent + entity-pair + competitor categories). H2 now fits on one line at 1440. |
+| New row (position 2, right after Team access) | none → `AI-native operations` \| `Agentic AI runs spec, review, and QA workflows` \| `Manual handoffs across teams` \| `Manual, per-contractor` | Surfaces Metaborong's internal use of agentic AI as a competitive edge. T1 anchor `AI-native` + T1 `agentic workflow` + T1 `workflows`. Three named delivery phases (`spec`, `review`, `QA`) — defensible informational triplet. Distinguished from the `production AI agents and RAG systems` claims relocated to `/services/ai-agents` in pass 3: this row is about AI Metaborong USES internally, not AI Metaborong BUILDS for clients. |
+| Caption (sr-only) | 6 dimensions → 7 dimensions | Reflects the new row. |
+
+### 11.2 writing-guardrails.md vet (delta on new content)
+
+| Item | Status |
+|---|---|
+| H2 `Metaborong vs. large Web3/AI agencies and freelancers` | ✓ Pass — no banned words; `vs.` is canonical comparison syntax; no puffery, no -ing tail |
+| Row label `AI-native operations` | ✓ Pass — `AI-native` is a specific positioning modifier, not a generic intensifier |
+| mb cell `Agentic AI runs spec, review, and QA workflows` | ✓ Pass — `Agentic AI` is a named technical term; `spec`, `review`, `QA` are three real distinct delivery phases (not synonyms, not padding); ends on noun (`workflows`); passes underlying-principle test |
+| large cell `Manual handoffs across teams` | ✓ Pass — descriptive, defensible characterization |
+| free cell `Manual, per-contractor` | ✓ Pass — tight, factual |
+| Caption (sr-only) | ✓ Pass — no introduced banned words; accurate enumeration |
+
+**Full guardrails re-check:** 15/15 sections still pass. No regressions introduced.
+
+### 11.3 Fourth-pass scorecard
+
+| # | Category | v1 | v2 | v3 | **v4** | Δ v4 vs v3 |
+|---|---|---|---|---|---|---|
+| 1 | AEO extractability | 8 | 9 | 8 | **9** | +1 (new row answers `what is an AI-native development agency?` and `how does agentic AI accelerate software delivery?` with citation-ready phrasing; three named delivery phases partially restore the AEO-extract weight that the 7-chain list previously carried) |
+| 2 | SEO keyword coverage | 8 | 9 | 9 | **9** | 0 (H2 dropped `integrated` and `delivery` keywords — net loss; gained canonical `vs.` AEO pattern + new row anchors `AI-native` + `agentic workflow` + `workflows` — net gain; balances at 9) |
+| 3 | Tone match | 9 | 9 | 9 | **9** | 0 (parallel professional phrasing maintained across 7 rows) |
+| 4 | Specificity / claim strength | 9 | 9 | 8 | **9** | +1 (named delivery phases `spec`, `review`, `QA` are concrete artifacts; new row carries the AI-internal-use story with three real distinct items) |
+| 5 | Readability / scan-ability | 8 | 8 | 8 | **8** | 0 (table grew 6 → 7 rows; H2 now 1 line at 1440 vs 2 in v3 — net positive on scan path; row count still scannable) |
+
+**Composite v4:** **(9 + 9 + 9 + 9 + 8) / 5 = 8.8 / 10**
+**Δ vs v3 (8.4):** **+0.4**
+**Δ vs v2 (8.8):** **0** (matches the prior high-water mark — this time without the relocated Web3/AI vertical claims)
+**Δ vs original 2026-05-14 baseline (5.2):** **+3.6**
+
+### 11.4 Why not 10/10 yet
+
+Same ceiling logic as pass 3: the 1.2-point gap to 10 sits in Readability (8 → 9 would need fewer rows or shorter cells; trade-off against table completeness) and one of AEO/SEO/Specificity reaching the 10-mark (would need a confirmed numeric claim beyond `25+ products` and `4–12 weeks`, e.g., `<X> senior engineers` or `<X>% repeat-engagement rate`).
+
+### 11.5 Verdict
+
+**SHIP at honest 8.8.** writing-guardrails 100% clean. AI-native operations row anchors the new "how we work" edge. Concise H2 uses canonical AEO `vs.` query pattern. 12/12 strings live in SSR on `PORT=3099`; `npx tsc --noEmit` exit 0; visual QA clean at 1440 + 375.

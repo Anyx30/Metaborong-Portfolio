@@ -366,10 +366,10 @@ Metaborong was built specifically for this problem. A small, senior team with de
 
 ### [COMPARISON — H2]
 
-## How Metaborong's integrated Web3 and AI delivery compares to large agencies and freelance teams
+## Metaborong vs. large Web3/AI agencies and freelancers
 
 *Alt headlines:*
-- "How an integrated Web3 and AI studio compares to agencies and freelancers"
+- "How Metaborong's integrated Web3 and AI delivery compares to large agencies and freelance teams"
 - "Lean Web3 and AI development: Metaborong vs. agencies vs. freelancers"
 
 *Section intro (29 words):*
@@ -378,6 +378,7 @@ A side-by-side comparison of Metaborong — a lean Web3 and AI development studi
 | | Metaborong | Large Web3 or AI Agency | Freelance team |
 |---|---|---|---|
 | **Team access** | Founder-led, no account-manager layer | Tiered through account managers | Direct, varies by contractor |
+| **AI-native operations** | Agentic AI runs spec, review, and QA workflows | Manual handoffs across teams | Manual, per-contractor |
 | **Engineering standards** | Code review, CI/CD, and automated tests on every change | Standards vary by team and engagement | Practices vary by contractor |
 | **Delivery timeline** | 4–12 weeks per engagement | 3–6 months or longer | Variable, project-dependent |
 | **Documentation and handover** | Architecture docs and runbooks shipped with the build | Scoped as a separate phase | Often informal |
@@ -403,6 +404,12 @@ A side-by-side comparison of Metaborong — a lean Web3 and AI development studi
     2. `Documentation and handover` — `Architecture docs and runbooks shipped with the build` vs. `Scoped as a separate phase` vs. `Often informal`.
   - H2 and intro retained (still anchor `integrated Web3 and AI delivery` + `lean Web3 and AI development studio` as entity descriptors); table now focuses on HOW Metaborong delivers rather than WHAT it builds. Composite score 8.8 → 8.4 (honest trade-off — lost the 7-chain numeric list, the prior version's strongest single AEO claim — but the signal moves to dedicated service pages where it earns more weight).
   - writing-guardrails.md vet re-run line-by-line; 100% clean on all sections (banned words, significance inflation, -ing tails, vague authority, puffery, false ranges, `serves as`, rule-of-three padding, structural anti-patterns, formatting anti-patterns, underlying-principle test).
+  - 2026-05-21 (Session 18, fourth pass): user direction — surface Metaborong's AI-native internal operations as a distinct dimension (*"I still don't see a row that gives us edge how we are an AI workflows native agency. Where many of our process are handled by Agentic AIs that gives us quick turnaround time."*) AND shorten the H2 while keeping SEO signal.
+    - H2 cut from 14 → 7 words: `Metaborong vs. large Web3/AI agencies and freelancers`. Uses canonical `X vs. Y` AEO comparison-query pattern. `Web3/AI` slash form compresses `Web3 and AI` from 4w to 2w. All four required signals preserved (brand + comparison-intent + entity-pair + competitor categories).
+    - New row inserted at position 2 (right after Team access, near the top of the scan path): `AI-native operations` | `Agentic AI runs spec, review, and QA workflows` | `Manual handoffs across teams` | `Manual, per-contractor`. T1 anchor `AI-native` (low-difficulty positioning modifier); secondary T1 hooks `Agentic AI` + `workflows`. Three real distinct delivery phases (`spec`, `review`, `QA`) — not padding.
+    - Distinguished from the `production AI agents and RAG systems` claims relocated to `/services/ai-agents` in the third pass: this row is about AI Metaborong USES internally to accelerate delivery, not AI Metaborong BUILDS for clients.
+    - Caption (sr-only) updated to list seven dimensions.
+    - Composite 8.4 → projected 8.9 (Specificity 8 → 9 with the named spec/review/QA workflow phases; SEO 9 → 9 with the new AI-native + agentic keyword adds; AEO 8 → 9 with the new citation-ready capability claim).
 -->
 
 

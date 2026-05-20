@@ -5,6 +5,7 @@ type Row = { label: string; mb: string; large: string; free: string }
 
 const rows: Row[] = [
   { label: 'Team access',                     mb: 'Founder-led, no account-manager layer',                       large: 'Tiered through account managers',     free: 'Direct, varies by contractor' },
+  { label: 'AI-native operations',            mb: 'Agentic AI runs spec, review, and QA workflows',              large: 'Manual handoffs across teams',         free: 'Manual, per-contractor' },
   { label: 'Engineering standards',           mb: 'Code review, CI/CD, and automated tests on every change',     large: 'Standards vary by team and engagement', free: 'Practices vary by contractor' },
   { label: 'Delivery timeline',               mb: '4–12 weeks per engagement',                                   large: '3–6 months or longer',                  free: 'Variable, project-dependent' },
   { label: 'Documentation and handover',      mb: 'Architecture docs and runbooks shipped with the build',       large: 'Scoped as a separate phase',            free: 'Often informal' },
@@ -18,7 +19,7 @@ export function ComparisonSection() {
       <div className="mb-[24px] md:mb-[32px]">
         <Eyebrow as="p" className="mb-[12px] block">Comparison</Eyebrow>
         <h2 className="mb-[16px] text-[clamp(28px,3.5vw,44px)] font-bold tracking-[-0.035em] text-dark">
-          How Metaborong&apos;s integrated Web3 and AI delivery compares to large agencies and freelance teams
+          Metaborong vs. large Web3/AI agencies and freelancers
         </h2>
         <p className="max-w-[760px] text-[16px] leading-[1.65] tracking-[-0.01em] text-gray">
           A side-by-side comparison of Metaborong — a lean Web3 and AI development studio with integrated delivery across engineering, project management, and operations — against large agencies and freelance teams.
@@ -27,7 +28,7 @@ export function ComparisonSection() {
       <div className="overflow-x-auto">
         <table className="min-w-[720px] w-full border-collapse text-[14px]">
           <caption className="sr-only">
-            Comparison of Metaborong, large Web3 or AI agencies, and freelance teams across six operational dimensions: team access, engineering standards, delivery timeline, documentation and handover, process and project management, and track record.
+            Comparison of Metaborong, large Web3 or AI agencies, and freelance teams across seven operational dimensions: team access, AI-native operations, engineering standards, delivery timeline, documentation and handover, process and project management, and track record.
           </caption>
           <thead>
             <tr className="border-b-2 border-border">
