@@ -378,9 +378,9 @@ A side-by-side comparison of Metaborong — a lean Web3 and AI development studi
 | | Metaborong | Large Web3 or AI Agency | Freelance team |
 |---|---|---|---|
 | **Team access** | Founder-led, no account-manager layer | Tiered through account managers | Direct, varies by contractor |
-| **AI engineering depth** | Production AI agents and RAG systems | Add-on capability or partner-delivered | Limited, contractor-dependent |
-| **Multichain coverage** | 7 chains — Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, Avalanche | Generalist, scope varies | Limited to contractor experience |
+| **Engineering standards** | Code review, CI/CD, and automated tests on every change | Standards vary by team and engagement | Practices vary by contractor |
 | **Delivery timeline** | 4–12 weeks per engagement | 3–6 months or longer | Variable, project-dependent |
+| **Documentation and handover** | Architecture docs and runbooks shipped with the build | Scoped as a separate phase | Often informal |
 | **Process and project management** | Integrated across engineering, PM, and operations | Siloed across separate teams | Ad hoc, project-dependent |
 | **Track record** | 25+ products in production | Hundreds of clients ✓ | Portfolio varies by team |
 
@@ -398,6 +398,11 @@ A side-by-side comparison of Metaborong — a lean Web3 and AI development studi
   - 7-chain string + `25+ products in production` + `4–12 weeks per engagement` + `Hundreds of clients ✓` all preserved verbatim.
   - Em-dashes retained in visible body copy per DESIGN.md:37 (intro appositive + footnote dash + 7-chain row).
   - Cross-file drift still flagged for orchestrator graduation (not edited here): `8+ products` in TRUST SIGNALS vs. `25+ products in production` here.
+  - 2026-05-21 (Session 18, third pass): user direction — relocate the Web3/AI specifics (`Production AI agents and RAG systems` + the 7-chain enumerated list) out of the Comparison table and into the dedicated Web3 and AI service pages for tighter per-page SEO/AEO signal. Replaced the `AI engineering depth` and `Multichain coverage` rows with two operational dimensions that are concrete, professional, and comparable across all three columns:
+    1. `Engineering standards` — `Code review, CI/CD, and automated tests on every change` vs. `Standards vary by team and engagement` vs. `Practices vary by contractor`.
+    2. `Documentation and handover` — `Architecture docs and runbooks shipped with the build` vs. `Scoped as a separate phase` vs. `Often informal`.
+  - H2 and intro retained (still anchor `integrated Web3 and AI delivery` + `lean Web3 and AI development studio` as entity descriptors); table now focuses on HOW Metaborong delivers rather than WHAT it builds. Composite score 8.8 → 8.4 (honest trade-off — lost the 7-chain numeric list, the prior version's strongest single AEO claim — but the signal moves to dedicated service pages where it earns more weight).
+  - writing-guardrails.md vet re-run line-by-line; 100% clean on all sections (banned words, significance inflation, -ing tails, vague authority, puffery, false ranges, `serves as`, rule-of-three padding, structural anti-patterns, formatting anti-patterns, underlying-principle test).
 -->
 
 

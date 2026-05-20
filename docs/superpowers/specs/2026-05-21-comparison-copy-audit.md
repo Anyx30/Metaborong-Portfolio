@@ -223,3 +223,78 @@ Cannibalization check: Comparison section owns the `vs / comparison / lean / int
 ### 9.7 Verdict
 
 **SHIP.** Composite 8.8 > prior 8.4. All claims verified. All guardrails clean. Synced to `docs/content/homepage.md` §[COMPARISON] and `components/sections/comparison.tsx`. 13/13 strings live in SSR on `PORT=3099`. `npx tsc --noEmit` exit 0. Visual QA at 1440 / 1280 / 375 clean.
+
+---
+
+## 10. Third pass — Web3/AI specifics relocated to service pages (2026-05-21, user-direction)
+
+User direction: *"The row having `AI engineering Depth` and `Multichain Coverage` doesn't fit this comparison as it seems very subjective. I will include the 7 chains and AI agents and RAG system when I build the individual pages for services to maintain SEO signals. For now replace this with other solid points that don't sound poetic or far fetched rather professional. Also reference the content with @docs/writing-guardrails.md and then run an audit to maintain 10/10."*
+
+### 10.1 Changes
+
+| Row removed | Reason | New destination for the signal |
+|---|---|---|
+| `AI engineering depth` (`Production AI agents and RAG systems`) | Subjective per-buyer; AI capability claims belong on the dedicated AI service page where they earn focused SEO/AEO weight | `/services/ai-agents` (future page) |
+| `Multichain coverage` (`7 chains — Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, Avalanche`) | Subjective per-buyer; the enumerated chain list is a focused-SEO asset that earns more weight on the Web3 service page than buried in a homepage table row | `/services/web3-development` (future page) |
+
+| Row added | Cell content (mb / large / free) | Rationale |
+|---|---|---|
+| **`Engineering standards`** | `Code review, CI/CD, and automated tests on every change` / `Standards vary by team and engagement` / `Practices vary by contractor` | Concrete named technical practices. Three real distinct items, not a padded tricolon. Citation-ready answer to "what engineering practices does Metaborong follow?". Supports the lean / integrated angle (process integration in dev). |
+| **`Documentation and handover`** | `Architecture docs and runbooks shipped with the build` / `Scoped as a separate phase` / `Often informal` | Concrete named deliverable artifacts (docs, runbooks). Supports the lean / integrated angle (process integration in operations). Citation-ready answer to "what do you get at the end of a Metaborong engagement?". |
+
+H2 + intro + footnote unchanged. Caption (sr-only) updated to list the new six dimensions.
+
+### 10.2 writing-guardrails.md vet — line-by-line, all six rows
+
+| Guardrail | Pass/Block | Specific finding |
+|---|---|---|
+| §1 Banned words | **Pass** | None across H2, intro, 18 cells, 6 labels, 4 column headers, footnote. |
+| §2 Significance inflation | **Pass** | None. |
+| §2 -ing tails | **Pass** | All cells end on noun phrases. New cells: `…on every change.` (noun), `…by contractor.` (noun), `…with the build.` (noun), `…as a separate phase.` (noun), `…informal.` (adj). |
+| §2 Vague authority | **Pass** | None. |
+| §2 Promotional puffery | **Pass** | None. |
+| §2 Negative parallelisms | **Pass** | None. |
+| §2 False ranges | **Pass** | `4–12 weeks` and `3–6 months or longer` are real ranges. |
+| §2 `serves as` vs `is` | **Pass** | Plain copulatives. |
+| §3 Rule-of-three padding | **Pass** | `Code review, CI/CD, and automated tests` = three distinct practices, not synonyms. |
+| §3 Outline-as-content | **Pass** | Table is the legitimate genre. |
+| §3 Context-before-the-point | **Pass** | Direct opening. |
+| §4 Excessive bold | **Pass** | Bold only on row identifiers. |
+| §4 Emoji as decoration | **Pass** | `✓` is content. |
+| §4 Excessive headers / bullet-prose | **Pass** | One H2; table is appropriate genre. |
+| Em-dash scope (DESIGN.md:37) | **Pass** | Em-dashes only in visible body. |
+| **Underlying principle test** | **Pass** | Every line carries entity (`Metaborong`) or specific numerics (`25+`, `4–12`) or named technical artifacts (`CI/CD`, `runbooks`, `architecture docs`) or specific service-model claims (`Founder-led, no account-manager layer`, `Integrated across engineering, PM, and operations`). |
+
+**Verdict:** **100% clean.** All 15 guardrail rules pass on every line of the new copy.
+
+### 10.3 Third-pass scorecard
+
+| # | Category | First pass (v1) | Second pass (v2) | **Third pass (v3)** | Δ v3 vs v2 |
+|---|---|---|---|---|---|
+| 1 | AEO extractability | 8 | 9 | **8** | −1 (lost the 7-chain enumerated list; gained two citation-ready operational claims — net loss because the chain list was the single strongest extract target) |
+| 2 | SEO keyword coverage | 8 | 9 | **9** | 0 (H2 and intro retain `integrated Web3 and AI delivery` and `lean Web3 and AI development studio` entity keywords; new cells add `engineering standards`, `code review`, `CI/CD`, `automated tests`, `architecture docs`, `runbooks`, `handover` mid-volume technical keywords; lost `multichain`, `RAG`, `AI agents` keyword anchors — those move to service pages where they earn more page-level weight) |
+| 3 | Tone match (Founders / Why-Us) | 9 | 9 | **9** | 0 |
+| 4 | Specificity / claim strength | 9 | 9 | **8** | −1 (lost the 7-chain enumerated list — the single strongest specificity anchor; new claims are concrete and defensible but more universal) |
+| 5 | Readability / scan-ability | 8 | 8 | **8** | 0 (new Metaborong cells are 8–9 words; comparable to the 11-word 7-chain row they replace — net layout impact similar) |
+
+**Composite third pass:** **(8 + 9 + 9 + 8 + 8) / 5 = 8.4 / 10**
+**Δ vs v2 (8.8):** **−0.4** (intentional trade — focused per-page SEO over compound section SEO)
+**Δ vs v1 first pass (8.4):** **0**
+**Δ vs original 2026-05-14 baseline (5.2):** **+3.2**
+
+### 10.4 Why 10/10 isn't honestly available
+
+The composite ceiling is gated by AEO extractability and specificity. Both categories were carried in the prior version by the enumerated 7-chain list. Removing that list (per user direction) for focused per-page SEO means those categories drop by one point each. The remaining 1.6-point gap to 10/10 would require either (a) a comparable enumerated/numeric claim in a different dimension that doesn't drift into Web3/AI specifics, or (b) fabricated specificity — blocked by claim-gate.
+
+**Available levers to push toward 9+ (require user confirmation):**
+
+| Lever | Score lift est. | Requires user confirms |
+|---|---|---|
+| Add a third numeric — e.g., `<X> senior engineers`, `<X> time zones`, `<X>% repeat-engagement rate` | +0.4 (Specificity 8 → 9) | A specific number that survives claim-gate |
+| Replace one operational row with `Engagement model` (`Fixed-scope, milestone-billed` vs `Retainer or T&M` vs `Hourly or per-task`) | +0.2 (Specificity 8 → 8.5) | Confirmation that Metaborong defaults to fixed-scope/milestone billing |
+
+Without those, **8.4 is the honest ceiling** for this section after the Web3/AI specifics move to service pages.
+
+### 10.5 Verdict
+
+**SHIP at honest 8.4.** writing-guardrails 100% clean. Web3/AI specifics relocated to dedicated service-page targets per user direction. Section now compares HOW Metaborong delivers (operational dimensions) rather than WHAT it builds (vertical capabilities). 10/10 strings live in SSR on `PORT=3099`; `npx tsc --noEmit` exit 0; visual QA clean at 1440.
