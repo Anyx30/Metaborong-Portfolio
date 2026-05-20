@@ -366,33 +366,35 @@ Metaborong was built specifically for this problem. A small, senior team with de
 
 ### [COMPARISON — H2]
 
-## How Metaborong compares
+## How Metaborong compares to large agencies and freelance teams
 
 *Alt headlines:*
-- "Choosing between us and the alternatives"
-- "Where each option wins"
+- "Metaborong vs. large Web3/AI agencies vs. freelance teams"
+- "How we compare across team, depth, delivery, and track record"
 
-*Section intro (16 words):*
-If you're choosing between us, a large agency, or a freelance team — here's the honest read.
+*Section intro (24 words):*
+A side-by-side comparison of Metaborong, large Web3 and AI agencies, and freelance teams across team access, technical depth, delivery, and track record.
 
 | | Metaborong | Large Web3 or AI Agency | Freelance team |
 |---|---|---|---|
-| **Team access** | Direct — founders | Account manager layer | Direct but inconsistent |
-| **AI-native services** | Core offering | Add-on or absent | Rare |
-| **DeFi depth** | 7 chains — Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, Avalanche | Generic | Depends on individual |
-| **Speed to delivery** | Weeks | Months | Unpredictable |
-| **Product thinking** | Built in | Execution-focused | Absent |
-| **Track record** | DeFi · AI · SaaS shipped | Hundreds of clients ✓ | Case by case |
+| **Team access** | Founders on every engagement | Tiered through account managers | Direct, varies by contractor |
+| **AI engineering depth** | Core service line | Add-on capability or partner-delivered | Limited, contractor-dependent |
+| **Multichain coverage** | 7 chains — Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, Avalanche | Generalist, scope varies | Limited to contractor experience |
+| **Delivery timeline** | 4–12 weeks per engagement | 3–6 months or longer | Variable, project-dependent |
+| **Product strategy** | Embedded in delivery | Separate consulting tier | Usually scoped out |
+| **Track record** | 25+ products in production | Hundreds of clients ✓ | Portfolio varies by team |
 
 *Footnote:*
-✓ marks where the alternative genuinely wins. Larger agencies have longer track records — a real advantage for enterprises needing procurement comfort. We win on speed, AI-native depth, and direct access.
+✓ marks where the alternative has a structural advantage. Large agencies bring longer track records and procurement maturity. Metaborong's edge is delivery speed, AI and Web3 depth, and founder-level engagement.
 
 <!-- WHY
-  - "8 shipped products" softened to "DeFi · AI · SaaS shipped" per user direction ("not needed" on the count).
-  - "Deep, multichain" replaced with named chains — concrete claim, easier to verify, better AEO.
-  - Removed "Communication" row (collapsed into "Team access"); kept the section tight at 6 rows.
-  - Removed "Where they win" row — duplicated the footnote and felt list-stuffed.
-  - Intro sentence (16 words) sets a framing before the table to reduce cognitive load.
+  - 2026-05-21 (Session 18) A3 rewrite: 2026-05-14 lock reopened on user direction ("too aggressive — make it professional and SEO optimised"). Full row set rewritten; 7-chain string preserved verbatim. Baseline 5.2 → rewrite 8.4 (see docs/superpowers/specs/2026-05-21-comparison-copy-audit.md).
+  - Track record cell: `DeFi · AI · SaaS shipped` → `25+ products in production` (D5; user-verified ground truth). Drifts against `8+ products` in TRUST SIGNALS below — flagged for orchestrator graduation, NOT edited in this session.
+  - Labels rewritten for SEO parallelism: `DeFi depth` → `Multichain coverage` (Hyperledger is not DeFi-only); `Speed to delivery` → `Delivery timeline`; `AI-native services` → `AI engineering depth`; `Product thinking` → `Product strategy`.
+  - Cell values rewritten as parallel noun phrases; concrete numerics added where verifiable (`4–12 weeks` is cross-page consistent with FAQ; `25+ products` is user-verified).
+  - H2 expanded to carry the comparison-intent keyword chain; intro reframed as a factual lede instead of a cheeky one (`here's the honest read`).
+  - Footnote rephrased: still honest about competitor advantage, but in the page's professional voice.
+  - Em-dashes retained in visible body copy per DESIGN.md:37 (only `7 chains — …`).
 -->
 
 
