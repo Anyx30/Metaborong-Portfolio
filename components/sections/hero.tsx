@@ -142,14 +142,7 @@ export function HeroSection() {
         {/* Right: ASCII-art still — replaces the orb */}
         <div className="relative overflow-hidden h-[52vh] min-h-[360px] sm:h-[58vh] lg:h-auto lg:min-h-screen flex items-center justify-center lg:justify-end">
           {/* Inner box constrains the ASCII-art to a sensible size on tall viewports. */}
-          {/* On lg+, the parent is `h-auto + min-h-screen` — Safari computes
-              percentage heights inconsistently on align-items:center flex
-              children with indefinite parent height, which would leave grey
-              letterbox bars under <picture> object-contain. Locking the box
-              to the image's 3:4 aspect at lg+ keeps Safari and Chrome in
-              sync. Below lg the parent has a definite vh height, so h-[82%]
-              resolves cleanly. */}
-          <div ref={asciiBoxRef} className="relative w-[92%] h-[82%] max-w-[520px] max-h-[700px] sm:w-[86%] sm:h-[80%] lg:h-auto lg:aspect-[3/4]">
+          <div ref={asciiBoxRef} className="relative w-[92%] h-[82%] max-w-[520px] max-h-[700px] sm:w-[86%] sm:h-[80%]">
             {mountVideo && (
               <video
                 ref={videoRef}
@@ -167,7 +160,7 @@ export function HeroSection() {
                 onPause={() => setVideoPlaying(false)}
                 onEnded={() => setVideoPlaying(false)}
                 onStalled={() => setVideoPlaying(false)}
-                className="hero-ascii-image absolute inset-0 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none"
+                className="hero-ascii-image absolute inset-0 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-center select-none pointer-events-none"
               />
             )}
             {/* Poster overlay — the LCP element. <picture> negotiates the
@@ -187,7 +180,7 @@ export function HeroSection() {
                 draggable={false}
                 fetchPriority="high"
                 decoding="async"
-                className={`absolute inset-0 z-10 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none transition-opacity duration-300 ${
+                className={`absolute inset-0 z-10 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-center select-none pointer-events-none transition-opacity duration-300 ${
                   videoPlaying ? 'opacity-0' : 'opacity-100'
                 }`}
               />
