@@ -366,35 +366,38 @@ Metaborong was built specifically for this problem. A small, senior team with de
 
 ### [COMPARISON — H2]
 
-## How Metaborong compares to large agencies and freelance teams
+## How Metaborong's integrated Web3 and AI delivery compares to large agencies and freelance teams
 
 *Alt headlines:*
-- "Metaborong vs. large Web3/AI agencies vs. freelance teams"
-- "How we compare across team, depth, delivery, and track record"
+- "How an integrated Web3 and AI studio compares to agencies and freelancers"
+- "Lean Web3 and AI development: Metaborong vs. agencies vs. freelancers"
 
-*Section intro (24 words):*
-A side-by-side comparison of Metaborong, large Web3 and AI agencies, and freelance teams across team access, technical depth, delivery, and track record.
+*Section intro (29 words):*
+A side-by-side comparison of Metaborong — a lean Web3 and AI development studio with integrated delivery across engineering, project management, and operations — against large agencies and freelance teams.
 
 | | Metaborong | Large Web3 or AI Agency | Freelance team |
 |---|---|---|---|
-| **Team access** | Founders on every engagement | Tiered through account managers | Direct, varies by contractor |
-| **AI engineering depth** | Core service line | Add-on capability or partner-delivered | Limited, contractor-dependent |
+| **Team access** | Founder-led, no account-manager layer | Tiered through account managers | Direct, varies by contractor |
+| **AI engineering depth** | Production AI agents and RAG systems | Add-on capability or partner-delivered | Limited, contractor-dependent |
 | **Multichain coverage** | 7 chains — Ethereum, Solana, Base, Arbitrum, Hyperledger, Polygon, Avalanche | Generalist, scope varies | Limited to contractor experience |
 | **Delivery timeline** | 4–12 weeks per engagement | 3–6 months or longer | Variable, project-dependent |
-| **Product strategy** | Embedded in delivery | Separate consulting tier | Usually scoped out |
+| **Process and project management** | Integrated across engineering, PM, and operations | Siloed across separate teams | Ad hoc, project-dependent |
 | **Track record** | 25+ products in production | Hundreds of clients ✓ | Portfolio varies by team |
 
 *Footnote:*
-✓ marks where the alternative has a structural advantage. Large agencies bring longer track records and procurement maturity. Metaborong's edge is delivery speed, AI and Web3 depth, and founder-level engagement.
+✓ marks where the alternative has a structural advantage. Large agencies bring longer track records and procurement maturity. Metaborong's edge is integrated delivery — one senior team across engineering, project management, and operations, with fewer handoffs and faster decisions.
 
 <!-- WHY
-  - 2026-05-21 (Session 18) A3 rewrite: 2026-05-14 lock reopened on user direction ("too aggressive — make it professional and SEO optimised"). Full row set rewritten; 7-chain string preserved verbatim. Baseline 5.2 → rewrite 8.4 (see docs/superpowers/specs/2026-05-21-comparison-copy-audit.md).
-  - Track record cell: `DeFi · AI · SaaS shipped` → `25+ products in production` (D5; user-verified ground truth). Drifts against `8+ products` in TRUST SIGNALS below — flagged for orchestrator graduation, NOT edited in this session.
-  - Labels rewritten for SEO parallelism: `DeFi depth` → `Multichain coverage` (Hyperledger is not DeFi-only); `Speed to delivery` → `Delivery timeline`; `AI-native services` → `AI engineering depth`; `Product thinking` → `Product strategy`.
-  - Cell values rewritten as parallel noun phrases; concrete numerics added where verifiable (`4–12 weeks` is cross-page consistent with FAQ; `25+ products` is user-verified).
-  - H2 expanded to carry the comparison-intent keyword chain; intro reframed as a factual lede instead of a cheeky one (`here's the honest read`).
-  - Footnote rephrased: still honest about competitor advantage, but in the page's professional voice.
-  - Em-dashes retained in visible body copy per DESIGN.md:37 (only `7 chains — …`).
+  - 2026-05-21 (Session 18, second pass): user-direction angle shift — "We are a service company who are lean now because we have integrated lot of processes in every aspect, be it development, management or operations." Full A3 chain re-run end-to-end (seo-aeo-keyword-research → seo-aeo-landing-page-writer → seo-content-auditor re-score → copywriting claim-gate → writing-guardrails vet). Rewrite scores 8.8/10 (vs. prior pass 8.4, original baseline 5.2).
+  - H2 expanded to carry the T2 comparison-intent phrase + the new T1 modifier `integrated Web3 and AI delivery`. Intro reframed as a 29w AEO definition sentence answering "what is a lean Web3 and AI development studio?".
+  - Row label `Product strategy` → `Process and project management` (surfaces T1 modifiers `process` and `project management`).
+  - Cell `Founders on every engagement` → `Founder-led, no account-manager layer` (sharper service-model claim, AEO-extractable).
+  - Cell `Core service line` (AI row) → `Production AI agents and RAG systems` (concrete capability claim, cross-page-supported by Why-Us Pillar B + Hero blockquote).
+  - Cell `Embedded in delivery` → `Integrated across engineering, PM, and operations` (directly mirrors the user-asserted positioning).
+  - Footnote expanded by 10w to land the AEO answer "what does integrated delivery mean?" (one senior team, fewer handoffs, faster decisions).
+  - 7-chain string + `25+ products in production` + `4–12 weeks per engagement` + `Hundreds of clients ✓` all preserved verbatim.
+  - Em-dashes retained in visible body copy per DESIGN.md:37 (intro appositive + footnote dash + 7-chain row).
+  - Cross-file drift still flagged for orchestrator graduation (not edited here): `8+ products` in TRUST SIGNALS vs. `25+ products in production` here.
 -->
 
 
