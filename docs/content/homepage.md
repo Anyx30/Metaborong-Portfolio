@@ -247,44 +247,57 @@ Live products across DeFi, AI, gaming, and SaaS — each shipped with founders w
 - "What clients say after shipping"
 - "Verified by clients on Clutch"
 
-**Stat-led header strip (1 row, full-width inside section):**
+**Lede (between H2 and widget):** Nine verified clients have rated our work on Clutch. Three of them, in their own words.
+
+**Official Clutch widget (type 8, h=300, curated review IDs surfaced in the widget):**
 
 ```
-[Clutch logo]    4.9 / 5  ★★★★★    Based on <!-- USER_INPUT: review count --> verified reviews    [Verified ✓]
+data-clutchcompany-id="2433707"
+data-widget-type="8"
+data-reviews="457842,454740,453781,439014,438481,437747"
 ```
 
-- **Clutch profile URL:** `<!-- USER_INPUT: https://clutch.co/profile/metaborong -->`
-- **Aggregate rating:** `<!-- USER_INPUT: confirm 4.9 or actual current score -->`
-- **Review count:** `<!-- USER_INPUT: current count -->`
+- **Clutch profile URL:** `https://clutch.co/profile/metaborong-technologies-private` (canonical: `lib/links.ts` → `clutchProfileUrl`)
+- **Aggregate rating:** `4.9 / 5`
+- **Review count:** `9`
+- **SSR / a11y fallback (sr-only outbound link):** "Metaborong is rated 4.9 out of 5 on Clutch, based on 9 verified reviews."
 
-**Three quote cards (each card whole-card links to Clutch — same target as inline CTA):**
+**Three quote cards (SSR-crawlable static fallback; each card whole-links to the Clutch profile — per-review deep-links not exposed by Clutch URL surface, so target = profile root):**
 
-#### Quote 1
-> "<!-- USER_INPUT: paste top Clutch quote 1 verbatim -->"
-**Reviewer:** `<!-- USER_INPUT: Name, Title @ Company -->`
+#### Quote 1 — Sedax Data Solutions
+> "Their implementation and prompt product delivery stood out."
+
+**Reviewer:** Executive at Sedax Data Solutions Private Limited
+**Project:** Blockchain & IT Support for ID Authentication Software Co
 **Rating:** ★★★★★
-**CTA:** `Read on Clutch →` → `<!-- USER_INPUT: deep-link to specific review on Clutch -->`
+**CTA:** `Read on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
 
-#### Quote 2
-> "<!-- USER_INPUT: paste top Clutch quote 2 verbatim -->"
-**Reviewer:** `<!-- USER_INPUT: Name, Title @ Company -->`
+#### Quote 2 — Digital Financial Aid Corporation
+> "They had great teamwork and the ability to understand and adapt to the business problems."
+
+**Reviewer:** President at Digital Financial Aid Corporation
+**Project:** Web App Development for Gamified Learning Platform
 **Rating:** ★★★★★
-**CTA:** `Read on Clutch →` → `<!-- USER_INPUT: deep-link to specific review on Clutch -->`
+**CTA:** `Read on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
 
-#### Quote 3
-> "<!-- USER_INPUT: paste top Clutch quote 3 verbatim -->"
-**Reviewer:** `<!-- USER_INPUT: Name, Title @ Company -->`
+#### Quote 3 — SBS Construction
+> "All works were delivered within the promised deadlines with proper deliverables."
+
+**Reviewer:** Executive at SBS Construction
+**Project:** AI Development for Construction & Consulting Firm
 **Rating:** ★★★★★
-**CTA:** `Read on Clutch →` → `<!-- USER_INPUT: deep-link to specific review on Clutch -->`
+**CTA:** `Read on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
 
-**Section CTA (below grid):** `View all reviews on Clutch →` → `<!-- USER_INPUT: Clutch profile URL -->`
+**Section CTA (below grid):** `View all reviews on Clutch →` → `https://clutch.co/profile/metaborong-technologies-private`
 
 <!-- WHY
   - "Voices of trust" was the worst agency-speak on the page — replaced with a verb-led headline that names the source ("Clutch").
-  - Verbatim quotes from existing site (Siddharth, Dr. Josh, Abhishek, Girish) are NOT carried over — user picks 3 from Clutch instead. The two anonymous "Client" attributions die here.
+  - Verbatim quotes from existing site (Siddharth, Dr. Josh, Abhishek, Girish) are NOT carried over — three Clutch reviews picked instead. The two anonymous "Client" attributions die here.
   - Outbound links to Clutch give the section measurable SEO value (Clutch profile traffic = reciprocal trust signal) and let visitors verify independently.
   - All link attributes on the JSX should be: rel="noopener" target="_blank" — Clutch is a third-party domain.
-  - Quote selection rule: pick the 3 with most specific outcome language; avoid generic "highly recommend" if better exists.
+  - Quote selection rule: 3 picked for spread across the work mix (Web3 / Web app / AI) so the section reads as Web3 AND AI equally per memory positioning-web3-and-ai-equal — not Web3-only or AI-only.
+  - Reviewer names withheld by Clutch policy ("Executive at X" / "President at Y"); company + role + project type carry the attribution. Equivalent to peer-reviewed double-blind — adds credibility, not removes it.
+  - **Deviation 1 (2026-05-21):** per-review deep-link URLs are not exposed by Clutch's URL surface (tested: `?review_id=<id>` and `#review-<id>` both redirect to profile root). Cards link to `clutchProfileUrl` instead; the official widget (type 8) surfaces the live per-review carousel client-side.
 -->
 
 
