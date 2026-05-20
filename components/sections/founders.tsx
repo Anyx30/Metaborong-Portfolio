@@ -99,6 +99,7 @@ function FounderCard({ founder }: { founder: Founder }) {
               src={founder.image}
               alt={`${founder.name}, ${founder.role}`}
               loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (

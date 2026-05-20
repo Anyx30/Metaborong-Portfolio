@@ -20,7 +20,7 @@ const clients: Client[] = [
   { name: 'Sedax',      src: '/clients/sedax.svg',      href: 'https://www.sedax.in/',      scale: 0.8 },
   { name: 'DDAF',       src: '/clients/ddaf.svg',       href: 'https://www.ddaf.io/',       scale: 1.2 },
   { name: 'Near',       src: '/clients/near.svg',       href: 'https://near.org/',          scale: 1.3 },
-  { name: 'Diamante',   src: '/clients/diamante.svg',   href: 'https://www.diamante.io/',   scale: 1.3, customColor: '#B026FF' },
+  { name: 'Diamante',   src: '/clients/diamante.webp',  href: 'https://www.diamante.io/',   scale: 1.3, customColor: '#B026FF' },
   { name: 'OrbitX',     src: '/clients/orbitx.svg',     href: 'https://orbitxpay.com/',     scale: 1.1 },
   { name: 'PredictRAM', src: '/clients/predictram.png', href: 'https://predictram.com/',    scale: 1.5, softMute: true },
   { name: 'Magic',      src: '/clients/magic.svg',      href: 'https://omagic.ai/',         scale: 1.2 },
@@ -51,11 +51,14 @@ export function TrustBar() {
                   style={{ height: cellH }}
                 >
                   {/* Invisible image forces the parent 'a' tag to automatically snap to the exact intrinsic layout width/height.
-                      alt="" so screen readers don't double-announce — the visible mask-rendered logo is the accessible name carrier via the parent <a> aria-label. */}
+                      alt="" so screen readers don't double-announce — the visible mask-rendered logo is the accessible name carrier via the parent <a> aria-label.
+                      loading="lazy" keeps Next.js/React 19 from auto-promoting this to <link rel="preload">, which would otherwise race the hero AVIF for bandwidth. */}
                   <img
                     src={c.src}
                     alt=""
                     aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
                     className="opacity-0 pointer-events-none select-none object-contain"
                     style={{ height: cap, width: 'auto' }}
                   />

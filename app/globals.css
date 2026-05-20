@@ -176,6 +176,29 @@
   animation: navDropdownIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Hide Safari's default media-controls overlay on the decorative hero video.
+   Use the bare `video` tag + class selector to outweigh the UA stylesheet.
+   The overlay-play-button is the giant centered ▶ Safari paints when autoplay
+   is refused (e.g. Low Power Mode or codec hiccup). */
+video.hero-ascii-image::-webkit-media-controls,
+video.hero-ascii-image::-webkit-media-controls-enclosure,
+video.hero-ascii-image::-webkit-media-controls-panel,
+video.hero-ascii-image::-webkit-media-controls-panel-container,
+video.hero-ascii-image::-webkit-media-controls-overlay-enclosure,
+video.hero-ascii-image::-webkit-media-controls-overlay-play-button,
+video.hero-ascii-image::-webkit-media-controls-start-playback-button,
+video.hero-ascii-image::-webkit-media-controls-play-button,
+video.hero-ascii-image::-webkit-media-controls-container {
+  display: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* ── Hero scroll affordance ──────────────────────────────────────────── */
 @keyframes heroScrollBounce {
 
