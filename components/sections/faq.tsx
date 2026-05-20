@@ -1,41 +1,33 @@
-'use client'
-
-import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { faqs } from '@/components/sections/faq-data'
+import { Section } from '@/components/ui/section'
+import { Eyebrow } from '@/components/ui/eyebrow'
+import { FaqAccordion } from '@/components/sections/faq-accordion'
 
 export function FaqSection() {
-  const [open, setOpen] = useState<number | null>(null)
   return (
-    <section className="bg-bg px-[16px] py-[56px] sm:px-[24px] md:px-[48px] md:py-[72px] lg:px-[96px] lg:py-[80px] xl:px-[128px]">
-      <div className="mx-auto max-w-[760px]">
-        <div className="mb-[36px] md:mb-[48px]">
-          <p className="mb-[12px] text-[11px] font-semibold uppercase tracking-[0.1em] text-gray-light">FAQ</p>
-          <h2 className="text-[clamp(28px,3.5vw,44px)] font-bold tracking-[-0.035em] text-dark">Frequently asked questions</h2>
+    <Section as="section" maxWidth="xwide">
+      <div className="grid gap-[40px] md:grid-cols-[minmax(0,360px)_1fr] md:gap-[64px] lg:gap-[96px]">
+        <div className="md:sticky md:top-[96px] md:self-start">
+          <Eyebrow as="p" className="mb-[14px]">FAQ</Eyebrow>
+          <h2 className="text-[clamp(28px,3.5vw,44px)] font-bold leading-[1.05] tracking-[-0.035em] text-dark">
+            Frequently asked questions
+          </h2>
+          <div className="mt-[32px] hidden border border-border p-[24px] md:block">
+            <p className="text-[15px] font-semibold leading-[1.4] tracking-[-0.02em] text-dark">
+              Don&apos;t see your question?
+            </p>
+            <p className="mt-[8px] text-[14px] leading-[1.5] text-gray">
+              Email the founders directly — first reply usually lands the same day.
+            </p>
+            <a
+              href="mailto:contact@metaborong.com?subject=Question%20about%20your%20studio"
+              className="mt-[18px] inline-flex items-center gap-[6px] text-[13px] font-semibold tracking-[-0.01em] text-dark underline decoration-gray-subtle underline-offset-[3px] transition-colors duration-200 hover:text-brand hover:decoration-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              contact@metaborong.com <span aria-hidden="true">→</span>
+            </a>
+          </div>
         </div>
-        <div className="border-t border-border">
-          {faqs.map((faq, i) => (
-            <div key={i} className="border-b border-border">
-              <button
-                onClick={() => setOpen(open === i ? null : i)}
-                className="flex min-h-[56px] w-full items-center justify-between gap-[16px] bg-transparent py-[16px] text-left [font-family:var(--font-brand)] sm:py-[20px]"
-                aria-expanded={open === i}
-              >
-                <span className="text-[16px] font-semibold leading-[1.3] tracking-[-0.02em] text-dark">{faq.q}</span>
-                <ChevronDown
-                  size={18}
-                  className={`shrink-0 text-gray transition-transform duration-200 ${open === i ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {open === i && (
-                <div className="pb-[16px] pr-[8px] sm:pb-[20px] sm:pr-[32px]">
-                  <p className="text-[15px] leading-[1.7] tracking-[-0.01em] text-gray">{faq.a}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        <FaqAccordion />
       </div>
-    </section>
+    </Section>
   )
 }
