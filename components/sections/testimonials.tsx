@@ -28,13 +28,28 @@ export function TestimonialsSection() {
         </p>
       </div>
 
-      {/* SEO + a11y fallback: crawlable static line announcing the rating, followed by the aria-hidden official widget. */}
-      <a href={clutchProfileUrl} target="_blank" rel="noopener noreferrer" className="sr-only">
-        Metaborong is rated {rating} out of 5 on Clutch, based on {reviewCount} verified reviews.
-      </a>
-
-      <div className="rounded-[12px] border border-border bg-white">
-        <ClutchWidget widgetType="8" height={420} reviews={clutchReviewIds} className="w-full" />
+      {/* The visible badge below carries the rating + count as crawlable, JS-free,
+          always-rendered trust content. The official Clutch widget loads on top
+          (its iframe is opaque), so when Clutch's CDN serves the live carousel
+          this badge is hidden behind it; when the widget fails (CDN bot-challenge,
+          ad-blocker, no-JS), the badge remains visible. SSR-friendly. Mirrors the
+          Why-Us SEO-fallback pattern but visible instead of sr-only. */}
+      <div className="relative rounded-[12px] border border-border bg-white">
+        <a
+          href={clutchProfileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-[12px] p-[24px] text-center no-underline text-inherit"
+          aria-label={`Metaborong is rated ${rating} out of 5 on Clutch, based on ${reviewCount} verified reviews. View all reviews on Clutch.`}
+        >
+          <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-gray-light">Verified · Clutch</span>
+          <span className="flex items-center gap-[12px]">
+            <span className="text-[44px] font-bold leading-none tracking-[-0.03em] text-dark tabular-nums">{rating}</span>
+            <span aria-hidden="true" className="text-[20px] leading-none text-[#F6851B]">{'★★★★★'}</span>
+          </span>
+          <span className="text-[14px] leading-[1.5] text-gray">Based on {reviewCount} verified Clutch reviews</span>
+        </a>
+        <ClutchWidget widgetType="8" height={420} reviews={clutchReviewIds} className="relative w-full" />
       </div>
 
       <div className="mt-[24px] text-center">
