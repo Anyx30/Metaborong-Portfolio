@@ -69,12 +69,37 @@ export function HeroSection() {
       video.pause()
       return
     }
-    video.play().catch(() => {})
+
+    const tryPlay = () => {
+      if (!video.paused) return
+      video.muted = true
+      video.play().catch(() => {})
+    }
+
+    // Eager first attempt.
+    tryPlay()
+
+    // Safari refuses programmatic play() in tabs that opened in the
+    // background and never received user activation — so initial
+    // autoplay + the IntersectionObserver retries both fail silently
+    // until the user switches back to the tab. Retry on any signal
+    // that grants activation: visibility change, scroll, click, touch,
+    // pointer. Each listener is { once: true } so we don't accumulate
+    // handlers.
+    const onActivation = () => tryPlay()
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') tryPlay()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('scroll', onActivation, { passive: true, once: true })
+    window.addEventListener('pointerdown', onActivation, { once: true })
+    window.addEventListener('keydown', onActivation, { once: true })
+    window.addEventListener('touchstart', onActivation, { passive: true, once: true })
+
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          video.muted = true
-          video.play().catch(() => {})
+          tryPlay()
         } else {
           video.pause()
         }
@@ -82,7 +107,14 @@ export function HeroSection() {
       { threshold: 0 },
     )
     obs.observe(box)
-    return () => obs.disconnect()
+    return () => {
+      obs.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('scroll', onActivation)
+      window.removeEventListener('pointerdown', onActivation)
+      window.removeEventListener('keydown', onActivation)
+      window.removeEventListener('touchstart', onActivation)
+    }
   }, [mountVideo])
 
   return (
@@ -157,7 +189,10 @@ export function HeroSection() {
                 preload="auto"
                 aria-hidden="true"
                 onPlaying={() => setVideoPlaying(true)}
-                className="hero-ascii-image absolute inset-0 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none"
+                onPause={() => setVideoPlaying(false)}
+                onEnded={() => setVideoPlaying(false)}
+                onStalled={() => setVideoPlaying(false)}
+                className="hero-ascii-image absolute inset-0 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-center select-none pointer-events-none"
               />
             )}
             {/* Poster overlay — the LCP element. <picture> negotiates the
@@ -177,7 +212,7 @@ export function HeroSection() {
                 draggable={false}
                 fetchPriority="high"
                 decoding="async"
-                className={`absolute inset-0 z-10 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-contain sm:object-center select-none pointer-events-none transition-opacity duration-300 ${
+                className={`absolute inset-0 z-10 w-full h-full object-cover object-[50%_24%] scale-[1.08] sm:scale-100 sm:object-center select-none pointer-events-none transition-opacity duration-300 ${
                   videoPlaying ? 'opacity-0' : 'opacity-100'
                 }`}
               />
