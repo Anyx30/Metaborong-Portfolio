@@ -1,4 +1,6 @@
-import { type ReactNode } from 'react'
+'use client'
+
+import { type ReactNode, useEffect, useRef } from 'react'
 import { Section } from '@/components/ui/section'
 import { Eyebrow } from '@/components/ui/eyebrow'
 
@@ -23,7 +25,7 @@ const founders: Founder[] = [
     name: 'Arnab Ray',
     role: 'CEO & Co-Founder',
     bio: 'Co-founded Metaborong and sets its direction across Web3 and AI engagements.',
-    image: null,
+    image: '/founders/arnab.svg',
     linkedin: 'https://www.linkedin.com/in/arnab-ray-682111192/',
     x: 'https://x.com/Arnab_Alfa_Ray',
   },
@@ -31,7 +33,7 @@ const founders: Founder[] = [
     name: 'Anik Ghosh',
     role: 'COO & Co-Founder',
     bio: 'Co-founded the studio; owns delivery and the scope discipline that keeps timelines honest.',
-    image: '/anikfounderimage.png',
+    image: '/founders/anik.svg',
     linkedin: 'https://www.linkedin.com/in/anik-ghosh-01a985208/',
     x: 'https://x.com/0x_Zeph',
   },
@@ -39,7 +41,7 @@ const founders: Founder[] = [
     name: 'Soumojit Ash',
     role: 'CTO & Co-Founder',
     bio: 'Co-founded the studio and owns the architecture under every Web3 protocol and AI system it ships.',
-    image: null,
+    image: '/founders/soumojit.svg',
     linkedin: 'https://www.linkedin.com/in/soumojit-ash/',
     x: 'https://x.com/SoumojitAsh',
   },
@@ -158,6 +160,30 @@ function FounderCard({ founder }: { founder: Founder }) {
 }
 
 export function FoundersSection() {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Only manage scroll on mobile (where it is swipeable)
+    if (window.innerWidth >= 1024) return
+
+    const container = scrollRef.current
+    if (!container) return
+
+    // Jump to the middle set of cards instantly on mount.
+    // Since index 0 is Arnab and index 12 is also Arnab, this jump is visually imperceptible.
+    // It gives the user 12 cards of runway to swipe left!
+    requestAnimationFrame(() => {
+      const middleCard = container.children[12] as HTMLElement
+      if (middleCard) {
+        const targetScroll = middleCard.offsetLeft - (container.clientWidth / 2) + (middleCard.clientWidth / 2)
+        container.scrollLeft = targetScroll
+      }
+    })
+  }, [])
+
+  // 9 sets of 3 founders = 27 cards. Middle set is indices 12, 13, 14.
+  const repeatedFounders = Array(9).fill(founders).flat()
+
   return (
     <Section bg="default" maxWidth="xwide">
       {/* Header */}
@@ -180,12 +206,52 @@ export function FoundersSection() {
         </p>
       </div>
 
-      {/* Card row — the single <Section> Reveal carries the section (matches the
-          why-us/comparison card-grid precedent; no nested Reveal-in-Reveal). */}
-      <div className="mt-[48px] grid grid-cols-1 lg:grid-cols-3 gap-[48px]">
-        {founders.map((founder) => (
-          <FounderCard key={founder.name} founder={founder} />
-        ))}
+      {/* Card row wrapper */}
+      <div className="relative mt-[48px] [--cw:calc(100vw-32px)] sm:[--cw:calc(100vw-48px)] md:[--cw:calc(100vw-80px)]">
+        <div 
+          ref={scrollRef}
+          className="flex overflow-x-auto snap-x snap-mandatory gap-[24px] lg:grid lg:grid-cols-3 lg:gap-[48px] pb-[24px] -mx-[16px] px-[16px] sm:-mx-[24px] sm:px-[24px] md:-mx-[48px] md:px-[48px] lg:mx-0 lg:px-0 lg:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {repeatedFounders.map((founder, idx) => {
+            const isOriginal = idx >= 12 && idx <= 14;
+            return (
+              <div 
+                key={`${founder.name}-${idx}`} 
+                className={`snap-center snap-always shrink-0 w-[calc(100vw-32px)] sm:w-[calc(100vw-48px)] md:w-[calc(100vw-80px)] lg:w-auto lg:max-w-none ${!isOriginal ? 'lg:hidden' : ''}`}
+              >
+                <FounderCard founder={founder} />
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Floating swipe hint arrow (Left) */}
+        <div 
+          className="pointer-events-none absolute lg:hidden text-gray opacity-80 motion-safe:animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]"
+          style={{
+            top: 'calc(var(--cw) / 2)',
+            left: 'calc(var(--cw) * 0.04)',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="square" strokeLinejoin="miter">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </div>
+
+        {/* Floating swipe hint arrow (Right) */}
+        <div 
+          className="pointer-events-none absolute lg:hidden text-gray opacity-80 motion-safe:animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]"
+          style={{
+            top: 'calc(var(--cw) / 2)',
+            right: 'calc(var(--cw) * 0.04)',
+            transform: 'translate(50%, -50%)'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="square" strokeLinejoin="miter">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </div>
       </div>
     </Section>
   )

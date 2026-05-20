@@ -45,7 +45,7 @@ const linkCls =
 export function Footer() {
   const year = new Date().getFullYear()
   return (
-    <footer className="border-t border-border bg-bg px-[16px] py-[64px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+    <footer className="border-t border-border bg-bg px-[16px] py-[64px] sm:px-[24px] md:px-[40px] lg:px-[48px] xl:px-[80px] 2xl:px-[128px]">
       <div className="mx-auto max-w-[1280px]">
         {/* Row 1 — positioning */}
         <div className="mb-[48px]">
@@ -55,7 +55,7 @@ export function Footer() {
         </div>
 
         {/* Row 2 — sitemap grid */}
-        <div className="grid grid-cols-1 gap-[1px] border border-border bg-border md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-[1px] border border-border bg-border lg:grid-cols-4">
           <nav aria-label="Company" className="bg-bg p-[24px]">
             <Eyebrow as="p" className="mb-[16px] font-mono text-[12px]! text-dark!">Company</Eyebrow>
             <ul className="space-y-[12px]">
@@ -116,7 +116,7 @@ export function Footer() {
         </p>
 
         {/* Row 4 — bottom bar */}
-        <div className="mt-[24px] flex flex-col gap-[12px] text-[13px] tracking-[-0.01em] text-gray sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-[24px] flex flex-col items-center gap-[12px] text-[13px] tracking-[-0.01em] text-gray sm:flex-row sm:justify-between">
           <span>© {year} Metaborong Technologies</span>
           <div className="flex gap-[20px]">
             <a href="https://linkedin.com/company/metaborong-technologies" target="_blank" rel="me noopener noreferrer" className="no-underline text-gray transition-[color] duration-[var(--duration-instant)] hover:text-dark">LinkedIn</a>

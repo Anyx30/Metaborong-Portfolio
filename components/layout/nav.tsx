@@ -102,6 +102,18 @@ export function Nav() {
 
   const closeMobile = () => setMobileOpen(false)
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
+
   // ── Mega-menu keyboard nav ────────────────────────────────────────────────
   const setItemRef = (col: number, row: number) => (el: HTMLAnchorElement | null) => {
     if (!itemRefs.current[col]) itemRefs.current[col] = []
@@ -173,7 +185,7 @@ export function Nav() {
           Polish pass: cell-grid hairlines (desktop) slice the bar into measured
           regions. Top frame is solid + 1px (structural); bottom toggles dashed→solid
           on scroll (feedback). Two different strokes = blueprint-y. */}
-      <nav className="w-full px-[16px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+      <nav className="w-full px-[16px] sm:px-[24px] md:px-[40px] lg:px-[48px] xl:px-[80px] 2xl:px-[128px]">
         <div className="flex h-14 items-center max-w-[1280px] mx-auto">
           <Logo size="sm" />
 
@@ -251,17 +263,17 @@ export function Nav() {
                 const childCount = p.children.slice(0, 5).length
                 return (
                   <div key={p.id} className={colIdx < 2 ? 'pr-[24px] border-r border-border' : ''}>
-                    <div className="flex items-center gap-[10px]">
+                    <div className="flex items-center gap-[12px]">
                       <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
                       <span
                         aria-hidden="true"
                         className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
                         style={{ background: p.color, outlineColor: p.color }}
                       />
+                      <h3 className="text-[20px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
+                        {p.label}
+                      </h3>
                     </div>
-                    <h3 className="mt-[12px] text-[20px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
-                      {p.label}
-                    </h3>
                     <p className="mt-[6px] text-sm leading-[1.5] text-gray">{p.headline}</p>
 
                     {/* L2: ul-to-hub gap promoted from 20→32 so hub CTA reads as a separate group, not the next list item. */}
@@ -317,30 +329,28 @@ export function Nav() {
       {mobileOpen && (
         <div
           id="mobile-menu"
-          className="lg:hidden bg-bg-subtle border-t border-border px-[16px] sm:px-[24px] md:px-[48px] py-[24px] flex flex-col gap-[8px]"
+          className="lg:hidden absolute top-14 left-0 right-0 h-[calc(100dvh-56px)] overflow-y-auto bg-bg-subtle px-[16px] sm:px-[24px] md:px-[40px] pt-[32px] pb-[40px] flex flex-col gap-[8px]"
         >
           {/* Pillar blocks — collapsed by default. Children stay in DOM for SEO. */}
           {pillars.map((p, i) => (
             <details
               key={p.id}
-              className={i > 0 ? 'pt-[16px] border-t border-dashed border-border group' : 'group'}
+              className={i > 0 ? 'pt-[12px] pb-[4px] border-t border-dashed border-border group' : 'pb-[4px] group'}
             >
               {/* L3: collapsed summary stays compact (numeral row + H3 only).
                   Headline moves into the expanded panel where it earns its place. */}
-              <summary className="nav-summary flex items-center justify-between cursor-pointer py-[8px] -my-[8px] [touch-action:manipulation]">
-                <div>
-                  <div className="flex items-center gap-[10px]">
+              <summary className="nav-summary flex items-center justify-between cursor-pointer py-[14px] [touch-action:manipulation]">
+                  <div className="flex items-center gap-[12px]">
                     <span className="text-[13px] font-mono text-gray tabular-nums">{p.num}</span>
                     <span
                       aria-hidden="true"
                       className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
                       style={{ background: p.color, outlineColor: p.color }}
                     />
+                    <h3 className="text-[18px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
+                      {p.label}
+                    </h3>
                   </div>
-                  <h3 className="mt-[10px] text-[18px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
-                    {p.label}
-                  </h3>
-                </div>
                 <ChevronDown
                   size={18}
                   aria-hidden="true"

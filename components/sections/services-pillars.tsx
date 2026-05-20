@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { pillars, type PillarId } from '@/components/sections/services-data'
 import { ServicesIsoCanvas } from '@/components/sections/services-iso-canvas'
@@ -94,7 +95,7 @@ function LeftAccordion({
   active: (typeof pillars)[number]
 }) {
   return (
-    <div className="border-r border-border-subtle bg-white overflow-hidden flex flex-col h-[560px] xl:h-[600px]">
+    <div className="border-r border-border-subtle bg-white overflow-hidden flex flex-col h-[70vh] min-h-[500px] max-h-[700px] xl:h-[75vh] xl:max-h-[800px]">
       <div className="px-[20px] py-[14px] border-b border-border-subtle flex items-center justify-between flex-shrink-0">
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-gray-light">
           Three pillars
@@ -202,7 +203,7 @@ function LeftAccordion({
 
 function RightCanvas({ active, activeId }: { active: (typeof pillars)[number]; activeId: PillarId }) {
   return (
-    <div className="bg-white overflow-hidden h-[560px] xl:h-[600px] flex flex-col">
+    <div className="bg-white overflow-hidden h-[70vh] min-h-[500px] max-h-[700px] xl:h-[75vh] xl:max-h-[800px] flex flex-col">
       <div className="px-[24px] pt-[20px] pb-[12px] flex-shrink-0">
         <p
           key={`hl-${active.id}`}
@@ -228,58 +229,64 @@ function RightCanvas({ active, activeId }: { active: (typeof pillars)[number]; a
 
 function MobileStack() {
   return (
-    <div className="space-y-[48px]">
-      {pillars.map((pillar) => (
-        <article
+    <div className="flex flex-col gap-[8px] bg-white border border-border rounded-lg p-[16px] sm:p-[24px]">
+      {pillars.map((pillar, i) => (
+        <details
           key={pillar.id}
           id={`pillar-${pillar.id}-mobile`}
-          aria-labelledby={`pillar-${pillar.id}-mobile-heading`}
+          className={i > 0 ? 'pt-[12px] pb-[4px] border-t border-dashed border-border group' : 'pb-[4px] group'}
           style={{ '--pillar-color': pillar.color } as React.CSSProperties}
         >
-          <p className="mb-[8px]">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-gray-light">
-              [{pillar.num}]
-            </span>
-            <span
-              className="font-mono ml-[10px] text-[11px] font-bold uppercase tracking-[0.1em]"
-              style={{ color: pillar.color }}
+          <summary className="flex items-center justify-between cursor-pointer py-[14px] [touch-action:manipulation] list-none [&::-webkit-details-marker]:hidden">
+            <div className="flex items-center gap-[12px]">
+              <span className="text-[13px] font-mono text-gray tabular-nums">[{pillar.num}]</span>
+              <span
+                aria-hidden="true"
+                className="w-[9px] h-[9px] outline outline-[1.5px] outline-offset-[1.5px]"
+                style={{ background: pillar.color, outlineColor: pillar.color }}
+              />
+              <h3 className="text-[18px] font-bold tracking-[-0.025em] leading-[1.2] text-dark">
+                {pillar.label}
+              </h3>
+            </div>
+            <ChevronDown size={18} className="shrink-0 text-gray transition-transform duration-[var(--duration-instant)] group-open:rotate-180" />
+          </summary>
+
+          <div className="mt-[24px]">
+            <h4
+              id={`pillar-${pillar.id}-mobile-heading`}
+              className="text-[20px] font-bold tracking-[-0.025em] leading-tight text-dark mb-[12px]"
             >
-              {pillar.label}
-            </span>
-          </p>
-          <h3
-            id={`pillar-${pillar.id}-mobile-heading`}
-            className="text-[22px] font-bold tracking-[-0.025em] leading-tight text-dark"
-          >
-            {pillar.headline}
-          </h3>
-          <p className="mt-[12px] text-[15px] leading-[1.65] text-gray">{pillar.body}</p>
-          <ul role="list" className="mt-[20px] space-y-[8px]">
-            {pillar.children.slice(0, TOP_N).map((child) => (
-              <li key={child.slug}>
-                <Link
-                  href={`${pillar.hubHref}${child.slug}/`}
-                  className="group flex items-center justify-between gap-[12px] min-h-[44px] px-[16px] py-[12px] border border-border bg-white hover:border-[var(--pillar-color)] transition-colors duration-[var(--duration-instant)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                >
-                  <span className="text-[13px] font-bold uppercase tracking-[0.02em] text-dark leading-tight">
-                    {child.name}
-                  </span>
-                  <ArrowUpRight className="shrink-0 text-gray-light group-hover:text-[var(--pillar-color)] transition-colors duration-[var(--duration-instant)]" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-[16px]">
-            <Link
-              href={pillar.hubHref}
-              className="inline-flex items-center gap-[8px] text-[14px] font-medium"
-              style={{ color: pillar.color }}
-            >
-              <span>See all {pillar.label} services</span>
-              <ArrowRight />
-            </Link>
+              {pillar.headline}
+            </h4>
+            <p className="text-[15px] leading-[1.65] text-gray mb-[20px]">{pillar.body}</p>
+            <ul role="list" className="space-y-[8px]">
+              {pillar.children.slice(0, TOP_N).map((child) => (
+                <li key={child.slug}>
+                  <Link
+                    href={`${pillar.hubHref}${child.slug}/`}
+                    className="group flex items-center justify-between gap-[12px] min-h-[44px] px-[16px] py-[12px] border border-border bg-white hover:border-[var(--pillar-color)] transition-colors duration-[var(--duration-instant)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                  >
+                    <span className="text-[13px] font-bold uppercase tracking-[0.02em] text-dark leading-tight">
+                      {child.name}
+                    </span>
+                    <ArrowUpRight className="shrink-0 text-gray-light group-hover:text-[var(--pillar-color)] transition-colors duration-[var(--duration-instant)]" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-[16px]">
+              <Link
+                href={pillar.hubHref}
+                className="inline-flex items-center gap-[8px] text-[14px] font-medium"
+                style={{ color: pillar.color }}
+              >
+                <span>See all {pillar.label} services</span>
+                <ArrowRight />
+              </Link>
+            </div>
           </div>
-        </article>
+        </details>
       ))}
     </div>
   )

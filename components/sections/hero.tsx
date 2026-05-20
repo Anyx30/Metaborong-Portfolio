@@ -86,7 +86,7 @@ export function HeroSection() {
   }, [mountVideo])
 
   return (
-    <section className="relative min-h-screen bg-bg-subtle px-[16px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px]">
+    <section className="relative min-h-screen bg-bg-subtle px-[16px] sm:px-[24px] md:px-[40px] lg:px-[48px] xl:px-[80px] 2xl:px-[128px]">
       {/* Preload the AVIF poster — React 19 hoists this to <head> so it
           races ahead of the bundle and wins the LCP slot. fetchPriority high
           marks it as critical-path. */}
@@ -97,7 +97,7 @@ export function HeroSection() {
         type="image/avif"
         fetchPriority="high"
       />
-      <div className="max-w-[1280px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[57fr_43fr]">
+      <div className="w-full max-w-[1600px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-[57fr_43fr]">
         {/* Left: copy */}
         <Reveal className="flex flex-col justify-center pt-[80px] pb-[36px] lg:pt-[96px] lg:pb-[48px]">
           {/* Eyebrow chip — entity-category line */}
