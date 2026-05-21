@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
-import { pillars, type PillarId } from '@/components/sections/services-data'
+import { pillars, getPublishedLeaves, type PillarId } from '@/components/sections/services-data'
 import { ServicesIsoCanvas } from '@/components/sections/services-iso-canvas'
 
 const TOP_N = 5
@@ -110,7 +110,9 @@ function LeftAccordion({
         {pillars.map((pillar, idx) => {
           const isActive = pillar.id === activeId
           const isLast = idx === pillars.length - 1
-          const visibleChildren = pillar.children.slice(0, TOP_N)
+          // v1 published leaves only — coming-soon stubs are filtered out of
+          // the homepage accordion per SERVICES_PLAN.md § Risk 3.
+          const visibleChildren = getPublishedLeaves(pillar).slice(0, TOP_N)
           return (
             <li
               key={pillar.id}
@@ -261,7 +263,7 @@ function MobileStack() {
             </h4>
             <p className="text-[15px] leading-[1.65] text-gray mb-[20px]">{pillar.body}</p>
             <ul role="list" className="space-y-[8px]">
-              {pillar.children.slice(0, TOP_N).map((child) => (
+              {getPublishedLeaves(pillar).slice(0, TOP_N).map((child) => (
                 <li key={child.slug}>
                   <Link
                     href={`${pillar.hubHref}${child.slug}/`}

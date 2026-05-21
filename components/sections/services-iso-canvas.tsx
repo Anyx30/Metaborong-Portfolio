@@ -7,13 +7,13 @@ import { type PillarId } from '@/components/sections/services-data'
 // inset white shine reads correctly.
 const PILLAR_COLOR: Record<PillarId, string> = {
   'web3': '#296ff0',
-  'ai-agents': '#10b981',
+  'ai': '#10b981',
   'product-studio': '#F6851B',
 }
 
 const PILLAR_LABEL: Record<PillarId, string> = {
   'web3': 'WEB3',
-  'ai-agents': 'AI',
+  'ai': 'AI',
   'product-studio': 'PRODUCT',
 }
 
@@ -24,12 +24,12 @@ const PILLAR_LABEL: Record<PillarId, string> = {
 // one cube-edge apart so plates and the active cube nearly touch — matching
 // the tight spacing in Figma Frame 1707481128.
 const PILLAR_OFFSET_X: Record<PillarId, number> = {
-  'ai-agents': -173.2,
+  'ai': -173.2,
   'web3': 0,
   'product-studio': 173.2,
 }
 
-const PILLAR_ORDER: PillarId[] = ['ai-agents', 'web3', 'product-studio']
+const PILLAR_ORDER: PillarId[] = ['ai', 'web3', 'product-studio']
 
 export function ServicesIsoCanvas({ activeId }: { activeId: PillarId }) {
   return (
