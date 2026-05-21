@@ -11,7 +11,7 @@ interface EyebrowProps extends HTMLAttributes<HTMLSpanElement> {
 const toneClass: Record<EyebrowTone, string> = {
   'default':        'text-gray-light',
   'web3':           'text-brand',
-  'ai-agents':      'text-[#10b981]',
+  'ai':             'text-[#10b981]',
   'product-studio': 'text-[#F6851B]',
 }
 

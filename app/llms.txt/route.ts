@@ -35,7 +35,7 @@ export async function GET(): Promise<Response> {
   lines.push('- Direct contact: contact@metaborong.com — no account managers, no pitch decks.')
   lines.push('- Typical project duration: 4–12 weeks; smart contract audits and AI integrations deliver in 4–6 weeks.')
   lines.push('- 8+ products shipped in production across DeFi, gaming, AI, and SaaS.')
-  lines.push('- Three service pillars: Web3/Blockchain, AI Agents, and Product Studio.')
+  lines.push('- Three service pillars: Web3, AI, and Product Studio.')
   lines.push('')
 
   lines.push('## Main pages')
@@ -48,10 +48,14 @@ export async function GET(): Promise<Response> {
     lines.push(`### ${p.label}`)
     lines.push(`${p.body}`)
     lines.push('')
-    for (const c of p.children) {
-      lines.push(`- **${c.name}** — ${c.description}`)
+    for (const sg of p.subGroups) {
+      lines.push(`#### ${sg.label}`)
+      for (const c of sg.children) {
+        const marker = c.status === 'coming-soon' ? ' _(coming soon)_' : ''
+        lines.push(`- **${c.name}**${marker} — ${c.description}`)
+      }
+      lines.push('')
     }
-    lines.push('')
   }
 
   lines.push('## Frequently asked questions')

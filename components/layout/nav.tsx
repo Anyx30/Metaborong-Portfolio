@@ -4,7 +4,7 @@ import { Fragment, useState, useEffect, useRef, type KeyboardEvent } from 'react
 import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
 import { Button } from '@/components/ui/button'
-import { pillars } from '@/components/sections/services-data'
+import { pillars, getPublishedLeaves } from '@/components/sections/services-data'
 
 const navLinks = [
   { label: 'Work', href: '/#work' },
@@ -248,7 +248,8 @@ export function Nav() {
           <div className="px-[16px] sm:px-[24px] md:px-[48px] lg:px-[96px] xl:px-[128px] pt-[32px] pb-[40px]">
             <div className="grid grid-cols-3 gap-[48px] max-w-[1280px] mx-auto">
               {pillars.map((p, colIdx) => {
-                const childCount = p.children.slice(0, 5).length
+                const visibleChildren = getPublishedLeaves(p).slice(0, 5)
+                const childCount = visibleChildren.length
                 return (
                   <div key={p.id} className={colIdx < 2 ? 'pr-[24px] border-r border-border' : ''}>
                     <div className="flex items-center gap-[10px]">
@@ -266,7 +267,7 @@ export function Nav() {
 
                     {/* L2: ul-to-hub gap promoted from 20→32 so hub CTA reads as a separate group, not the next list item. */}
                     <ul className="mt-[20px] flex flex-col gap-[10px]">
-                      {p.children.slice(0, 5).map((c, rowIdx) => {
+                      {visibleChildren.map((c, rowIdx) => {
                         const isActive = activeIdx[0] === colIdx && activeIdx[1] === rowIdx
                         return (
                           <li key={c.slug}>
@@ -351,7 +352,7 @@ export function Nav() {
               <p className="mt-[12px] text-sm leading-[1.5] text-gray">{p.headline}</p>
 
               <ul className="mt-[8px] flex flex-col">
-                {p.children.slice(0, 5).map(c => (
+                {getPublishedLeaves(p).slice(0, 5).map(c => (
                   <li key={c.slug}>
                     <a
                       href={`/services/${p.id}/${c.slug}/`}
