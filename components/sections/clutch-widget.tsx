@@ -35,7 +35,10 @@ export function ClutchWidget({
     >
       <Script
         src="https://widget.clutch.co/static/js/widget.js"
-        strategy="afterInteractive"
+        // Widget renders well below the fold and already has an sr-only
+        // crawlable proof in the parent section; defer to idle so it does
+        // not compete with home-page hydration for main-thread time.
+        strategy="lazyOnload"
         onReady={() => window.CLUTCHCO?.Init?.()}
       />
       <div

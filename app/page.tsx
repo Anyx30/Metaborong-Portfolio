@@ -12,7 +12,13 @@ import { FoundersSection } from '@/components/sections/founders'
 import { ComparisonSection } from '@/components/sections/comparison'
 import { FaqSection } from '@/components/sections/faq'
 import { ContactCtaSection } from '@/components/sections/contact-cta'
-import { organizationSchema, websiteSchema, faqSchema, whyUsAeoSchema, serviceSchemas } from '@/lib/schema'
+import {
+  organizationSchemaJson,
+  websiteSchemaJson,
+  faqSchemaJson,
+  whyUsAeoSchemaJson,
+  serviceSchemasJson,
+} from '@/lib/schema'
 
 export const metadata: Metadata = {
   // Title inherits from layout.tsx default — single source of truth.
@@ -38,25 +44,25 @@ export default function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        dangerouslySetInnerHTML={{ __html: organizationSchemaJson }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        dangerouslySetInnerHTML={{ __html: websiteSchemaJson }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: faqSchemaJson }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(whyUsAeoSchema) }}
+        dangerouslySetInnerHTML={{ __html: whyUsAeoSchemaJson }}
       />
-      {serviceSchemas.map((schema) => (
+      {serviceSchemasJson.map(({ id, json }) => (
         <script
-          key={schema['@id']}
+          key={id}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{ __html: json }}
         />
       ))}
 

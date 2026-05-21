@@ -137,6 +137,17 @@ export const serviceSchemas = pillars.map((p) => ({
   },
 }))
 
+// Pre-stringified variants: serialised once at module init instead of on every
+// React render. The home page emits these via dangerouslySetInnerHTML, so the
+// cost of stringifying the OfferCatalog graph (3 pillars × ~25 leaves) does
+// not repeat on every RSC pass.
+export const organizationSchemaJson = JSON.stringify(organizationSchema)
+export const websiteSchemaJson = JSON.stringify(websiteSchema)
+export const faqSchemaJson = JSON.stringify(faqSchema)
+export const whyUsAeoSchemaJson = JSON.stringify(whyUsAeoSchema)
+export const serviceSchemasJson: ReadonlyArray<{ id: string; json: string }> =
+  serviceSchemas.map((s) => ({ id: s['@id'], json: JSON.stringify(s) }))
+
 // ─── v1 leaf-level Service nodes ──────────────────────────────────────────────
 //
 // SERVICES_PLAN.md § 5 — one Service node per *published* v1 leaf. Coming-soon

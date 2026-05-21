@@ -1,5 +1,5 @@
 import { Section } from '@/components/ui/section'
-import { ServicesPillars } from '@/components/sections/services-pillars'
+import { ServicesPillarsLazy } from '@/components/sections/services-pillars-lazy'
 
 const FAQ_JSONLD = {
   '@context': 'https://schema.org',
@@ -53,14 +53,15 @@ export function ServicesSection() {
           </div>
         </div>
 
-        <ServicesPillars />
+        <ServicesPillarsLazy />
       </div>
 
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }}
+        dangerouslySetInnerHTML={{ __html: FAQ_JSONLD_JSON }}
       />
     </Section>
   )
 }
+
+const FAQ_JSONLD_JSON = JSON.stringify(FAQ_JSONLD)
